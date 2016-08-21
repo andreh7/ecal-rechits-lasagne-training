@@ -57,19 +57,19 @@ dataDesc = dict(
 #
 #   phoIdInput :
 #     {
-#       s4 : FloatTensor - size: 431989
-#       scRawE : FloatTensor - size: 431989
-#       scEta : FloatTensor - size: 431989
-#       covIEtaIEta : FloatTensor - size: 431989
-#       rho : FloatTensor - size: 431989
-#       pfPhoIso03 : FloatTensor - size: 431989
-#       phiWidth : FloatTensor - size: 431989
-#       covIEtaIPhi : FloatTensor - size: 431989
-#       etaWidth : FloatTensor - size: 431989
-#       esEffSigmaRR : FloatTensor - size: 431989
-#       r9 : FloatTensor - size: 431989
-#       pfChgIso03 : FloatTensor - size: 431989
-#       pfChgIso03worst : FloatTensor - size: 431989
+#       covIEtaIEta : FloatTensor - size: 431989          0
+#       covIEtaIPhi : FloatTensor - size: 431989          1
+#       esEffSigmaRR : FloatTensor - size: 431989         2 # endcap only
+#       etaWidth : FloatTensor - size: 431989             3
+#       pfChgIso03 : FloatTensor - size: 431989           4
+#       pfChgIso03worst : FloatTensor - size: 431989      5
+#       pfPhoIso03 : FloatTensor - size: 431989           6
+#       phiWidth : FloatTensor - size: 431989             7
+#       r9 : FloatTensor - size: 431989                   8
+#       rho : FloatTensor - size: 431989                  9
+#       s4 : FloatTensor - size: 431989                  10
+#       scEta : FloatTensor - size: 431989               11
+#       scRawE : FloatTensor - size: 431989              12
 #     }
 
 #----------------------------------------------------------------------
