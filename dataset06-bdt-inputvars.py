@@ -126,6 +126,12 @@ def datasetLoadFunction(fnames, size, cuda):
       
             # fill the individual variable names
             sortedVarnames = sorted(loaded['phoIdInput'].keys())
+
+            # for barrel, exclude the preshower variable
+            # (this will have zero standard deviation in the barrel and will
+            # therefore lead to NaNs after normalization)
+            sortedVarnames = [ varname for varname in sortedVarnames if varname != 'esEffSigmaRR' ]
+
             numvars = len(sortedVarnames)
       
             # allocate a 2D Tensor
