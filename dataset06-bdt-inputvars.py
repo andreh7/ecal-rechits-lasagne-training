@@ -117,11 +117,11 @@ def datasetLoadFunction(fnames, size, cuda):
                data    = {},
             
                # labels are 0/1 because we use cross-entropy loss
-               labels  = loaded['y'].asndarray()[:thisSize],
+               labels  = loaded['y'].asndarray()[:thisSize].astype('float32'),
             
-               weights = loaded['weight'].asndarray()[:thisSize],
+               weights = loaded['weight'].asndarray()[:thisSize].astype('float32'),
           
-               mvaid   = loaded['mvaid'].asndarray()[:thisSize],
+               mvaid   = loaded['mvaid'].asndarray()[:thisSize].astype('float32'),
             )
       
             # fill the individual variable names
@@ -129,7 +129,7 @@ def datasetLoadFunction(fnames, size, cuda):
             numvars = len(sortedVarnames)
       
             # allocate a 2D Tensor
-            data['input'] = np.ndarray((thisSize, numvars))
+            data['input'] = np.ndarray((thisSize, numvars), dtype = 'float32')
       
             # copy over the individual variables: use a 2D tensor
             # with each column representing a variables
@@ -145,11 +145,11 @@ def datasetLoadFunction(fnames, size, cuda):
             
             # see http://stackoverflow.com/a/36242627/288875 for why one has to
             # put the arguments in parentheses...
-            data['labels']  = np.concatenate((data['labels'], loaded['y'].asndarray()[:thisSize]))
+            data['labels']  = np.concatenate((data['labels'], loaded['y'].asndarray()[:thisSize].astype('float32')))
     
-            data['weights'] = np.concatenate((data['weights'], loaded['weight'].asndarray()[:thisSize]))
+            data['weights'] = np.concatenate((data['weights'], loaded['weight'].asndarray()[:thisSize].astype('float32')))
     
-            data['mvaid']   = np.concatenate((data['mvaid'], loaded['mvaid'].asndarray()[:thisSize]))
+            data['mvaid']   = np.concatenate((data['mvaid'], loaded['mvaid'].asndarray()[:thisSize].astype('float32')))
     
             # special treatment for input variables
       
@@ -159,7 +159,7 @@ def datasetLoadFunction(fnames, size, cuda):
             #
             # so we build first a tensor with the new values
             # and then concatenate this to the previously loaded data
-            newData = np.ndarray((thisSize, numvars))
+            newData = np.ndarray((thisSize, numvars), dtype = 'float32')
       
             for varindex, varname in enumerate(sortedVarnames):
                 newData[:,varindex] = loaded['phoIdInput'][varname].asndarray()[:thisSize]
