@@ -188,6 +188,9 @@ while True:
     # end of loop over minibatches
     progbar.close()
 
+    for fout in fouts:
+        print >> fout, "avg train loss:",sum_train_loss / float(len(trainData['labels']))
+
     #----------
 
     deltaT = time.time() - startTime
