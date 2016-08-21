@@ -198,7 +198,16 @@ def datasetLoadFunction(fnames, size, cuda):
     # (weights should in principle directly
     # affect the effective learning rate of SGD)
     data['weights'] *= (data['weights'].shape[0] / float(data['weights'].sum()))
+
+    # normalize inputs to zero mean and unit variance
+    data['input'] -= data['input'].mean(axis = 0)
+
+    print "stddevs before:",data['input'].std(axis = 0)
+
+    data['input'] /= data['input'].std(axis = 0)
   
+    print "stddevs after:",data['input'].std(axis = 0)
+
     return data, totsize
 
 #----------------------------------------------------------------------
