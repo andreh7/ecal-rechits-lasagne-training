@@ -159,7 +159,7 @@ while True:
         print >> fout, "----------------------------------------"
         print >> fout, "starting epoch %d at" % epoch, nowStr
         print >> fout, "----------------------------------------"
-
+        print >> fout, "output directory is", outputDir
         fout.flush()
 
     #----------
@@ -188,9 +188,6 @@ while True:
     # end of loop over minibatches
     progbar.close()
 
-    for fout in fouts:
-        print >> fout, "avg train loss:",sum_train_loss / float(len(trainData['labels']))
-
     #----------
 
     deltaT = time.time() - startTime
@@ -199,6 +196,8 @@ while True:
         print >> fout
         print >> fout, "time to learn 1 sample: %.3f ms" % ( deltaT / len(trainWeights) * 1000.0)
         print >> fout, "time to train entire batch: %.2f min" % (deltaT / 60.0)
+        print >> fout
+        print >> fout, "avg train loss:",sum_train_loss / float(len(trainData['labels']))
         print >> fout
         fout.flush()
 
