@@ -2,7 +2,7 @@
 
 from lasagne.layers import InputLayer, DenseLayer
 from lasagne.init import GlorotUniform
-from lasagne.nonlinearities import rectify, sigmoid
+from lasagne.nonlinearities import rectify, softmax
 
 import numpy as np
 import theano.tensor as T
@@ -22,9 +22,6 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
     # 2D tensor
     input_var = T.matrix('inputs')
 
-    # 2-class problem
-    noutputs = 1
-
     # 13 input variables
     #   phoIdInput :
     #     {
@@ -43,9 +40,6 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
     #       pfChgIso03worst : FloatTensor - size: 1299819
     #     }
     
-    # size of minibatch
-    batchSize = 32
-
     # how many minibatches to unpack at a time
     # and to store in the GPU (to have fewer
     # data transfers to the GPU)
@@ -68,10 +62,12 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
             # add a dropout layer at the end ?
             #  model:add(nn.Dropout(0.3))
 
-            # sigmoid at output
-            nonlinearity = sigmoid
+            # sigmoid at output: can't get this
+            # to work with minibatch size > 1
+            # nonlinearity = sigmoid
+            nonlinearity = softmax
 
-            num_units = noutputs
+            num_units = 2
 
         model = DenseLayer(model,
                            num_units = num_units,
