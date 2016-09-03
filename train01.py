@@ -5,7 +5,7 @@ import numpy as np
 import os, sys
 
 import lasagne
-from lasagne.objectives import binary_crossentropy
+from lasagne.objectives import categorical_crossentropy
 from lasagne.updates import adam, nesterov_momentum
 
 from sklearn.metrics import roc_auc_score
@@ -117,16 +117,16 @@ for name, weights, label, output in (
 ### print >> logfile, "the model has",model.count_params(),"parameters"
 ### logfile.flush()
 
-# target_var = T.ivector('targets')
-target_var = T.vector('targets2')
+target_var = T.ivector('targets')
+# target_var = T.vector('targets2')
 
 
 train_prediction = lasagne.layers.get_output(model)
-train_loss       = binary_crossentropy(train_prediction, target_var).mean()
+train_loss       = categorical_crossentropy(train_prediction, target_var).mean()
 
 # deterministic = True is e.g. set to replace dropout layers by a fixed weight
 test_prediction = lasagne.layers.get_output(model, deterministic = True)
-test_loss       = binary_crossentropy(test_prediction, target_var).mean()
+test_loss       = categorical_crossentropy(test_prediction, target_var).mean()
 
 # method for updating weights
 params = lasagne.layers.get_all_params(model, trainable = True)
@@ -143,7 +143,14 @@ test_function  = theano.function([input_var, target_var], test_loss)
 # function to calculate the output of the network
 test_prediction_function = theano.function([input_var], test_prediction)
 
+#----------
+# convert targets to integers (needed for softmax)
+#----------
 
+for data in (trainData, testData):
+    data['labels'] = data['labels'].astype('int32')
+
+#----------
 
 print "params=",params
 print
@@ -217,7 +224,7 @@ while True:
         ('test',  test_output,  testData['labels'],  testData['weights']),
         ):
         auc = roc_auc_score(labels,
-                            predictions,
+                            predictions[:,1],
                             sample_weight = weights,
                             average = None,
                             )
