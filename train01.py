@@ -226,6 +226,20 @@ while True:
             print >> fout, "%s AUC: %f" % (name, auc)
             fout.flush()
 
+        # write network output
+        np.savez(os.path.join(outputDir, "roc-data-%s-%04d.npz" % (name, epoch)),
+                 weight = weights,
+                 output = predictions[:1],
+                 label = labels)
+
+
+    #----------
+    # saving the model weights
+    #----------
+
+    np.savez(os.path.join(outputDir, 'model-%04d.npz' % epoch), 
+             *lasagne.layers.get_all_param_values(model))
+
     #----------
     # prepare next iteration
     #----------
