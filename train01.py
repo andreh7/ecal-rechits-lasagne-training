@@ -23,21 +23,20 @@ outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
 
 #----------------------------------------------------------------------
 
-# taken from the Lasagne mnist example
-def iterate_minibatches(inputs, targets, batchsize, shuffle = False):
-
-    assert len(inputs) == len(targets)
+# taken from the Lasagne mnist example and modified
+def iterate_minibatches(targets, batchsize, shuffle = False):
+    # generates list of indices and target values
 
     if shuffle:
-        indices = np.arange(len(inputs))
+        indices = np.arange(len(targets))
         np.random.shuffle(indices)
 
-    for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
+    for start_idx in range(0, len(targets) - batchsize + 1, batchsize):
         if shuffle:
             excerpt = indices[start_idx:start_idx + batchsize]
         else:
             excerpt = slice(start_idx, start_idx + batchsize)
-        yield inputs[excerpt], targets[excerpt]
+        yield excerpt, targets[excerpt]
 
 
 #----------------------------------------------------------------------
@@ -80,7 +79,7 @@ testWeights  = testData['weights']
 
 #----------
 print "building model"
-input_var, model = makeModel()
+input_vars, model = makeModel()
 
 #----------
 if not os.path.exists(outputDir):
@@ -137,11 +136,11 @@ updates = adam(train_loss, params)
 
 # build / compile the goal functions
 
-train_function = theano.function([input_var, target_var], train_loss, updates = updates)
-test_function  = theano.function([input_var, target_var], test_loss)
+train_function = theano.function(input_vars + [ target_var ], train_loss, updates = updates, name = 'train_function')
+test_function  = theano.function(input_vars + [ target_var ], test_loss)
 
 # function to calculate the output of the network
-test_prediction_function = theano.function([input_var], test_prediction)
+test_prediction_function = theano.function(input_vars, test_prediction)
 
 #----------
 # convert targets to integers (needed for softmax)
@@ -179,11 +178,12 @@ while True:
     progbar = tqdm.tqdm(total = len(trainData['labels']), mininterval = 1.0, unit = 'samples')
 
     startTime = time.time()
-    for batch in iterate_minibatches(trainData['input'], trainData['labels'], batchsize, shuffle = True):
-        inputs, targets = batch
+    for indices, targets in iterate_minibatches(trainData['labels'], batchsize, shuffle = True):
+
+        inputs = makeInput(trainData, indices, inputDataIsSparse = True)
 
         # this also updates the weights ?
-        sum_train_loss += train_function(inputs, targets)
+        sum_train_loss += train_function(* (inputs + [ targets ]))
 
         # this leads to an error
         # print train_prediction.eval()
