@@ -119,7 +119,7 @@ for name, weights, label, output in (
 target_var = T.ivector('targets')
 # target_var = T.vector('targets2')
 
-
+# these are of type theano.tensor.var.TensorVariable
 train_prediction = lasagne.layers.get_output(model)
 train_loss       = categorical_crossentropy(train_prediction, target_var).mean()
 
@@ -150,6 +150,13 @@ for data in (trainData, testData):
     data['labels'] = data['labels'].astype('int32')
 
 #----------
+# produce test and training input once
+#----------
+# assuming we have enough memory 
+#
+# TODO: can we use slicing instead of unpacking these again for the minibatches ?
+trainInput = makeInput(trainData, range(len(trainData['labels'])), inputDataIsSparse = True)
+testInput  = makeInput(testData, range(len(testData['labels'])), inputDataIsSparse = True)
 
 print "params=",params
 print
@@ -211,8 +218,30 @@ while True:
     #----------
     # calculate outputs of train and test samples
     #----------
-    train_output = test_prediction_function(trainData['input'])
-    test_output = test_prediction_function(testData['input'])
+
+    evalBatchSize = 10000
+
+    outputs = []
+
+    for input in (trainInput, testInput):
+        numSamples = input[0].shape[0]
+        
+        thisOutput = np.zeros(numSamples)
+
+        for start in range(0,numSamples,evalBatchSize):
+            end = min(start + evalBatchSize,numSamples)
+
+            thisOutput[start:end] = test_prediction_function(
+                *[ inp[start:end] for inp in input]
+                )[:,1]
+
+        outputs.append(thisOutput)
+
+    train_output, test_output = outputs
+            
+    # evaluating all at once exceeds the GPU memory in some cases
+    # train_output = test_prediction_function(*trainInput)[:,1]
+    # test_output = test_prediction_function(*testInput)[:,1]
 
     #----------
     # calculate AUCs
@@ -223,7 +252,7 @@ while True:
         ('test',  test_output,  testData['labels'],  testData['weights']),
         ):
         auc = roc_auc_score(labels,
-                            predictions[:,1],
+                            predictions,
                             sample_weight = weights,
                             average = None,
                             )
@@ -236,7 +265,7 @@ while True:
         # write network output
         np.savez(os.path.join(outputDir, "roc-data-%s-%04d.npz" % (name, epoch)),
                  weight = weights,
-                 output = predictions[:,1],
+                 output = predictions,
                  label = labels)
 
 
