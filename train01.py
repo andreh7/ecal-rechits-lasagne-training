@@ -70,7 +70,7 @@ def cloneFunc(data):
     ### for key, value in data.items():
     ###     retval[key] = np.
 
-trainData = cloneFunc(trainData); testData = cloneFunc(testData)
+# trainData = cloneFunc(trainData); testData = cloneFunc(testData)
 
 
 # TODO: normalize these to same weight for positive and negative samples
