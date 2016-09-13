@@ -234,7 +234,9 @@ while True:
     startTime = time.time()
     for indices, targets in iterate_minibatches(trainData['labels'], batchsize, shuffle = True):
 
-        inputs = makeInput(trainData, indices, inputDataIsSparse = True)
+        # inputs = makeInput(trainData, indices, inputDataIsSparse = True)
+
+        inputs = [ inp[indices] for inp in trainInput]
 
         # this also updates the weights ?
         sum_train_loss += train_function(* (inputs + [ targets ]))
