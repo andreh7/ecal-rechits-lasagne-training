@@ -38,6 +38,42 @@ def iterate_minibatches(targets, batchsize, shuffle = False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield excerpt, targets[excerpt]
 
+import time
+
+#----------------------------------------------------------------------
+
+# see http://preshing.com/20110924/timing-your-code-using-pythons-with-statement/
+class Timer:    
+    # timer printing a message
+
+    def __init__(self, msg = None, fout = None):
+        self.msg = msg
+
+        if fout == None:
+            fout = sys.stdout
+
+        if isinstance(fout, list):
+            # TODO: should make this for any iterable
+            self.fouts = list(fout)
+        else:
+            self.fouts = [ fout ]
+
+
+    def __enter__(self):
+        if self.msg != None:
+            for fout in self.fouts:
+                print >> fout, self.msg,
+                fout.flush()
+
+        self.start = time.clock()
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.clock()
+        self.interval = self.end - self.start
+        if self.msg != None:
+            for fout in self.fouts:
+                print >> fout, "%.1f seconds" % self.interval
 
 #----------------------------------------------------------------------
 # main
@@ -56,8 +92,10 @@ execfile(ARGV[1])
 print "loading data"
 
 cuda = True
-trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], cuda)
-testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda)
+with Timer("loading training dataset...") as t:
+    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], cuda)
+with Timer("loading test dataset...") as t:
+    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda)
 
 # convert labels from -1..+1 to 0..1 for cross-entropy loss
 # must clone to assign
@@ -134,13 +172,19 @@ updates = adam(train_loss, params)
 #           train_loss, params, learning_rate=0.01, momentum=0.9)
 
 
+#----------
 # build / compile the goal functions
+#----------
 
-train_function = theano.function(input_vars + [ target_var ], train_loss, updates = updates, name = 'train_function')
-test_function  = theano.function(input_vars + [ target_var ], test_loss)
+with Timer("compiling train dataset loss function...", fouts) as t:
+    train_function = theano.function(input_vars + [ target_var ], train_loss, updates = updates, name = 'train_function')
+
+with Timer("compiling test dataset loss function...", fouts) as t:
+    test_function  = theano.function(input_vars + [ target_var ], test_loss)
 
 # function to calculate the output of the network
-test_prediction_function = theano.function(input_vars, test_prediction)
+with Timer("compiling network output function...", fouts) as t:
+    test_prediction_function = theano.function(input_vars, test_prediction)
 
 #----------
 # convert targets to integers (needed for softmax)
@@ -155,8 +199,11 @@ for data in (trainData, testData):
 # assuming we have enough memory 
 #
 # TODO: can we use slicing instead of unpacking these again for the minibatches ?
-trainInput = makeInput(trainData, range(len(trainData['labels'])), inputDataIsSparse = True)
-testInput  = makeInput(testData, range(len(testData['labels'])), inputDataIsSparse = True)
+with Timer("unpacking training dataset...", fouts) as t:
+    trainInput = makeInput(trainData, range(len(trainData['labels'])), inputDataIsSparse = True)
+
+with Timer("unpacking test dataset...", fouts) as t:
+    testInput  = makeInput(testData, range(len(testData['labels'])), inputDataIsSparse = True)
 
 print "params=",params
 print
