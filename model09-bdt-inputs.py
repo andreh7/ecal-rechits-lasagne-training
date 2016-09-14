@@ -77,7 +77,7 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
 
     # end of loop over hidden layers
 
-    return input_var, model
+    return [ input_var ], model
 
 #----------------------------------------------------------------------
 
@@ -93,22 +93,9 @@ def makeModel():
 
 def makeInput(dataset, rowIndices, inputDataIsSparse):
 
-    assert not inputDataIsSparse, "input data is not expected to be sparse"
+    # assert not inputDataIsSparse, "input data is not expected to be sparse"
   
-    batchSize = len(rowIndices)
-  
-    retval = np.zeros(batchSize, ninputs)
-  
-    #----------
-  
-    for i in range(batchSize):
-  
-        rowIndex = rowIndices[i]
-        retval[i] = dataset.data[rowIndex]
-  
-    # end of loop over minibatch indices
-  
-    return retval
+    return [ dataset['input'][rowIndices] ]
 
 #----------------------------------------------------------------------
 # function makeInputView(inputValues, first, last)
