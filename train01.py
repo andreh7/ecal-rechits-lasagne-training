@@ -6,7 +6,7 @@ import os, sys
 
 import lasagne
 from lasagne.objectives import categorical_crossentropy
-from lasagne.updates import adam, nesterov_momentum
+from lasagne.updates import adam, nesterov_momentum, sgd, get_or_compute_grads
 
 from sklearn.metrics import roc_auc_score
 
@@ -39,6 +39,39 @@ def iterate_minibatches(targets, batchsize, shuffle = False):
         yield excerpt, targets[excerpt]
 
 import time
+
+#----------------------------------------------------------------------
+
+# my own gradient update update supporting learning rate decay
+# like we use in Torch)
+
+# torch learning rate decay is implemented here:
+# https://github.com/torch/optim/blob/b812d2a381162bed9f0df26cab8abb4015f47471/sgd.lua#L27
+#
+# see other Lasagne code e.g. here: https://github.com/Lasagne/Lasagne/blob/996bf64c0aec6d481044495800b461cc62040041/lasagne/updates.py#L584
+
+def sgdWithLearningRateDecay(loss_or_grads, params, learningRate, learningRateDecay):
+
+    from collections import OrderedDict
+    from lasagne import utils
+
+    grads = get_or_compute_grads(loss_or_grads, params)
+    updates = OrderedDict()
+
+    t_prev = theano.shared(utils.floatX(0.))
+    one = T.constant(1)
+
+    t = t_prev + 1
+
+    clr = learningRate / (1 + t * learningRateDecay)
+
+    for param, grad in zip(params, grads):
+        updates[param] = param - clr * grad
+
+    updates[t_prev] = t
+
+    return updates
+
 
 #----------------------------------------------------------------------
 
