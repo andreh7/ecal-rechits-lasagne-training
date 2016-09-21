@@ -112,14 +112,45 @@ class Timer:
 # main
 #----------------------------------------------------------------------
 
-ARGV = sys.argv[1:]
+# parse command line arguments
+import argparse
 
-assert len(ARGV) == 2, "usage: " + os.path.basename(sys.argv[0]) + " modelFile.py dataFile.py"
+parser = argparse.ArgumentParser(prog='train01.py',
+                                 formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+                                 )
+
+parser.add_argument('--opt',
+                    dest = "optimizer",
+                    type = str,
+                    choices = [ 'adam', 
+                                'sgd',
+                                ],
+                    default = 'adam',
+                    help='optimizer to use (default: %(default)s)'
+                    )
+
+parser.add_argument('modelFile',
+                    metavar = "modelFile.py",
+                    type = str,
+                    nargs = 1,
+                    help='file with model building code',
+                    )
+
+parser.add_argument('dataFile',
+                    metavar = "dataFile.py",
+                    type = str,
+                    nargs = 1,
+                    help='file with data loading code',
+                    )
+
+options = parser.parse_args()
+
+#----------
 
 batchsize = 32
 
-execfile(ARGV[0])
-execfile(ARGV[1])
+execfile(options.modelFile[0])
+execfile(options.dataFile[0])
 #----------
 
 print "loading data"
@@ -200,7 +231,34 @@ test_loss       = categorical_crossentropy(test_prediction, target_var).mean()
 
 # method for updating weights
 params = lasagne.layers.get_all_params(model, trainable = True)
-updates = adam(train_loss, params)
+
+
+if options.optimizer == 'adam':
+    updates = adam(train_loss, params)
+elif options.optimizer == 'sgd':
+
+    # parameters taken from Torch examples,
+    # should be equivalent
+    # but this does not take into account the minibatch size 
+    # (i.e. 32 times fewer evaluations of this function, learning
+    # rate decays 32 times slower) ?
+    updates = sgdWithLearningRateDecay(train_loss, params,
+                                       learningRate = 1e-3,
+                                       learningRateDecay = 1e-7)
+
+    # original torch parameters:                 
+    # optimState = {
+    #    -- learning rate at beginning
+    #    learningRate = 1e-3,
+    #    weightDecay = 0,
+    #    momentum = 0,
+    #    learningRateDecay = 1e-7
+    # }
+
+
+else:
+    raise Exception("internal error")
+
 # updates = nesterov_momentum(
 #           train_loss, params, learning_rate=0.01, momentum=0.9)
 
