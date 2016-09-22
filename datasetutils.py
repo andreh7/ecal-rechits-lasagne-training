@@ -136,7 +136,7 @@ class SparseConcatenator:
             self.data[self.numItemsVar] = loaded[self.groupVarName][self.numItemsVar].asndarray()[:thisSize]
 
             # copy the sparsified data
-            for varname in self.othervars:
+            for varname in self.otherVars:
                 self.data[varname]      = loaded[self.groupVarName][varname].asndarray()[:objectsEndIndex]
 
         else:
@@ -146,12 +146,12 @@ class SparseConcatenator:
             #----------
 
             numPhotonsBefore = self.data[self.firstIndexVar].size
-            numObjectsBefore = self.data[self.othervars[0]].size
+            numObjectsBefore = self.data[self.otherVars[0]].size
 
             # append sparse objects (e.g. rechits, tracks)
 
             # copy the sparsified information
-            for varname in self.othervars:
+            for varname in self.otherVars:
                 self.data[varname]      = np.concatenate([ self.data[varname],      loaded[self.groupVarName][varname].asndarray()[:objectsEndIndex] ])
       
             # copy the indices and lengths
