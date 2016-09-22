@@ -64,9 +64,9 @@ def datasetLoadFunction(fnames, size, cuda):
 
     totsize = 0
 
-    from datasetutils import RecHitsConcatenator
+    from datasetutils import makeRecHitsConcatenator
 
-    recHits = RecHitsConcatenator()
+    recHits = makeRecHitsConcatenator()
   
     # sort the names of the input variables
     # so that we get reproducible results
