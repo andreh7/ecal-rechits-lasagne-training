@@ -4,6 +4,30 @@ import numpy as np
 
 #----------------------------------------------------------------------
 
+def getActualSize(sizeSpec, loadedData):
+    # given a potentially relative size specification ( value between 0 and 1)
+    # or None ('take all data') or integer (exact number of items to
+    # be taken) returns the number of items to be taken from this data
+    
+    # use target variable to infer size of loaded dataset
+    loadedSize = len(loadedData['y'])
+
+    if sizeSpec != None and sizeSpec < 1:
+        retval = int(sizeSpec * loadedSize + 0.5)
+    else:
+        if size != None:
+            # absolute number of events given (assume this is an integer...)
+            retval = size
+        else:
+            # None specified, take all loaded data
+            retval = loadedSize
+
+        retval = min(thisSize, loadedSize)
+
+    return retval
+
+#----------------------------------------------------------------------
+
 class SparseConcatenator:
 
     #----------------------------------------

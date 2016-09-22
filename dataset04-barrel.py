@@ -64,7 +64,7 @@ def datasetLoadFunction(fnames, size, cuda):
 
     totsize = 0
 
-    from datasetutils import makeRecHitsConcatenator
+    from datasetutils import makeRecHitsConcatenator, getActualSize
 
     recHits = makeRecHitsConcatenator()
   
@@ -81,17 +81,7 @@ def datasetLoadFunction(fnames, size, cuda):
         #----------
         # determine the size
         #----------
-        if size != None and size < 1:
-            thisSize = int(size * len(loaded['y']) + 0.5)
-        else:
-            if size != None:
-                thisSize = size
-            else:
-                thisSize = len(loaded['y'])
-
-            thisSize = min(thisSize, loaded['y'].size[0])
-
-        #----------
+        thisSize = getActualSize(size, loaded)
 
         totsize += thisSize
 
