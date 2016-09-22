@@ -177,17 +177,6 @@ def datasetLoadFunction(fnames, size, cuda):
   
     # end of loop over input files
   
-    ### ----------
-    ### -- convert to CUDA tensors if required
-    ### ----------
-    ### if cuda then
-    ###   data.labels  = data.labels:cuda()
-    ###   data.weights = data.weights:cuda()
-    ###   data.mvaid   = data.mvaid:cuda()
-    ### end
-    ### 
-    ### ----------
-  
     # TODO: do we actually use this ?
     data['size'] = lambda: totsize 
     
