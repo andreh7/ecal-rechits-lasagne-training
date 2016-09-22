@@ -64,13 +64,17 @@ def datasetLoadFunction(fnames, size, cuda):
 
     totsize = 0
 
-    from datasetutils import makeRecHitsConcatenator, getActualSize
+    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, getActualSize
 
+    commonData = CommonDataConcatenator()
     recHits = makeRecHitsConcatenator()
+
+    # some of the BDT input variables
+    otherVars = None
   
     # sort the names of the input variables
     # so that we get reproducible results
-    sortedVarnames = {}
+    sortedVarnames = ['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ]
   
     # load all input files
     for fname in fnames:
@@ -86,55 +90,45 @@ def datasetLoadFunction(fnames, size, cuda):
         totsize += thisSize
 
         #----------
+        # combine common data
+        #----------
+        commonData.add(loaded, thisSize)
+
+        #----------
         # combine rechits
         #----------
         recHits.add(loaded, thisSize)
     
-        if data == None:
-    
+        if otherVars == None:
             #----------
-            # create the first entry
+            # first file 
             #----------
 
-            data = dict(
-               data    = {},
-            
-               # labels are 0/1 because we use cross-entropy loss
-               labels  = loaded['y'].asndarray()[:thisSize].astype('float32'),
-            
-               weights = loaded['weight'].asndarray()[:thisSize].astype('float32'),
-          
-               mvaid   = loaded['mvaid'].asndarray()[:thisSize].astype('float32'),
-            )
-
-      
-            # fill the individual variable names
-            sortedVarnames = ['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ]
-
+            # fill the individual variables
+            otherVars = {}   
             for varname in sortedVarnames:
                 # store additional variables by name, not by index
-                data[varname] = loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1))
- 
+                otherVars[varname] = loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1))
         else:
-
             #----------
             # append
-            #----------          
-
-            data['labels']  = np.concatenate((data['labels'],  loaded['y'].asndarray()[:thisSize].astype('float32')))
-            data['weights'] = np.concatenate((data['weights'], loaded['weight'].asndarray()[:thisSize].astype('float32')))
-            data['mvaid']   = np.concatenate((data['mvaid'],   loaded['mvaid'].asndarray()[:thisSize].astype('float32')))
-            
+            #----------
             # concatenate auxiliary variables
             for varname in sortedVarnames:
-                data[varname] = np.concatenate([ data[varname], loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1)) ])
-          
-        # end of appending
+                otherVars[varname] = np.concatenate([ otherVars[varname], loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1)) ])
+        
   
     # end of loop over input files
+
+    data = commonData.data
   
     # add rechits
     data['rechits'] = recHits.data
+
+    # add auxiliary variables
+    for key, value in otherVars.items():
+        assert not key in data
+        data[key] = value
 
     assert totsize == data['rechits']['numRecHits'].shape[0]
   

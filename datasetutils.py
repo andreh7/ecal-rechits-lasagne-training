@@ -28,6 +28,61 @@ def getActualSize(sizeSpec, loadedData):
 
 #----------------------------------------------------------------------
 
+class CommonDataConcatenator:
+    # concatenator for commonly used data fields such as the
+    # target variable, event weights etc.
+    
+    #----------------------------------------
+
+    def __init__(self):
+        self.data = None
+        self.totsize = 0
+
+        self.data = None
+
+    #----------------------------------------
+
+    def add(self, loaded, thisSize):
+        # @param loaded is the data to be added
+        self.totsize += thisSize
+        
+        if self.data == None:
+    
+            #----------
+            # create the first entry
+            #----------
+
+            self.data = dict(
+               data    = {},
+            
+               # labels are 0/1 because we use cross-entropy loss
+               labels  = loaded['y'].asndarray()[:thisSize].astype('float32'),
+            
+               weights = loaded['weight'].asndarray()[:thisSize].astype('float32'),
+          
+               mvaid   = loaded['mvaid'].asndarray()[:thisSize].astype('float32'),
+            )
+
+      
+        else:
+
+            #----------
+            # append
+            #----------          
+
+            self.data['labels']  = np.concatenate((self.data['labels'],  loaded['y'].asndarray()[:thisSize].astype('float32')))
+            self.data['weights'] = np.concatenate((self.data['weights'], loaded['weight'].asndarray()[:thisSize].astype('float32')))
+            self.data['mvaid']   = np.concatenate((self.data['mvaid'],   loaded['mvaid'].asndarray()[:thisSize].astype('float32')))
+            
+        # end of appending
+        
+
+    #----------------------------------------
+
+
+
+#----------------------------------------------------------------------
+
 class SparseConcatenator:
 
     #----------------------------------------
