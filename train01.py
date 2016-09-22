@@ -187,6 +187,17 @@ input_vars, model = makeModel()
 if not os.path.exists(outputDir):
     os.makedirs(outputDir)
 
+#----------
+# write training file paths to result directory
+#----------
+
+fout = open(os.path.join(outputDir, "samples.txt"), "w")
+for fname in dataDesc['train_files']:
+    print >> fout, fname
+fout.close()
+
+#----------
+
 logfile = open(os.path.join(outputDir, "train.log"), "w")
 
 fouts = [ sys.stdout, logfile ]
