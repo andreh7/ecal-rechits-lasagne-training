@@ -64,17 +64,13 @@ def datasetLoadFunction(fnames, size, cuda):
 
     totsize = 0
 
-    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, getActualSize
+    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, getActualSize
 
     commonData = CommonDataConcatenator()
     recHits = makeRecHitsConcatenator()
 
     # some of the BDT input variables
-    otherVars = None
-  
-    # sort the names of the input variables
-    # so that we get reproducible results
-    sortedVarnames = ['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ]
+    otherVars = SimpleVariableConcatenator(['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ])
   
     # load all input files
     for fname in fnames:
@@ -99,24 +95,10 @@ def datasetLoadFunction(fnames, size, cuda):
         #----------
         recHits.add(loaded, thisSize)
     
-        if otherVars == None:
-            #----------
-            # first file 
-            #----------
-
-            # fill the individual variables
-            otherVars = {}   
-            for varname in sortedVarnames:
-                # store additional variables by name, not by index
-                otherVars[varname] = loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1))
-        else:
-            #----------
-            # append
-            #----------
-            # concatenate auxiliary variables
-            for varname in sortedVarnames:
-                otherVars[varname] = np.concatenate([ otherVars[varname], loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1)) ])
-        
+        #----------
+        # auxiliary variables
+        #----------
+        otherVars.add(loaded, thisSize)
   
     # end of loop over input files
 
@@ -125,8 +107,15 @@ def datasetLoadFunction(fnames, size, cuda):
     # add rechits
     data['rechits'] = recHits.data
 
+    #----------
+    # normalize auxiliary variables to zero mean and unit variance
+    #----------
+    otherVars.normalize()
+
+    #----------
     # add auxiliary variables
-    for key, value in otherVars.items():
+    #----------
+    for key, value in otherVars.data.items():
         assert not key in data
         data[key] = value
 
@@ -140,19 +129,6 @@ def datasetLoadFunction(fnames, size, cuda):
     # (weights should in principle directly
     # affect the effective learning rate of SGD)
     data['weights'] *= (data['weights'].shape[0] / float(data['weights'].sum()))
-
-    #----------
-    # normalize auxiliary variables to zero mean and unit variance
-    #----------
-    for varname in sortedVarnames:
-        data[varname] -= data[varname].mean()
-
-    print "stddevs before:", [ data[varname].std() for varname in sortedVarnames ]
-
-    for varname in sortedVarnames:
-        data[varname] /= data[varname].std()
-
-    print "stddevs after:", [ data[varname].std() for varname in sortedVarnames ]
 
     return data, totsize
 

@@ -83,6 +83,73 @@ class CommonDataConcatenator:
 
 #----------------------------------------------------------------------
 
+class SimpleVariableConcatenator:
+    # concatenator for 'simple' variables which are just 1D float tensors
+    # keeping individual numpy 1D arrays per variable in a dict
+
+    def __init__(self, varnames):
+        # note that varnames is treated as sorted
+        # so that we get reproducible results
+        # (i.e. the order is important when mapping to the input neurons)
+
+        self.data = None
+        self.totsize = 0
+
+        # TODO: also support variable names with dots in them indicating
+        # that they are part of a lua table
+        self.varnames = varnames
+
+        self.data = None
+
+    #----------------------------------------
+
+    def add(self, loaded, thisSize):
+        if self.data == None:
+            #----------
+            # first file 
+            #----------
+
+            # fill the individual variables
+            self.data = {}
+            for varname in self.varnames:
+                # store additional variables by name, not by index
+                self.data[varname] = loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1))
+        else:
+            #----------
+            # append
+            #----------
+            # concatenate auxiliary variables
+            for varname in self.varnames:
+                self.data[varname] = np.concatenate([ self.data[varname], loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1)) ])
+
+    #----------------------------------------
+
+    def normalize(self):
+        # normalize each variable individually to zero mean
+        # and unit variance 
+
+        # if a variable has zero variance to start with, 
+        # do not normalize the variance but this also
+        # implies that all values are the same, i.e. the 
+        # variable does not contain any information
+        for varname in self.varnames:
+            self.data[varname] -= self.data[varname].mean()
+
+        print "stddevs before:", [ self.data[varname].std() for varname in self.varnames ]
+
+        for varname in self.varnames:
+            stddev = self.data[varname].std()
+            if stddev > 0:
+                self.data[varname] /= stddev
+            else:
+                print "WARNING: variable",varname,"has zero standard deviation"
+
+        print "stddevs after:", [ self.data[varname].std() for varname in self.varnames ]
+
+
+
+#----------------------------------------------------------------------
+
 class SparseConcatenator:
 
     #----------------------------------------
