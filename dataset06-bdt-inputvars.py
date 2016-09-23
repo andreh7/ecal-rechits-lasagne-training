@@ -79,6 +79,10 @@ def datasetLoadFunction(fnames, size, cuda):
     data = None
 
     totsize = 0
+
+    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, getActualSize
+
+    commonData = CommonDataConcatenator()
   
     # sort the names of the input variables
     # so that we get reproducible results
@@ -93,36 +97,21 @@ def datasetLoadFunction(fnames, size, cuda):
         #----------
         # determine the size
         #----------
-        if size != None and size < 1:
-            thisSize = math.floor(size * len(loaded['y']) + 0.5)
-        else:
-            if size != None:
-                thisSize = size
-            else:
-                thisSize = len(loaded['y'])
-
-            thisSize = min(thisSize, loaded['y'].size[0])
-
-        #----------
+        thisSize = getActualSize(size, loaded)
 
         totsize += thisSize
+
+        #----------
+        # combine common data
+        #----------
+        commonData.add(loaded, thisSize)
+
     
         if data == None:
     
             #----------
             # create the first entry
             #----------
-
-            data = dict(
-               data    = {},
-            
-               # labels are 0/1 because we use cross-entropy loss
-               labels  = loaded['y'].asndarray()[:thisSize].astype('float32'),
-            
-               weights = loaded['weight'].asndarray()[:thisSize].astype('float32'),
-          
-               mvaid   = loaded['mvaid'].asndarray()[:thisSize].astype('float32'),
-            )
       
             # fill the individual variable names
             sortedVarnames = sorted(loaded['phoIdInput'].keys())
@@ -149,14 +138,6 @@ def datasetLoadFunction(fnames, size, cuda):
             # append
             #----------          
             
-            # see http://stackoverflow.com/a/36242627/288875 for why one has to
-            # put the arguments in parentheses...
-            data['labels']  = np.concatenate((data['labels'], loaded['y'].asndarray()[:thisSize].astype('float32')))
-    
-            data['weights'] = np.concatenate((data['weights'], loaded['weight'].asndarray()[:thisSize].astype('float32')))
-    
-            data['mvaid']   = np.concatenate((data['mvaid'], loaded['mvaid'].asndarray()[:thisSize].astype('float32')))
-    
             # special treatment for input variables
       
             # note that we can not use resize(..) here as the contents
