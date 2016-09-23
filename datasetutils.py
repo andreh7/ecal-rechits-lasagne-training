@@ -150,6 +150,34 @@ class SimpleVariableConcatenator:
 
 #----------------------------------------------------------------------
 
+class SimpleVariableConcatenatorToMatrix:
+    # similar to SimpleVariableConcatenator but producing a 2D 
+    # matrix instead of keeping per variable 1D arrays
+
+    #----------------------------------------
+
+    def __init__(self, varnames):
+        # note that varnames is treated as sorted
+        # so that we get reproducible results
+        # (i.e. the order is important when mapping to the input neurons)
+
+        self.data = None
+        self.totsize = 0
+
+        # TODO: also support variable names with dots in them indicating
+        # that they are part of a lua table
+        self.varnames = varnames
+
+        self.data = None
+
+    #----------------------------------------
+
+    def add(self, loaded, thisSize):
+        pass
+    #----------------------------------------
+
+#----------------------------------------------------------------------
+
 class SparseConcatenator:
 
     #----------------------------------------
