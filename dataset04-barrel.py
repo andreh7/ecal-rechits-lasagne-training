@@ -102,6 +102,12 @@ def datasetLoadFunction(fnames, size, cuda):
   
     # end of loop over input files
 
+    #----------
+    # normalize event weights
+    #----------
+    commondData.normalizeWeights()
+
+    #----------
     data = commonData.data
   
     # add rechits
@@ -121,15 +127,6 @@ def datasetLoadFunction(fnames, size, cuda):
 
     assert totsize == data['rechits']['numRecHits'].shape[0]
   
-    #----------
-    # normalize weights
-    #----------
-    # to have an average
-    # of one per sample
-    # (weights should in principle directly
-    # affect the effective learning rate of SGD)
-    data['weights'] *= (data['weights'].shape[0] / float(data['weights'].sum()))
-
     return data, totsize
 
 #----------------------------------------------------------------------

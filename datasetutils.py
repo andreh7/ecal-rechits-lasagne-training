@@ -76,10 +76,17 @@ class CommonDataConcatenator:
             
         # end of appending
         
-
     #----------------------------------------
 
+    def normalizeWeights(self):
+        # normalizes the weights 
+        # to have an average
+        # of one per sample
+        # 
+        # (weights should in principle directly
+        # affect the effective learning rate of SGD)
 
+        self.data['weights'] *= (self.data['weights'].shape[0] / float(self.data['weights'].sum()))
 
 #----------------------------------------------------------------------
 
