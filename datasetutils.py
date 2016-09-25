@@ -12,19 +12,16 @@ def getActualSize(sizeSpec, loadedData):
     # use target variable to infer size of loaded dataset
     loadedSize = len(loadedData['y'])
 
-    if sizeSpec != None and sizeSpec < 1:
-        retval = int(sizeSpec * loadedSize + 0.5)
-    else:
-        if size != None:
-            # absolute number of events given (assume this is an integer...)
-            retval = size
-        else:
-            # None specified, take all loaded data
-            retval = loadedSize
+    if sizeSpec == None:
+        # None specified, take all loaded data
+        return loadedSize
 
-        retval = min(thisSize, loadedSize)
+    if sizeSpec < 1:
+        assert sizeSpec >= 0
+        return int(sizeSpec * loadedSize + 0.5)
 
-    return retval
+    # absolute number of events given (assume this is an integer...)
+    return min(sizeSpec, loadedSize)
 
 #----------------------------------------------------------------------
 
