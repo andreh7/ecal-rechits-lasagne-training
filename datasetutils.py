@@ -160,7 +160,7 @@ class SimpleVariableConcatenatorToMatrix:
 
     #----------------------------------------
 
-    def __init__(self, varnames):
+    def __init__(self, groupVarName, varnames):
         # note that varnames is treated as sorted
         # so that we get reproducible results
         # (i.e. the order is important when mapping to the input neurons)
@@ -168,17 +168,77 @@ class SimpleVariableConcatenatorToMatrix:
         self.data = None
         self.totsize = 0
 
+        self.groupVarName = groupVarName
+
         # TODO: also support variable names with dots in them indicating
         # that they are part of a lua table
         self.varnames = varnames
+
+        self.numvars = len(self.varnames)
 
         self.data = None
 
     #----------------------------------------
 
     def add(self, loaded, thisSize):
-        pass
+        if self.data == None:
+            #----------
+            # first file
+            #----------
+
+            # allocate a 2D Tensor
+            self.data = np.ndarray((thisSize, self.numvars), dtype = 'float32')
+      
+            # copy over the individual variables: use a 2D tensor
+            # with each column representing a variables
+            for varindex, varname in enumerate(self.varnames):
+                self.data[:, varindex] = loaded[self.groupVarName][varname].asndarray()[:thisSize]
+
+        else:
+            #----------
+            # append
+            #----------          
+            
+            # special treatment for input variables
+      
+            # note that we can not use resize(..) here as the contents
+            # of the resized tensor are undefined according to 
+            # https://github.com/torch/torch7/blob/master/doc/tensor.md#resizing
+            #
+            # so we build first a tensor with the new values
+            # and then concatenate this to the previously loaded data
+            newData = np.ndarray((thisSize, self.numvars), dtype = 'float32')
+      
+            for varindex, varname in enumerate(self.varnames):
+                newData[:,varindex] = loaded['phoIdInput'][varname].asndarray()[:thisSize]
+      
+            # and append
+            self.data = np.concatenate((self.data, newData))
+
     #----------------------------------------
+
+    def normalize(self):
+        # normalize each variable individually to zero mean
+        # and unit variance 
+        # 
+        # if a variable has zero variance to start with, 
+        # do not normalize the variance but this also
+        # implies that all values are the same, i.e. the 
+        # variable does not contain any information
+
+        self.data -= self.data.mean(axis = 0)
+
+        print "stddevs before:",self.data.std(axis = 0)
+
+        for varnum in range(self.numvars):
+            std = self.data[:,varnum].std()
+            if std > 0:
+                self.data[:,varnum] /= std
+
+        print "stddevs after:",self.data.std(axis = 0)
+
+    #----------------------------------------
+
 
 #----------------------------------------------------------------------
 

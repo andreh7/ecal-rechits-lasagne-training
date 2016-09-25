@@ -80,9 +80,12 @@ def datasetLoadFunction(fnames, size, cuda):
 
     totsize = 0
 
-    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, getActualSize
+    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenatorToMatrix, getActualSize
 
     commonData = CommonDataConcatenator()
+
+    bdtVars = None 
+                                                 
   
     # sort the names of the input variables
     # so that we get reproducible results
@@ -106,78 +109,40 @@ def datasetLoadFunction(fnames, size, cuda):
         #----------
         commonData.add(loaded, thisSize)
 
-    
-        if data == None:
-    
-            #----------
-            # create the first entry
-            #----------
-      
+        #----------
+        # BDT input variables
+        #----------
+        if bdtVars == None:
+            # find the variable names
+            groupVarName = 'phoIdInput'
+
             # fill the individual variable names
-            sortedVarnames = sorted(loaded['phoIdInput'].keys())
+            sortedVarnames = sorted(loaded[groupVarName].keys())
 
             # for barrel, exclude the preshower variable
             # (this will have zero standard deviation in the barrel and will
             # therefore lead to NaNs after normalization)
             sortedVarnames = [ varname for varname in sortedVarnames if varname != 'esEffSigmaRR' ]
 
-            numvars = len(sortedVarnames)
-      
-            # allocate a 2D Tensor
-            data['input'] = np.ndarray((thisSize, numvars), dtype = 'float32')
-      
-            # copy over the individual variables: use a 2D tensor
-            # with each column representing a variables
-            
-            for varindex, varname in enumerate(sortedVarnames):
+            bdtVars = SimpleVariableConcatenatorToMatrix(groupVarName, sortedVarnames)
 
-              data['input'][:, varindex] = loaded['phoIdInput'][varname].asndarray()[:thisSize]
-        else:
+        bdtVars.add(loaded, thisSize)
 
-            #----------
-            # append
-            #----------          
-            
-            # special treatment for input variables
-      
-            # note that we can not use resize(..) here as the contents
-            # of the resized tensor are undefined according to 
-            # https://github.com/torch/torch7/blob/master/doc/tensor.md#resizing
-            #
-            # so we build first a tensor with the new values
-            # and then concatenate this to the previously loaded data
-            newData = np.ndarray((thisSize, numvars), dtype = 'float32')
-      
-            for varindex, varname in enumerate(sortedVarnames):
-                newData[:,varindex] = loaded['phoIdInput'][varname].asndarray()[:thisSize]
-      
-            # and append
-            data['input']    = np.concatenate((data['input'], newData))
-          
-        # end of appending
-  
     # end of loop over input files
-  
-    # TODO: do we actually use this ?
-    data['size'] = lambda: totsize 
-    
+
+    bdtVars.normalize()
+
+    #----------
+    # normalize event weights
+    #----------
+    commonData.normalizeWeights()
+        
+    # combine the datas
+    data = commonData.data
+    data['input'] = bdtVars.data
+
     assert totsize == data['input'].shape[0]
   
-    # normalize weights to have an average
-    # of one per sample
-    # (weights should in principle directly
-    # affect the effective learning rate of SGD)
-    data['weights'] *= (data['weights'].shape[0] / float(data['weights'].sum()))
-
-    # normalize inputs to zero mean and unit variance
-    data['input'] -= data['input'].mean(axis = 0)
-
-    print "stddevs before:",data['input'].std(axis = 0)
-
-    data['input'] /= data['input'].std(axis = 0)
-  
-    print "stddevs after:",data['input'].std(axis = 0)
-
     return data, totsize
 
 #----------------------------------------------------------------------
