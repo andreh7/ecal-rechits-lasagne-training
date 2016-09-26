@@ -332,7 +332,7 @@ def makeRecHitsConcatenator():
 
 #----------------------------------------------------------------------
 def makeTracksConcatenator():
-    return SparseConcatenator("X", 
+    return SparseConcatenator("tracks", 
                               "firstIndex",
                               "numTracks",
                               ['relpt', 'charge', 'dphiAtVertex', 'detaAtVertex'])
