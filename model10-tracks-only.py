@@ -230,7 +230,7 @@ def makeSymmetricBinning(maxVal, step):
 
     # symmetrize
     # but avoid doubling the zero value
-    return bins[::-1][:-1] + bins
+    return [ -x for x in bins[::-1][:-1]] + bins
 
     
 #----------------------------------------
