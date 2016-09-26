@@ -279,7 +279,7 @@ def makeTrackHistogramsRadial(dataset, rowIndices, relptWeighted):
             drValues.append(dr)
 
             if relptWeighted:
-                weights.append(dataset['tracks'][relpt][index])
+                weights.append(dataset['tracks']['relpt'][index])
 
         # end of loop over all tracks of event
 
@@ -299,7 +299,7 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
     assert inputDataIsSparse,"non-sparse input data is not supported"
 
     return [ 
-        makeTrackHisotgramsRadial(datset, rowIndices, relptWeighted = True)
+        makeTrackHistogramsRadial(dataset, rowIndices, relptWeighted = True)
         ]
 
 # ----------------------------------------------------------------------
