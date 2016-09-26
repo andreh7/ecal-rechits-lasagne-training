@@ -255,7 +255,7 @@ def makeTrackHistogramsRadial(dataset, rowIndices, relptWeighted):
 
     batchSize = len(rowIndices)
 
-    retval = np.empty((batchSize, len(trkBinningDr) - 1))
+    retval = np.empty((batchSize, len(trkBinningDr) - 1), dtype = 'float32')
 
     for row,rowIndex in enumerate(rowIndices):
 
