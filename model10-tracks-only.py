@@ -235,7 +235,9 @@ def makeSymmetricBinning(maxVal, step):
     
 #----------------------------------------
 
-trkBinningDr = makeSymmetricBinning(trkDrMax, trkDrBinWidth)
+# note that we do NOT need makeSymmetricBinning(..) here
+# because dr does not go negative
+trkBinningDr = list(myArange(0, trkDrMax, trkDrBinWidth))
 
 def makeTrackHistograms(dataset, rowIndices):
     # fills tracks into a histogram
