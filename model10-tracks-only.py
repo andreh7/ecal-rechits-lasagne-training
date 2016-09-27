@@ -6,6 +6,7 @@
 
 
 from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer, DropoutLayer, ReshapeLayer, ConcatLayer
+import lasagne.layers
 from lasagne.init import GlorotUniform
 from lasagne.nonlinearities import rectify, softmax
 
@@ -201,6 +202,76 @@ def makeRadialTracksHistogramModel(input_var):
     # it looks like Lasagne scales the inputs at training time
     # while Torch scales them at inference time ?
     # network = DropoutLayer(network, p = 0.5)
+
+    return network
+
+#----------------------------------------------------------------------
+def make2DTracksHistogramModel(input_var):
+    # convolutional network 
+
+    num_filters = [ 64, 64 ]
+    filtsize = 5
+    poolsize = 2
+
+    # subtract one because the binning arrays include the last upper edge
+    width  = len(trkBinningDeta) - 1
+    height = len(trkBinningDphi) - 1
+
+    # 2D convolution layers require a dimension for the input channels
+    network = InputLayer(shape=(None, 1, width, height),
+                         input_var = input_var
+                         )
+
+    #----------
+    # stage 1 : filter bank -> squashing -> L2 pooling -> normalization
+    #----------
+
+    network = Conv2DLayer(
+        network, 
+        num_filters = num_filters[0], 
+        filter_size = (filtsize, filtsize),
+        nonlinearity = rectify,
+        pad = 'same',
+        W = GlorotUniform(),
+        )
+
+    network = MaxPool2DLayer(network, pool_size = (poolsize, poolsize),
+                             pad = ((poolsize - 1) / 2, (poolsize - 1) / 2)
+                             )
+
+    #----------
+    # stage 2 : filter bank -> squashing -> L2 pooling -> normalization
+    #----------
+
+    network = Conv2DLayer(
+        network, 
+        num_filters = num_filters[1], 
+        filter_size = (3, 3),
+        nonlinearity = rectify,
+        pad = 'same',
+        W = GlorotUniform(),
+        )
+
+    network = MaxPool2DLayer(network, pool_size = (poolsize, poolsize),
+                             pad = ((poolsize - 1) / 2, (poolsize - 1) / 2)
+                             )
+
+    #----------
+    # stage 3 : standard 2-layer neural network
+    #----------
+
+    thisShape = lasagne.layers.get_output_shape(network,
+                                                           (1, 1, width, height))
+    print "output shape=", thisShape
+
+    network = ReshapeLayer(network,
+                           shape = (-1,              # minibatch dimension
+                                     thisShape[1] * thisShape[2] * thisShape[3])
+                           )
+
+    # it looks like Lasagne scales the inputs at training time
+    # while Torch scales them at inference time ?
+    network = DropoutLayer(network, p = 0.5)
 
     return network
 
