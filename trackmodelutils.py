@@ -279,6 +279,12 @@ def make2DTracksHistogramModel(input_var):
     # while Torch scales them at inference time ?
     network = DropoutLayer(network, p = 0.5)
 
+    network = DenseLayer(network,
+                         num_units = 128,
+                         W = GlorotUniform(),
+                         nonlinearity = rectify
+                         )
+
     return network
 
 #----------------------------------------------------------------------
