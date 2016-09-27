@@ -42,3 +42,5 @@ def makeSymmetricBinning(maxVal, step):
 # because dr does not go negative
 trkBinningDr = list(myArange(0, trkDrMax, trkDrBinWidth))
     
+trkBinningDeta = makeSymmetricBinning(trkAbsDetaMax, trkDetaBinWidth)
+trkBinningDphi = makeSymmetricBinning(trkAbsDphiMax, trkDphiBinWidth)
