@@ -13,7 +13,6 @@ from lasagne.nonlinearities import softmax
 import theano.tensor as T
 import math
 
-from trackmodelutils import myArange, makeSymmetricBinning
 from trackmodelutils import makeTrackHistogramsRadial, makeRadialTracksHistogramModel
 
 #----------------------------------------------------------------------
