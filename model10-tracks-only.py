@@ -10,7 +10,6 @@ from lasagne.layers import DenseLayer
 from lasagne.init import GlorotUniform
 from lasagne.nonlinearities import softmax
 
-import numpy as np
 import theano.tensor as T
 import math
 
