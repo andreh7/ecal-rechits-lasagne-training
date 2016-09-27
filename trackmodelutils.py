@@ -170,6 +170,10 @@ def makeTrackHistograms2D(dataset, rowIndices, relptWeighted):
 def makeRadialTracksHistogramModel(input_var):
     # non-convolutional network for the moment
     #
+    # note that we produce a model with many outputs,
+    # it is up to the calling function to add an output
+    # softmax/sigmoid layer or feed this into 
+    # another network
 
 
     # subtract one because the upper boundary of the last
@@ -188,20 +192,10 @@ def makeRadialTracksHistogramModel(input_var):
 
     for i in range(numHiddenLayers):
 
-        if i < numHiddenLayers - 1:
-            # ReLU
-            nonlinearity = rectify
+        # ReLU
+        nonlinearity = rectify
 
-            num_units = nodesPerHiddenLayer
-        else:
-            # add a dropout layer at the end ?
-
-            # sigmoid at output: can't get this
-            # to work with minibatch size > 1
-            # nonlinearity = sigmoid
-            nonlinearity = softmax
-
-            num_units = 2
+        num_units = nodesPerHiddenLayer
 
         network = DenseLayer(network,
                              num_units = num_units,
@@ -210,8 +204,6 @@ def makeRadialTracksHistogramModel(input_var):
                              )
 
     # end of loop over hidden layers
-
-
 
     # it looks like Lasagne scales the inputs at training time
     # while Torch scales them at inference time ?
