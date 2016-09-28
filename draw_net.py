@@ -87,8 +87,15 @@ def get_pydot_graph(layers, output_shape=True, verbose=False):
                 label += '\n' + 'nonlinearity: {0}'.format(nonlinearity)
 
         if output_shape:
+            if hasattr(layer, 'get_output_shape'):
+                this_output_shape = layer.get_output_shape()
+            elif hasattr(layer, 'output_shape'):
+                this_output_shape = layer.output_shape
+            else:
+                this_output_shape = "unknown"
+
             label += '\n' + \
-                'Output shape: {0}'.format(layer.get_output_shape())
+                'Output shape: {0}'.format(this_output_shape)
         pydot_nodes[key] = pydot.Node(key,
                                       label=label,
                                       shape='record',
