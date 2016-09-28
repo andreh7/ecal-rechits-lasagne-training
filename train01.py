@@ -229,6 +229,20 @@ for name, weights, label, output in (
 ### print >> logfile, "the model has",model.count_params(),"parameters"
 ### logfile.flush()
 
+import draw_net
+networkGraphvizFname = os.path.join(outputDir, "model.gv")
+
+dot = draw_net.get_pydot_graph(lasagne.layers.get_all_layers(model))
+dot.write(networkGraphvizFname, format = "raw")
+
+# runs dot externally but graphviz is not installed on the machines...
+if False:
+    for suffix in ("svg",):
+        draw_net.draw_to_file(lasagne.layers.get_all_layers(model), 
+                              os.path.join(outputDir, "model." + suffix))
+
+#----------
+
 target_var = T.ivector('targets')
 # target_var = T.vector('targets2')
 
