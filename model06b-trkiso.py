@@ -9,6 +9,8 @@ from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer, 
 from lasagne.init import GlorotUniform
 from lasagne.nonlinearities import rectify, softmax
 
+import rechitmodelutils
+
 import numpy as np
 import theano.tensor as T
 import math
@@ -200,39 +202,22 @@ def makeModel():
 # function to prepare input data samples
 #----------------------------------------------------------------------
 
-# for shifting 18,18 to 4,12
-recHitsXoffset = -18 + 4,
-recHitsYoffset = -18 + 12,
+unpacker = rechitmodelutils.RecHitsUnpacker(
+    width,
+    height,
+    # for shifting 18,18 to 4,12
+
+    recHitsXoffset = -18 + 4,
+    recHitsYoffset = -18 + 12,
+    )
 
 def makeInput(dataset, rowIndices, inputDataIsSparse):
     assert inputDataIsSparse,"non-sparse input data is not supported"
 
-    batchSize = len(rowIndices)
-
     #----------
     # unpack the sparse data
     #----------
-
-    # TODO: can we move the creation of the tensor out of the loop ?
-    #       also one has to pay attention to actually clear the vector here
-    recHits = np.zeros((batchSize, 1, width, height), dtype = 'float32')
-
-    for i in range(batchSize):
-
-        rowIndex = rowIndices[i]
-  
-        indexOffset = dataset['rechits']['firstIndex'][rowIndex]
-    
-        for recHitIndex in range(dataset['rechits']['numRecHits'][rowIndex]):
-    
-            xx = dataset['rechits']['x'][indexOffset + recHitIndex] + recHitsXoffset
-            yy = dataset['rechits']['y'][indexOffset + recHitIndex] + recHitsYoffset
-    
-            if xx >= 0 and xx < width and yy >= 0 and yy < height:
-                recHits[i, 0, xx, yy] = dataset['rechits']['energy'][indexOffset + recHitIndex]
-    
-        # end of loop over rechits of this photon
-    # end of loop over minibatch indices
+    recHits = unpacker.unpack(dataset, rowIndices)
 
     return [ recHits, 
              dataset['chgIsoWrtChosenVtx'][rowIndices],
