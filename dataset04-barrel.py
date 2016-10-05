@@ -105,7 +105,7 @@ def datasetLoadFunction(fnames, size, cuda):
     #----------
     # normalize event weights
     #----------
-    commondData.normalizeWeights()
+    commonData.normalizeWeights()
 
     #----------
     data = commonData.data
