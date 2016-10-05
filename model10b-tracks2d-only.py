@@ -13,7 +13,7 @@ from lasagne.nonlinearities import softmax
 import theano.tensor as T
 import math
 
-from trackmodelutils import makeTrackHistograms2D, make2DTracksHistogramModel
+import trackmodelutils
 
 #----------------------------------------------------------------------
 # model
@@ -31,11 +31,16 @@ batchesPerSuperBatch = math.floor(3345197 / batchSize)
 # function to prepare input data samples
 #----------------------------------------------------------------------
 
+trackHistogramMaker = trackmodelutils.TrackHistograms2d(trackmodelutils.trkBinningDeta,
+                                        trackmodelutils.trkBinningDphi,
+                                        relptWeighted = True)
+                                        
+
 def makeInput(dataset, rowIndices, inputDataIsSparse):
     assert inputDataIsSparse,"non-sparse input data is not supported"
 
     return [ 
-        makeTrackHistograms2D(dataset, rowIndices, relptWeighted = True)
+        trackHistogramMaker.make(dataset, rowIndices)
         ]
 
 
@@ -47,7 +52,7 @@ def makeModel():
     # 3D tensor
     inputVarTracks         = T.tensor4('tracks')
 
-    tracksModel = make2DTracksHistogramModel(inputVarTracks)
+    tracksModel = trackmodelutils.make2DTracksHistogramModel(inputVarTracks)
 
     # output
     network = DenseLayer(

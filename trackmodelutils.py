@@ -106,64 +106,78 @@ def makeTrackHistogramsRadial(dataset, rowIndices, relptWeighted):
 #----------------------------------------------------------------------
 
 
-def makeTrackHistograms2D(dataset, rowIndices, relptWeighted):
-    # fills tracks into a histogram
-    # for each event
+class TrackHistograms2d:
+    def __init__(self, 
+                 trkBinningDeta,
+                 trkBinningDphi,
+                 relptWeighted,
+                 ):
+        self.trkBinningDeta = trkBinningDeta
+        self.trkBinningDphi = trkBinningDphi
+        self.relptWeighted = relptWeighted
 
-    # note that we need to 'unpack' the tracks
-    # and we want a histogram for each entry in rowIndices
+    #----------------------------------------
 
-    batchSize = len(rowIndices)
-    
-    # first index:  event index (for minibatch)
-    # second index: fixed to 1 (convolutional filters seem to need this)
-    # third index:  width / deta
-    # fourth index: height / dphi
-    retval = np.empty((batchSize, 
-                       1,
-                       len(trkBinningDeta) - 1,
-                       len(trkBinningDphi) - 1,
-                       ), dtype = 'float32')
+    def make(self, dataset, rowIndices):
+        # fills tracks into a histogram
+        # for each event
 
-    for row,rowIndex in enumerate(rowIndices):
+        # note that we need to 'unpack' the tracks
+        # and we want a histogram for each entry in rowIndices
 
-        indexOffset = dataset['tracks']['firstIndex'][rowIndex]
+        batchSize = len(rowIndices)
 
-        detaValues = []
-        dphiValues = []
-        if relptWeighted:
-            weights = []
-        else:
-            weights = None
+        # first index:  event index (for minibatch)
+        # second index: fixed to 1 (convolutional filters seem to need this)
+        # third index:  width / deta
+        # fourth index: height / dphi
+        retval = np.empty((batchSize, 
+                           1,
+                           len(self.trkBinningDeta) - 1,
+                           len(self.trkBinningDphi) - 1,
+                           ), dtype = 'float32')
 
-        #----------
-        # unpack the sparse data
-        #----------
-        for trackIndex in range(dataset['tracks']['numTracks'][rowIndex]):
-    
-            index = indexOffset + trackIndex
+        for row,rowIndex in enumerate(rowIndices):
 
-            deta = dataset['tracks']['detaAtVertex'][index]
-            dphi = dataset['tracks']['dphiAtVertex'][index]
+            indexOffset = dataset['tracks']['firstIndex'][rowIndex]
 
-            detaValues.append(deta)
-            dphiValues.append(dphi)
+            detaValues = []
+            dphiValues = []
+            if self.relptWeighted:
+                weights = []
+            else:
+                weights = None
 
-            if relptWeighted:
-                weights.append(dataset['tracks']['relpt'][index])
+            #----------
+            # unpack the sparse data
+            #----------
+            for trackIndex in range(dataset['tracks']['numTracks'][rowIndex]):
 
-        # end of loop over all tracks of event
+                index = indexOffset + trackIndex
 
-        # fill the histogram
-        histo, binBoundariesX, binBoundariesY = np.histogram2d(detaValues, 
-                                                               dphiValues,
-                                                               bins = [ trkBinningDeta, trkBinningDphi],
-                                                               weights = weights)
-        retval[row,0,:,:] = histo
+                deta = dataset['tracks']['detaAtVertex'][index]
+                dphi = dataset['tracks']['dphiAtVertex'][index]
 
-    # end of loop over events in this minibatch
+                detaValues.append(deta)
+                dphiValues.append(dphi)
 
-    return retval
+                if self.relptWeighted:
+                    weights.append(dataset['tracks']['relpt'][index])
+
+            # end of loop over all tracks of event
+
+            # fill the histogram
+            histo, binBoundariesX, binBoundariesY = np.histogram2d(detaValues, 
+                                                                   dphiValues,
+                                                                   bins = [ self.trkBinningDeta, self.trkBinningDphi],
+                                                                   weights = weights)
+            retval[row,0,:,:] = histo
+
+        # end of loop over events in this minibatch
+
+        return retval
+
+    #----------------------------------------
 
 #----------------------------------------------------------------------
 
