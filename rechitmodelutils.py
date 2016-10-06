@@ -33,8 +33,10 @@ class RecHitsUnpacker:
 
             for recHitIndex in range(dataset['rechits']['numRecHits'][rowIndex]):
 
-                xx = dataset['rechits']['x'][indexOffset + recHitIndex] + self.recHitsXoffset
-                yy = dataset['rechits']['y'][indexOffset + recHitIndex] + self.recHitsYoffset
+                # we subtract -1 from the coordinates because these are one based
+                # coordinates for Torch (and SparseConcatenator does NOT subtract this)
+                xx = dataset['rechits']['x'][indexOffset + recHitIndex] - 1 + self.recHitsXoffset
+                yy = dataset['rechits']['y'][indexOffset + recHitIndex] - 1 + self.recHitsYoffset
 
                 if xx >= 0 and xx < self.width and yy >= 0 and yy < self.height:
                     recHits[i, 0, xx, yy] = dataset['rechits']['energy'][indexOffset + recHitIndex]
