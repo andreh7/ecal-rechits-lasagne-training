@@ -5,7 +5,7 @@
 # variables
 
 
-from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer, DropoutLayer, ReshapeLayer, ConcatLayer
+from lasagne.layers import InputLayer, DenseLayer, ConcatLayer
 from lasagne.init import GlorotUniform
 from lasagne.nonlinearities import rectify, softmax
 
@@ -45,97 +45,6 @@ batchesPerSuperBatch = math.floor(3345197 / batchSize)
 
 #----------------------------------------------------------------------
 
-def makeRecHitsModel(input_var):
-    # a typical modern convolution network (conv+relu+pool)
-
-    # TODO: check ordering of width and height
-    # 2D convolution layers require a dimension for the input channels
-    network = InputLayer(shape=(None, 1, width, height),
-                         input_var = input_var
-                         )
-
-
-    # see https://github.com/torch/nn/blob/master/doc/convolution.md#nn.SpatialModules
-    # stage 1 : filter bank -> squashing -> L2 pooling -> normalization
-
-    ### recHitsModel:add(nn.SpatialConvolutionMM(nfeats,             -- nInputPlane
-    ###                                   nstates[1],         -- nOutputPlane
-    ###                                   filtsize,           -- kernel width
-    ###                                   filtsize,           -- kernel height
-    ###                                   1,                  -- horizontal step size
-    ###                                   1,                  -- vertical step size
-    ###                                   (filtsize - 1) / 2, -- padW
-    ###                                   (filtsize - 1) / 2 -- padH
-    ###                             ))
-    ### recHitsModel:add(nn.ReLU())
-    
-    network = Conv2DLayer(
-        network, 
-        num_filters = nstates[0], 
-        filter_size = (filtsize, filtsize),
-        nonlinearity = rectify,
-        pad = 'same',
-        W = GlorotUniform(),
-        )
-
-    # see https://github.com/torch/nn/blob/master/doc/convolution.md#nn.SpatialMaxPooling
-    # recHitsModel:add(nn.SpatialMaxPooling(poolsize,poolsize,poolsize,poolsize))
-
-    network = MaxPool2DLayer(network, pool_size = (poolsize, poolsize),
-                             pad = ((poolsize - 1) / 2, (poolsize - 1) / 2)
-                             )
-
-    # stage 2 : filter bank -> squashing -> L2 pooling -> normalization
-    ### recHitsModel:add(nn.SpatialConvolutionMM(nstates[1],         -- nInputPlane
-    ###                                   nstates[2],         -- nOutputPlane
-    ###                                   3,                  -- kernel width
-    ###                                   3,                  -- kernel height
-    ###                                   1,                  -- horizontal step size
-    ###                                   1,                  -- vertical step size
-    ###                                   (3 - 1) / 2, -- padW
-    ###                                   (3 - 1) / 2 -- padH
-    ###                             ))
-    ### recHitsModel:add(nn.ReLU())
-
-    network = Conv2DLayer(
-        network, 
-        num_filters = nstates[1], 
-        filter_size = (3, 3),
-        nonlinearity = rectify,
-        pad = 'same',
-        W = GlorotUniform(),
-        )
-
-    ### recHitsModel:add(nn.SpatialMaxPooling(poolsize, -- kernel width
-    ###                                poolsize, -- kernel height
-    ###                                poolsize, -- dW step size in the width (horizontal) dimension 
-    ###                                poolsize,  -- dH step size in the height (vertical) dimension
-    ###                                (poolsize - 1) / 2, -- pad size
-    ###                                (poolsize - 1) / 2 -- pad size
-    ###                          ))
-
-    network = MaxPool2DLayer(network, pool_size = (poolsize, poolsize),
-                             pad = ((poolsize - 1) / 2, (poolsize - 1) / 2)
-                             )
-
-    # stage 3 : standard 2-layer neural network
-
-    # see https://github.com/torch/nn/blob/master/doc/simple.md#nn.View
-    # recHitsModel:add(nn.View(nstates[2]*1*5))
-    network = ReshapeLayer(network,
-                           shape = (-1,              # minibatch dimension
-                                     nstates[1]*1*5)
-                           )
-
-    # recHitsModel:add(nn.Dropout(0.5))
-    # it looks like Lasagne scales the inputs at training time
-    # while Torch scales them at inference time ?
-    network = DropoutLayer(network, p = 0.5)
-
-    return network
-
-#----------------------------------------------------------------------
-
 def makeModel():
 
     # note that we need several input variables here
@@ -144,7 +53,7 @@ def makeModel():
     inputVarTrackIsoChosen = T.matrix('trackIsoChosen')
     inputVarTrackIsoWorst  = T.matrix('trackIsoWorst')
 
-    recHitsModel = makeRecHitsModel(inputVarRecHits)
+    recHitsModel = rechitmodelutils.makeRecHitsModel(inputVarRecHits, width, height, nstates[:2], filtsize, poolsize)
 
     inputLayerTrackIsoChosen = InputLayer(shape = (None,1), input_var = inputVarTrackIsoChosen)
     inputLayerTrackIsoWorst  = InputLayer(shape = (None,1), input_var = inputVarTrackIsoWorst)
