@@ -45,7 +45,7 @@ def datasetLoadFunction(fnames, size, cuda):
 
     totsize = 0
 
-    from datasetutils import makeTracksConcatenator, CommonDataConcatenator, getActualSize
+    from datasetutils import makeTracksConcatenator, makeRecHitsConcatenator, CommonDataConcatenator, getActualSize
 
     commonData = CommonDataConcatenator()
     tracks = makeTracksConcatenator()
