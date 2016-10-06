@@ -45,6 +45,29 @@ def makeSymmetricBinning(maxVal, step):
     return [ -x for x in bins[::-1][:-1]] + bins
 
 #----------------------------------------------------------------------
+def makeBinningFromWidthAndNumber(binWidth, numBins):
+    # produces a binning symmetric around zero
+    # given a number of total bins and a bin width
+    #
+    # note that this returns numBins + 1 values because
+    # also the upper end of the histogram is returned
+    
+    if numBins & 1 == 1:
+        # odd number of bins
+        # there is a 'center' bin crossing zero
+
+        # rounded down
+        halfNumBins = (numBins-1) / 2
+
+        bins = np.arange(-halfNumBins - 1, halfNumBins + 1) + 0.5
+
+        assert len(bins) == numBins + 1
+        return bins * binWidth
+    else:
+        # even number of bins
+        raise Exception("even number of bins case not yet implemented")
+
+#----------------------------------------------------------------------
 
 # note that we do NOT need makeSymmetricBinning(..) here
 # because dr does not go negative
