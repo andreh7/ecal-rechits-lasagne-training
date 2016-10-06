@@ -26,6 +26,9 @@ class RecHitsUnpacker:
 
             rowIndex = rowIndices[i]
 
+            # we do NOT subtract one because from 'firstIndex' because
+            # these have been already converted in the class SparseConcatenator
+            # in datasetutils.py
             indexOffset = dataset['rechits']['firstIndex'][rowIndex]
 
             for recHitIndex in range(dataset['rechits']['numRecHits'][rowIndex]):
