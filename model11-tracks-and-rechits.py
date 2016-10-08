@@ -124,13 +124,11 @@ def makeModel():
     # make a combined model with two layers (one for rechits,
     # one for tracks)
 
-
     network = rechitmodelutils.makeRecHitsModel(network, nstates[:2], filtsize, poolsize)
-    tracksModel = trackmodelutils.make2DTracksHistogramModel(inputVarTracks)
 
     # output
     network = DenseLayer(
-        tracksModel,
+        network,
         num_units = 2,  # need two class classification, seems not to work well with sigmoid
         nonlinearity = softmax,
         W = GlorotUniform(),
