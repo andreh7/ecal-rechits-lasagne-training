@@ -53,7 +53,12 @@ def makeModel():
     inputVarTrackIsoChosen = T.matrix('trackIsoChosen')
     inputVarTrackIsoWorst  = T.matrix('trackIsoWorst')
 
-    recHitsModel = rechitmodelutils.makeRecHitsModel(inputVarRecHits, width, height, nstates[:2], filtsize, poolsize)
+    ninputLayers = 1
+    network = InputLayer(shape=(None, ninputLayers, width, height),
+                        input_var = inputVarRecHits
+                        )
+
+    recHitsModel = rechitmodelutils.makeRecHitsModel(network, nstates[:2], filtsize, poolsize)
 
     inputLayerTrackIsoChosen = InputLayer(shape = (None,1), input_var = inputVarTrackIsoChosen)
     inputLayerTrackIsoWorst  = InputLayer(shape = (None,1), input_var = inputVarTrackIsoWorst)

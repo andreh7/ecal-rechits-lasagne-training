@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from lasagne.layers import InputLayer, Conv2DLayer, MaxPool2DLayer, DropoutLayer, ReshapeLayer
+from lasagne.layers import Conv2DLayer, MaxPool2DLayer, DropoutLayer, ReshapeLayer
 from lasagne.nonlinearities import rectify
 from lasagne.init import GlorotUniform
 
@@ -53,15 +53,8 @@ class RecHitsUnpacker:
 
 #----------------------------------------------------------------------
 
-def makeRecHitsModel(input_var, width, height, nstates, filtsize, poolsize):
+def makeRecHitsModel(network, nstates, filtsize, poolsize):
     # a typical modern convolution network (conv+relu+pool)
-
-    # TODO: check ordering of width and height
-    # 2D convolution layers require a dimension for the input channels
-    network = InputLayer(shape=(None, 1, width, height),
-                         input_var = input_var
-                         )
-
 
     # see https://github.com/torch/nn/blob/master/doc/convolution.md#nn.SpatialModules
     # stage 1 : filter bank -> squashing -> L2 pooling -> normalization
