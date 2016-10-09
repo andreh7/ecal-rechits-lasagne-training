@@ -91,7 +91,7 @@ def datasetLoadFunction(fnames, size, cuda):
   
     # add rechits
     data['tracks'] = tracks.data
-    data['rechits'] = rechits.data
+    data['rechits'] = recHits.data
 
     assert totsize == data['tracks']['numTracks'].shape[0]
   
