@@ -88,7 +88,7 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
     return [ 
         # unpack rechits
         unpacker.unpack(dataset, rowIndices),
-        trackHistogramMaker.make(dataset, rowIndices)
+        # trackHistogramMaker.make(dataset, rowIndices)
         ]
 
 
@@ -114,9 +114,13 @@ def makeModel():
     # combine them using a ConcatLayer
     # axis 1 (second dimension) is the layer dimension
 
-    network = ConcatLayer([ inputLayerRecHits, inputLayerTracks ],
-                          axis = 1,
-                          )
+    # network = ConcatLayer([ inputLayerRecHits, 
+    #                         # inputLayerTracks 
+    #                         ],
+    #                       axis = 1,
+    #                       )
+
+    network = inputLayerRecHits
 
     # print "ZZ",dir(network)
     print "output of concat layer:", network.output_shape
@@ -134,6 +138,8 @@ def makeModel():
         W = GlorotUniform(),
         )
 
-    return [ inputVarRecHits, inputVarTracks ], network
+    return [ inputVarRecHits, 
+             # inputVarTracks 
+], network
 
 #----------------------------------------------------------------------
