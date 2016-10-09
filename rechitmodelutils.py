@@ -134,7 +134,10 @@ def makeRecHitsModel(input_var, width, height, nstates, filtsize, poolsize):
     # recHitsModel:add(nn.View(nstates[2]*1*5))
     network = ReshapeLayer(network,
                            shape = (-1,              # minibatch dimension
-                                     nstates[1]*1*5)
+                                     lastMaxPoolOutputShape[-3] * # number of filters
+                                     lastMaxPoolOutputShape[-2] * # width
+                                     lastMaxPoolOutputShape[-1]   # height
+                                     )
                            )
 
     # recHitsModel:add(nn.Dropout(0.5))
