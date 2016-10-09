@@ -127,6 +127,8 @@ def makeRecHitsModel(input_var, width, height, nstates, filtsize, poolsize):
                              )
 
     # stage 3 : standard 2-layer neural network
+    lastMaxPoolOutputShape = network.output_shape
+    print "last maxpool layer output:", lastMaxPoolOutputShape
 
     # see https://github.com/torch/nn/blob/master/doc/simple.md#nn.View
     # recHitsModel:add(nn.View(nstates[2]*1*5))
