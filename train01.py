@@ -164,17 +164,6 @@ with Timer("loading test dataset...") as t:
 # convert labels from -1..+1 to 0..1 for cross-entropy loss
 # must clone to assign
 
-# TODO: do we still need this ?
-def cloneFunc(data):
-    return dict( [( key, np.copy(value) ) for key, value in data.items() ])
-
-    ### retval = {}
-    ### for key, value in data.items():
-    ###     retval[key] = np.
-
-# trainData = cloneFunc(trainData); testData = cloneFunc(testData)
-
-
 # TODO: normalize these to same weight for positive and negative samples
 trainWeights = trainData['weights']
 testWeights  = testData['weights']
