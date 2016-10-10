@@ -79,11 +79,12 @@ def get_pydot_graph(layers, output_shape=True, verbose=False):
         label = layer_type
         color = get_hex_color(layer_type)
         if verbose:
-            for attr in ['num_filters', 'num_units', 'ds',
+            for attr in ['name', 'num_filters', 'num_units', 'ds',
                          'filter_shape', 'stride', 'strides', 'p']:
                 if hasattr(layer, attr):
-                    label += '\n' + \
-                        '{0}: {1}'.format(attr, getattr(layer, attr))
+                    if attr != 'name' or getattr(layer,attr) != None:
+                        label += '\n' + \
+                            '{0}: {1}'.format(attr, getattr(layer, attr))
             if hasattr(layer, 'nonlinearity'):
                 try:
                     nonlinearity = layer.nonlinearity.__name__
