@@ -232,7 +232,7 @@ for name, weights, label, output in (
 import draw_net
 networkGraphvizFname = os.path.join(outputDir, "model.gv")
 
-dot = draw_net.get_pydot_graph(lasagne.layers.get_all_layers(model))
+dot = draw_net.get_pydot_graph(lasagne.layers.get_all_layers(model), verbose = True)
 dot.write(networkGraphvizFname, format = "raw")
 
 # runs dot externally but graphviz is not installed on the machines...
