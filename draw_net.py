@@ -48,6 +48,11 @@ def get_hex_color(layer_type):
     else:
         return '#{0:x}'.format(hash(layer_type) % 2**24)
 
+# custom labeling for individual layer types
+import lasagne.layers
+customLabelFunctions = {
+}
+
 
 def get_pydot_graph(layers, output_shape=True, verbose=False):
     """
@@ -96,6 +101,13 @@ def get_pydot_graph(layers, output_shape=True, verbose=False):
 
             label += '\n' + \
                 'output shape: {0}'.format(this_output_shape)
+
+        # add custom output lines
+        labelFuncs = customLabelFunctions.get(layer.__class__,[])
+        for func in labelFuncs:
+            if label:
+                label += '\n' 
+            label += str(func(layer))
 
         pydot_nodes[key] = pydot.Node(key,
                                       label=label,
