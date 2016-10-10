@@ -55,13 +55,14 @@ def makeModel():
 
     ninputLayers = 1
     network = InputLayer(shape=(None, ninputLayers, width, height),
-                        input_var = inputVarRecHits
+                         input_var = inputVarRecHits,
+                         name = 'rechits',
                         )
 
     recHitsModel = rechitmodelutils.makeRecHitsModel(network, nstates[:2], filtsize, poolsize)
 
-    inputLayerTrackIsoChosen = InputLayer(shape = (None,1), input_var = inputVarTrackIsoChosen)
-    inputLayerTrackIsoWorst  = InputLayer(shape = (None,1), input_var = inputVarTrackIsoWorst)
+    inputLayerTrackIsoChosen = InputLayer(shape = (None,1), input_var = inputVarTrackIsoChosen, name = 'chosen vtx track iso')
+    inputLayerTrackIsoWorst  = InputLayer(shape = (None,1), input_var = inputVarTrackIsoWorst, name = 'worst vtx track iso')
 
     ### #----------
     ### # track isolation variables 

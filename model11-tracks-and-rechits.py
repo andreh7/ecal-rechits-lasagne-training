@@ -103,12 +103,14 @@ def makeModel():
 
     # 2D convolution layers require a dimension for the input channels
     inputLayerRecHits = InputLayer(shape=(None, 1 , width, height),
-                                   input_var = inputVarRecHits
+                                   input_var = inputVarRecHits,
+                                   name = 'rechits',
                                    )
 
 
     inputLayerTracks = InputLayer(shape=(None, 1 , width, height),
-                                  input_var = inputVarTracks
+                                  input_var = inputVarTracks,
+                                  name = 'tracks',
                                   )
 
     # combine them using a ConcatLayer
