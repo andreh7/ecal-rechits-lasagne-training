@@ -95,7 +95,8 @@ def get_pydot_graph(layers, output_shape=True, verbose=False):
                 this_output_shape = "unknown"
 
             label += '\n' + \
-                'Output shape: {0}'.format(this_output_shape)
+                'output shape: {0}'.format(this_output_shape)
+
         pydot_nodes[key] = pydot.Node(key,
                                       label=label,
                                       shape='record',
