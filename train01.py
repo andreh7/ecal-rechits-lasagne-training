@@ -151,6 +151,11 @@ batchsize = 32
 
 execfile(options.modelFile[0])
 execfile(options.dataFile[0])
+
+#----------
+print "building model"
+input_vars, model = makeModel()
+
 #----------
 
 print "loading data"
@@ -167,10 +172,6 @@ with Timer("loading test dataset...") as t:
 # TODO: normalize these to same weight for positive and negative samples
 trainWeights = trainData['weights']
 testWeights  = testData['weights']
-
-#----------
-print "building model"
-input_vars, model = makeModel()
 
 #----------
 if not os.path.exists(outputDir):
