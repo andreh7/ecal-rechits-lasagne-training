@@ -129,6 +129,14 @@ parser.add_argument('--opt',
                     help='optimizer to use (default: %(default)s)'
                     )
 
+parser.add_argument('--print-model-only',
+                    dest = "printModelOnlyOutput",
+                    type = str,
+                    default = None,
+                    help='only write the model graphviz file (given after this option) and exit',
+                    metavar = 'file.gv',
+                    )
+
 parser.add_argument('modelFile',
                     metavar = "modelFile.py",
                     type = str,
@@ -156,8 +164,17 @@ execfile(options.dataFile[0])
 print "building model"
 input_vars, model = makeModel()
 
-#----------
+# produce network model in graphviz format
+import draw_net
+dot = draw_net.get_pydot_graph(lasagne.layers.get_all_layers(model), verbose = True)
 
+if options.printModelOnlyOutput != None:
+    # just generate the graphviz output and exit
+    dot.write(options.printModelOnlyOutput, format = "raw")
+    print "wrote model description to", options.printModelOnlyOutput
+    sys.exit(0)
+
+#----------
 print "loading data"
 
 cuda = True
@@ -219,10 +236,10 @@ for name, weights, label, output in (
 ### print >> logfile, "the model has",model.count_params(),"parameters"
 ### logfile.flush()
 
-import draw_net
+#----------
+# write graphviz output to results directory
+#----------
 networkGraphvizFname = os.path.join(outputDir, "model.gv")
-
-dot = draw_net.get_pydot_graph(lasagne.layers.get_all_layers(model), verbose = True)
 dot.write(networkGraphvizFname, format = "raw")
 
 # runs dot externally but graphviz is not installed on the machines...
