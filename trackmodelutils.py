@@ -141,7 +141,7 @@ class TrackHistograms2d:
 
     #----------------------------------------
 
-    def make(self, dataset, rowIndices):
+    def make(self, dataset, rowIndices, minVtxDz = None, maxVtxDz = None):
         # fills tracks into a histogram
         # for each event
 
@@ -177,6 +177,20 @@ class TrackHistograms2d:
             for trackIndex in range(dataset['tracks']['numTracks'][rowIndex]):
 
                 index = indexOffset + trackIndex
+
+                #----------
+                # apply vertex dz filter if given
+                #----------
+                if minVtxDz != None or maxVtxDz != None:
+                    vtxDz = dataset['tracks']['vtxDz'][index]
+                    
+                    if minVtxDz != None and vtxDz < minVtxDz:
+                        continue
+
+                    if maxVtxDz != None and vtxDz >= maxVtxDz:
+                        continue
+
+                #----------
 
                 deta = dataset['tracks']['detaAtVertex'][index]
                 dphi = dataset['tracks']['dphiAtVertex'][index]
