@@ -65,6 +65,15 @@ def sgdWithLearningRateDecay(loss_or_grads, params, learningRate, learningRateDe
 
     clr = learningRate / (1 + t * learningRateDecay)
 
+    # http://leon.bottou.org/publications/pdf/tricks-2012.pdf
+    # for example suggests (section 5.2)
+    # "use learning rates of the form 
+    #  gamma_t = gamma_0 / (1 + gamma_0 * lambda * t)
+    # determine the best gamma_0 using a small training 
+    # data sample" 
+    # (lambda / 2 is the coefficient of the weights norm
+    #  of L2 regularization)
+
     for param, grad in zip(params, grads):
         updates[param] = param - clr * grad
 
