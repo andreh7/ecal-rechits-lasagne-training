@@ -146,6 +146,13 @@ parser.add_argument('--print-model-only',
                     metavar = 'file.gv',
                     )
 
+parser.add_argument('--monitor-gradient',
+                    dest = "monitorGradient",
+                    default = False,
+                    action = 'store_true',
+                    help='write out additional information about the gradient to the results directory',
+                    )
+
 parser.add_argument('modelFile',
                     metavar = "modelFile.py",
                     type = str,
@@ -311,6 +318,12 @@ else:
 with Timer("compiling train dataset loss function...", fouts) as t:
     train_function = theano.function(input_vars + [ target_var ], train_loss, updates = updates, name = 'train_function')
 
+    if options.monitorGradient:
+        # see e.g. http://stackoverflow.com/a/37384861/288875
+        train_loss_grad = theano.grad(train_loss, params)
+
+        get_train_function_grad = theano.function(input_vars + [ target_var ], train_loss_grad)
+
 with Timer("compiling test dataset loss function...", fouts) as t:
     test_function  = theano.function(input_vars + [ target_var ], test_loss)
 
@@ -364,6 +377,10 @@ while True:
 
     progbar = tqdm.tqdm(total = len(trainData['labels']), mininterval = 1.0, unit = 'samples')
 
+    # magnitude of overall gradient. index is minibatch within epoch
+    if options.monitorGradient:
+        gradientMagnitudes = []
+
     startTime = time.time()
     for indices, targets in iterate_minibatches(trainData['labels'], batchsize, shuffle = True):
 
@@ -376,6 +393,16 @@ while True:
 
         # this leads to an error
         # print train_prediction.eval()
+
+        if options.monitorGradient:
+            # this actually returns a list of CudaNdarray objects
+            gradients = get_train_function_grad(* (inputs + [ targets ]))
+
+            gradients = [ np.ndarray.flatten(np.asarray(grad)) for grad in gradients ]
+
+            # produce the overall gradient
+            gradient = np.concatenate(gradients)
+            gradientMagnitudes.append(np.linalg.norm(gradient))
 
         train_batches += 1
 
@@ -396,6 +423,15 @@ while True:
         print >> fout, "avg train loss:",sum_train_loss / float(len(trainData['labels']))
         print >> fout
         fout.flush()
+
+    #----------
+    # save gradient magnitudes
+    #----------
+
+    if options.monitorGradient:
+        np.savez(os.path.join(outputDir, "gradient-magnitudes-%04d.npz" % epoch),
+                 gradientMagnitudes = np.array(gradientMagnitudes),
+                 )
 
     #----------
     # calculate outputs of train and test samples
