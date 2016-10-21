@@ -280,9 +280,14 @@ test_loss       = categorical_crossentropy(test_prediction, target_var).mean()
 # method for updating weights
 params = lasagne.layers.get_all_params(model, trainable = True)
 
+train_loss_grad  = theano.grad(train_loss, params)
+if globals().has_key('modelParams') and modelParams.has_key('maxGradientNorm'):
+    # clip the gradient, see http://lasagne.readthedocs.io/en/latest/modules/updates.html#lasagne.updates.total_norm_constraint
+    train_loss_grad = lasagne.updates.total_norm_constraint(train_loss_grad, modelParams['maxGradientNorm'])
+
 
 if options.optimizer == 'adam':
-    updates = adam(train_loss, params)
+    updates = adam(train_loss_grad, params)
 elif options.optimizer == 'sgd':
 
     # parameters taken from Torch examples,
@@ -290,7 +295,7 @@ elif options.optimizer == 'sgd':
     # but this does not take into account the minibatch size 
     # (i.e. 32 times fewer evaluations of this function, learning
     # rate decays 32 times slower) ?
-    updates = sgdWithLearningRateDecay(train_loss, params,
+    updates = sgdWithLearningRateDecay(train_loss_grad, params,
                                        learningRate = 1e-3,
                                        learningRateDecay = 1e-7)
 
@@ -320,8 +325,6 @@ with Timer("compiling train dataset loss function...", fouts) as t:
 
     if options.monitorGradient:
         # see e.g. http://stackoverflow.com/a/37384861/288875
-        train_loss_grad = theano.grad(train_loss, params)
-
         get_train_function_grad = theano.function(input_vars + [ target_var ], train_loss_grad)
 
 with Timer("compiling test dataset loss function...", fouts) as t:
