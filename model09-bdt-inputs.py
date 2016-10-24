@@ -16,6 +16,12 @@ if isBarrel:
 else:
     ninputs = 13
 
+#----------------------------------------
+modelParams = dict(
+    maxGradientNorm = 3.3, # typically 0.99 percentile of the gradient norm before diverging
+    )
+
+#----------------------------------------
 
 def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
 
