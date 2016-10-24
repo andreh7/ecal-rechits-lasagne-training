@@ -19,10 +19,6 @@ sys.path.append(os.path.expanduser("~/torchio")); import torchio
 
 #----------------------------------------------------------------------
 
-outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
-
-#----------------------------------------------------------------------
-
 # taken from the Lasagne mnist example and modified
 def iterate_minibatches(targets, batchsize, shuffle = False):
     # generates list of indices and target values
@@ -153,6 +149,13 @@ parser.add_argument('--monitor-gradient',
                     help='write out additional information about the gradient to the results directory',
                     )
 
+parser.add_argument('--output-dir',
+                    dest = "outputDir",
+                    default = None,
+                    help='manually specify the output directory',
+                    )
+
+
 parser.add_argument('modelFile',
                     metavar = "modelFile.py",
                     type = str,
@@ -207,21 +210,24 @@ trainWeights = trainData['weights']
 testWeights  = testData['weights']
 
 #----------
-if not os.path.exists(outputDir):
-    os.makedirs(outputDir)
+if options.outputDir == None:
+    options.outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
+
+if not os.path.exists(options.outputDir):
+    os.makedirs(options.outputDir)
 
 #----------
 # write training file paths to result directory
 #----------
 
-fout = open(os.path.join(outputDir, "samples.txt"), "w")
+fout = open(os.path.join(options.outputDir, "samples.txt"), "w")
 for fname in dataDesc['train_files']:
     print >> fout, fname
 fout.close()
 
 #----------
 
-logfile = open(os.path.join(outputDir, "train.log"), "w")
+logfile = open(os.path.join(options.outputDir, "train.log"), "w")
 
 fouts = [ sys.stdout, logfile ]
 
@@ -232,7 +238,7 @@ for name, weights, label, output in (
     ('train', trainWeights, trainData['labels'], trainData['mvaid']),
     ('test',  testWeights,  testData['labels'],  testData['mvaid']),
     ):
-    np.savez(os.path.join(outputDir, "roc-data-%s-mva.npz" % name),
+    np.savez(os.path.join(options.outputDir, "roc-data-%s-mva.npz" % name),
              weight = weights,
              output = output,
              label = label)
@@ -255,14 +261,14 @@ for name, weights, label, output in (
 #----------
 # write graphviz output to results directory
 #----------
-networkGraphvizFname = os.path.join(outputDir, "model.gv")
+networkGraphvizFname = os.path.join(options.outputDir, "model.gv")
 dot.write(networkGraphvizFname, format = "raw")
 
 # runs dot externally but graphviz is not installed on the machines...
 if False:
     for suffix in ("svg",):
         draw_net.draw_to_file(lasagne.layers.get_all_layers(model), 
-                              os.path.join(outputDir, "model." + suffix))
+                              os.path.join(options.outputDir, "model." + suffix))
 
 #----------
 
@@ -368,7 +374,7 @@ while True:
         print >> fout, "----------------------------------------"
         print >> fout, "starting epoch %d at" % epoch, nowStr
         print >> fout, "----------------------------------------"
-        print >> fout, "output directory is", outputDir
+        print >> fout, "output directory is", options.outputDir
         fout.flush()
 
     #----------
@@ -432,7 +438,7 @@ while True:
     #----------
 
     if options.monitorGradient:
-        np.savez(os.path.join(outputDir, "gradient-magnitudes-%04d.npz" % epoch),
+        np.savez(os.path.join(options.outputDir, "gradient-magnitudes-%04d.npz" % epoch),
                  gradientMagnitudes = np.array(gradientMagnitudes),
                  )
 
@@ -484,7 +490,7 @@ while True:
             fout.flush()
 
         # write network output
-        np.savez(os.path.join(outputDir, "roc-data-%s-%04d.npz" % (name, epoch)),
+        np.savez(os.path.join(options.outputDir, "roc-data-%s-%04d.npz" % (name, epoch)),
                  weight = weights,
                  output = predictions,
                  label = labels)
@@ -494,7 +500,7 @@ while True:
     # saving the model weights
     #----------
 
-    np.savez(os.path.join(outputDir, 'model-%04d.npz' % epoch), 
+    np.savez(os.path.join(options.outputDir, 'model-%04d.npz' % epoch), 
              *lasagne.layers.get_all_param_values(model))
 
     #----------
