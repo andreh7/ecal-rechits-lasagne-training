@@ -3,69 +3,110 @@
 import re, glob, os, time, tempfile
 import numpy as np
 
+
+
 #----------------------------------------------------------------------
+import threading
 
-def doTrain(outputDir, varnames):
-    print "training with",len(varnames),",".join(varnames)
+class TrainingRunner(threading.Thread):
 
-    # create a temporary dataset file
-    text = open("dataset06-bdt-inputvars.py").read()
+    #----------------------------------------
 
-    dataSetFile = tempfile.NamedTemporaryFile(suffix = ".py", delete = False)
+    def __init__(self, outputDir, varnames):
 
-    dataSetFile.write(text)
-    
-    print >> dataSetFile,"selectedVariables = ",varnames
+        threading.Thread.__init__(self)
 
-    dataSetFile.flush()
+        self.outputDir = outputDir
 
-    cmdParts = [
-        "./run-gpu.sh",
-        "train01.py",
+        # make a copy to be safe
+        self.varnames = list(varnames)
 
-        # put the dataset specification file first 
-        # so that we know the selected variables
-        # at the time we build the model
-        dataSetFile.name,
-        "model09-bdt-inputs.py",
-        "--max-epochs 50",
-        "--output-dir " + outputDir,
-        ]
+    #----------------------------------------
 
-    cmd = " ".join(cmdParts)
+    def setGPU(self, gpuindex):
+        self.gpuindex = gpuindex
 
-    res = os.system(cmd)
+    #----------------------------------------
 
-    if res != 0:
-        print "failed to run",cmd
+    def setCompletionQueue(self, completionQueue):
+        self.completionQueue = completionQueue
 
-    # get the results
-    fnames = glob.glob(os.path.join(outputDir, "auc-test-*.txt"))
+    #----------------------------------------
 
-    epochToAUC = {}
+    def setIndex(self, taskIndex):
+        self.taskIndex = taskIndex
 
-    for fname in fnames:
-        mo = re.search("auc-test-(\d+).txt$", fname)
-        if not mo:
-            continue
-        
-        epoch = int(mo.group(1), 10)
+    #----------------------------------------
 
-        auc = eval(open(fname).read())
+    def run(self):
+        print "training with",len(self.varnames),",".join(self.varnames)
 
-        epochToAUC[epoch] = auc
+        # create a temporary dataset file
+        text = open("dataset06-bdt-inputvars.py").read()
 
-    # average over the last few iterations
+        dataSetFile = tempfile.NamedTemporaryFile(suffix = ".py", delete = False)
 
-    windowSize = 10
+        dataSetFile.write(text)
 
-    assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize)" % (len(epochToAUC), windowSize)
+        print >> dataSetFile,"selectedVariables = ",self.varnames
 
-    aucs = zip(*sorted(epochToAUC.items()))[1]
+        dataSetFile.flush()
 
-    print "aucs=",aucs
+        cmdParts = []
 
-    return dict(testAUC = np.mean(aucs[-windowSize:]))
+        if self.gpuindex == 0:
+            cmdParts.append("./run-gpu0.sh")
+        else:
+            cmdParts.append("./run-gpu.sh")
+
+        cmdParts.extend([
+            "train01.py",
+
+            # put the dataset specification file first 
+            # so that we know the selected variables
+            # at the time we build the model
+            dataSetFile.name,
+            "model09-bdt-inputs.py",
+            "--max-epochs 50",
+            "--output-dir " + self.outputDir,
+            ])
+
+        cmd = " ".join(cmdParts)
+
+        res = os.system(cmd)
+
+        if res != 0:
+            print "failed to run",cmd
+
+        # get the results
+        fnames = glob.glob(os.path.join(self.outputDir, "auc-test-*.txt"))
+
+        epochToAUC = {}
+
+        for fname in fnames:
+            mo = re.search("auc-test-(\d+).txt$", fname)
+            if not mo:
+                continue
+
+            epoch = int(mo.group(1), 10)
+
+            auc = eval(open(fname).read())
+
+            epochToAUC[epoch] = auc
+
+        # average over the last few iterations
+
+        windowSize = 10
+
+        assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize)" % (len(epochToAUC), windowSize)
+
+        aucs = zip(*sorted(epochToAUC.items()))[1]
+
+        print "aucs=",aucs
+
+        result = dict(testAUC = np.mean(aucs[-windowSize:]),
+                      varnames = self.varnames)
+        self.completionQueue.put((self,result))
 
 #----------------------------------------------------------------------
 # main
