@@ -149,6 +149,13 @@ parser.add_argument('--monitor-gradient',
                     help='write out additional information about the gradient to the results directory',
                     )
 
+parser.add_argument('--max-epochs',
+                    dest = "maxEpochs",
+                    default = None,
+                    type = int,
+                    help='stop after the given number of epochs',
+                    )
+
 parser.add_argument('--output-dir',
                     dest = "outputDir",
                     default = None,
@@ -367,6 +374,13 @@ print 'starting training at', time.asctime()
 epoch = 1
 while True:
 
+    #----------
+
+    if options.maxEpochs != None and epoch > options.maxEpochs:
+        break
+
+    #----------
+
     nowStr = time.strftime("%Y-%m-%d %H:%M:%S")
         
     for fout in fouts:
@@ -488,6 +502,11 @@ while True:
             print >> fout
             print >> fout, "%s AUC: %f" % (name, auc)
             fout.flush()
+
+        # write out online calculated auc to the result directory
+        fout = open(os.path.join(options.outputDir, "auc-%s-%04d.txt" % (name, epoch)), "w")
+        print >> fout, auc
+        fout.close()
 
         # write network output
         np.savez(os.path.join(options.outputDir, "roc-data-%s-%04d.npz" % (name, epoch)),
