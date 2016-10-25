@@ -34,12 +34,11 @@ dataDesc = dict(
     #  on the first epoch
     #  trsize, tesize = 0.5, 0.5
     
-    trsize = None, 
-    tesize = None,
+    trsize = None, tesize = None,
 
 
     # DEBUG
-    # trsize, tesize = 0.01, 0.01
+    # trsize = 0.01, tesize = 0.01,
     # trsize, tesize = 100, 100
 )   
 #----------------------------------------
