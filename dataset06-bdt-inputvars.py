@@ -123,6 +123,10 @@ def datasetLoadFunction(fnames, size, cuda):
             # therefore lead to NaNs after normalization)
             sortedVarnames = [ varname for varname in sortedVarnames if varname != 'esEffSigmaRR' ]
 
+            # filter on selected variables if specified
+            if selectedVariables != None:
+                sortedVarnames = [ varname for varname in sortedVarnames if varname in selectedVariables ]
+
             bdtVars = SimpleVariableConcatenatorToMatrix(groupVarName, sortedVarnames)
 
         bdtVars.add(loaded, thisSize)
@@ -145,3 +149,5 @@ def datasetLoadFunction(fnames, size, cuda):
     return data, totsize
 
 #----------------------------------------------------------------------
+
+selectedVariables = None

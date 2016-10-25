@@ -11,10 +11,15 @@ import theano.tensor as T
 
 isBarrel = True
 
-if isBarrel:
-    ninputs = 12
+if globals().has_key('selectedVariables'):
+    ninputs = len(selectedVariables)
 else:
-    ninputs = 13
+    if isBarrel:
+        ninputs = 12
+    else:
+        ninputs = 13
+
+
 
 #----------------------------------------
 modelParams = dict(
