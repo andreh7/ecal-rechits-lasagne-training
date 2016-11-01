@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
-import re, glob, os, time, tempfile
+import re, glob, os, time, tempfile, sys
 import numpy as np
 
 
+maxJobsPerGPU = {
+    0: 2,
+    1: 2,
+    }
 
 #----------------------------------------------------------------------
 import threading
@@ -109,6 +113,66 @@ class TrainingRunner(threading.Thread):
         self.completionQueue.put((self,result))
 
 #----------------------------------------------------------------------
+
+def runTasks(threads):
+    # runs the given list of tasks on the GPUs and returns
+    # when all have finished
+
+    assert len(threads) > 0
+
+    threads = list(threads)
+
+    import Queue as queue
+    completionQueue = queue.Queue()
+
+    # maps from GPU number to number of tasks running there
+    numThreadsRunning = {}
+
+    for gpu in maxJobsPerGPU.keys():
+        numThreadsRunning[gpu] = 0
+
+    #----------
+    taskIndex = 0 # for assigning results
+
+    completedTasks = 0
+
+    results = [ None ] * len(threads)
+
+    while completedTasks < len(results):
+
+        # (re)fill queues if necessary
+
+        for gpu in numThreadsRunning.keys():
+            while threads and numThreadsRunning[gpu] < maxJobsPerGPU[gpu]:
+                task = threads.pop(0)
+                task.setGPU(gpu)
+
+                task.setIndex(taskIndex)
+                taskIndex += 1
+
+                task.setCompletionQueue(completionQueue)
+
+                numThreadsRunning[gpu] += 1
+                print "STARTING ON GPU",gpu
+                task.start()
+
+        # wait for any task to complete
+        thread, thisResult = completionQueue.get()
+
+        # 'free' a slot on this gpu
+        numThreadsRunning[thread.gpuindex] -= 1
+
+        results[thread.taskIndex] = thisResult
+
+        completedTasks += 1
+
+    # end while non completed tasks
+        
+    return results
+
+
+
+#----------------------------------------------------------------------
 # main
 #----------------------------------------------------------------------
 
@@ -129,7 +193,7 @@ allVars = [
     ]
 
 # DEBUG
-# allVars = [ "s4", "scRawE" ]
+# allVars = [ "s4", "scRawE", "scEta", "covIEtaIEta" ]
 
 remainingVars = allVars[:]
 
@@ -152,12 +216,12 @@ jobIndex = [ 0, 0 ]
 thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
         
 # run the training
-thisResults = doTrain(thisOutputDir, allVars)
+thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars)])
 
-results.append((allVars, thisResults))
+results.extend(thisResults)
 
 # find the one with the highest AUC
-testAUC = thisResults['testAUC']
+testAUC = thisResults[0]['testAUC']
 
 print "test AUC of full network:",testAUC
 
@@ -166,12 +230,10 @@ print "test AUC of full network:",testAUC
 while len(remainingVars) >= 2:
     # eliminate one variable at a time
 
-    # AUC of test data
-    highestAUC = None
-    highestAUCvarIndex = None # variable when removed giving the highest AUC
-
     jobIndex[0] += 1
     jobIndex[1] = 0
+
+    tasks = []
 
     for excluded in range(len(remainingVars)):
 
@@ -181,24 +243,27 @@ while len(remainingVars) >= 2:
         
         thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
         
-        # run the training
-        thisResults = doTrain(thisOutputDir, thisVars)
-
-        results.append((thisVars, thisResults))
-
-        # find the one with the highest AUC
-        testAUC = thisResults['testAUC']
-
-        print "test AUC when removing",remainingVars[excluded],":",testAUC
-
-        if highestAUC == None or testAUC > highestAUC:
-            highestAUC = testAUC
-            highestAUCvarIndex = excluded
+        tasks.append(TrainingRunner(thisOutputDir, thisVars))
 
     # end of loop over variable to be excluded
 
+    # run the trainings
+    thisResults = runTasks(tasks)
+
+    for index, line in enumerate(thisResults):
+        print "test AUC when removing",remainingVars[index],"(%d variables remaining)" % (len(remainingVars) - 1),":",line['testAUC']
+
+    sys.stdout.flush()
+
+    results.extend(thisResults)
+
+    # find highest AUC of test data
+    # (and variable when removed giving the highest AUC)
+    highestAUC, highestAUCvarIndex = max([ (line['testAUC'], index) for index, line in enumerate(thisResults) ])
+
     # remove the variable leading to the highest AUC when removed
     print "removing variable",remainingVars[highestAUCvarIndex]
+    sys.stdout.flush()
 
     del remainingVars[highestAUCvarIndex]
 
