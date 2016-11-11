@@ -82,6 +82,15 @@ class TrainingRunner(threading.Thread):
         if res != 0:
             print "failed to run",cmd
 
+        #----------
+        # write the variable names to the output directory
+        #----------
+        fout = open(os.path.join(self.outputDir, "variables.py"), "w")
+        print >> fout, self.varnames
+        fout.close()
+
+        #----------
+
         # get the results
         fnames = glob.glob(os.path.join(self.outputDir, "auc-test-*.txt"))
 
