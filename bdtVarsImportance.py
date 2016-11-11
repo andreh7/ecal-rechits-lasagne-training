@@ -177,20 +177,21 @@ def runTasks(threads):
 #----------------------------------------------------------------------
 
 allVars = [
-    "s4",
+    # "s4",
     "scRawE",
-    "scEta",
-    "covIEtaIEta",
-    "rho",
+    # "scEta",
+    # "covIEtaIEta",
+    # "rho",
     "pfPhoIso03",
-    "phiWidth",
-    "covIEtaIPhi",
-    "etaWidth",
+    # "phiWidth",
+    # "covIEtaIPhi",
+    # "etaWidth",
     # "esEffSigmaRR", # endcap only
-    "r9",
-    "pfChgIso03",
+    # "r9",
+    # "pfChgIso03",
     "pfChgIso03worst",
     ]
+
 
 # DEBUG
 # allVars = [ "s4", "scRawE", "scEta", "covIEtaIEta" ]
