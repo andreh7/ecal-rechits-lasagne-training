@@ -10,6 +10,34 @@ maxJobsPerGPU = {
     }
 
 #----------------------------------------------------------------------
+
+def getMeanTestAUC(outputDir, windowSize = 10):
+    fnames = glob.glob(os.path.join(outputDir, "auc-test-*.txt"))
+
+    epochToAUC = {}
+
+    for fname in fnames:
+        mo = re.search("auc-test-(\d+).txt$", fname)
+        if not mo:
+            continue
+
+        epoch = int(mo.group(1), 10)
+
+        auc = eval(open(fname).read())
+
+        epochToAUC[epoch] = auc
+
+    # average over the last few iterations
+    assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize)" % (len(epochToAUC), windowSize)
+
+    aucs = zip(*sorted(epochToAUC.items()))[1]
+
+    # print "aucs=",aucs
+
+    return np.mean(aucs[-windowSize:])
+
+#----------------------------------------------------------------------
+
 import threading
 
 class TrainingRunner(threading.Thread):
@@ -90,34 +118,11 @@ class TrainingRunner(threading.Thread):
         fout.close()
 
         #----------
+        # get the results (testAUCs)
+        #----------
+        testAUC = getMeanTestAUC(outputDir, windowSize = 10)
 
-        # get the results
-        fnames = glob.glob(os.path.join(self.outputDir, "auc-test-*.txt"))
-
-        epochToAUC = {}
-
-        for fname in fnames:
-            mo = re.search("auc-test-(\d+).txt$", fname)
-            if not mo:
-                continue
-
-            epoch = int(mo.group(1), 10)
-
-            auc = eval(open(fname).read())
-
-            epochToAUC[epoch] = auc
-
-        # average over the last few iterations
-
-        windowSize = 10
-
-        assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize)" % (len(epochToAUC), windowSize)
-
-        aucs = zip(*sorted(epochToAUC.items()))[1]
-
-        print "aucs=",aucs
-
-        result = dict(testAUC = np.mean(aucs[-windowSize:]),
+        result = dict(testAUC = testAUC,
                       varnames = self.varnames)
         self.completionQueue.put((self,result))
 
