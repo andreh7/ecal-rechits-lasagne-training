@@ -142,18 +142,28 @@ def runTasks(threads):
 
         # (re)fill queues if necessary
 
-        for gpu in numThreadsRunning.keys():
-            while threads and numThreadsRunning[gpu] < maxJobsPerGPU[gpu]:
+        # distribute jobs equally over GPUs
+
+        # find how many jobs could be started for each GPU
+        while threads:
+            unusedSlots = [ 
+                (maxJobsPerGPU[gpu] - numThreadsRunning[gpu], gpu)
+                for gpu in sorted(numThreadsRunning.keys()) ]
+
+            maxUnusedSlots, maxUnusedGpu = max(unusedSlots)
+
+            if maxUnusedSlots > 0:
+                assert numThreadsRunning[maxUnusedGpu] < maxJobsPerGPU[maxUnusedGpu]
                 task = threads.pop(0)
-                task.setGPU(gpu)
+                task.setGPU(maxUnusedGpu)
 
                 task.setIndex(taskIndex)
                 taskIndex += 1
 
                 task.setCompletionQueue(completionQueue)
 
-                numThreadsRunning[gpu] += 1
-                print "STARTING ON GPU",gpu
+                numThreadsRunning[maxUnusedGpu] += 1
+                print "STARTING ON GPU",maxUnusedGpu
                 task.start()
 
         # wait for any task to complete
