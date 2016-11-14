@@ -183,6 +183,28 @@ def readFromTrainingDir(trainDir):
 
 
 #----------------------------------------------------------------------
+
+def printStepDataToCSV(stepData, os = sys.stdout):
+    # prints the information about the removed variables
+    # in .csv format
+
+    print >> os, ",".join([
+            "numRemainingVars",
+            "removedVar",
+            "auc"])
+
+    for line in stepData:
+        for removedVar, auc in line['aucWithVarRemoved'].items():
+            parts = [
+                line['numRemainingVars'],
+                removedVar,
+                auc
+                ]
+            print >> os, ",".join([ str(x) for x in parts ])
+
+
+
+#----------------------------------------------------------------------
 # main
 #----------------------------------------------------------------------
 
