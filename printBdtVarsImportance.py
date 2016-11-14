@@ -9,14 +9,37 @@ from pprint import pprint
 #----------------------------------------------------------------------
 
 def readFromLogFiles(logFnames):
+    # reconstruct the AUC values from the log files
+    # (for older runs where the detailed information was not written
+    # out into separate files)
+
     # look for messages like:
     #   test AUC when removing s4 (11 variables remaining) : 0.943595981598
-
 
     stepData = []
 
     thisStep = None
     prevNumRemainingVars = None
+
+    #----------
+
+    def completeStep(thisStep):
+        # adds additional information
+        stepData.append(thisStep)
+
+        # get the list of all variables
+        assert len(thisStep['aucWithVarRemoved']) == thisStep['numRemainingVars'] + 1, "numRemainingVars is %d, number of variable removed entries is %d" % (
+            len(thisStep['aucWithVarRemoved']), thisStep['numRemainingVars'])
+
+        # get the list of all variables in this step
+        thisStep['allVariables'] = thisStep['aucWithVarRemoved'].keys()
+
+        # best AUC after removal
+        thisStep['bestAUC'], varToRemove = max( [ (auc, var) for var, auc in thisStep['aucWithVarRemoved'].items() ] )
+
+        assert varToRemove == thisStep['removedVariable']
+
+    #----------
 
     for logFile in logFnames:
 
@@ -32,7 +55,7 @@ def readFromLogFiles(logFnames):
                 if numRemainingVars != prevNumRemainingVars:
                     assert prevNumRemainingVars == None or numRemainingVars + 1 == prevNumRemainingVars
                     if thisStep != None:
-                        stepData.append(thisStep)
+                        completeStep(thisStep)
 
                     thisStep = dict(
                         numRemainingVars = numRemainingVars,
@@ -58,7 +81,7 @@ def readFromLogFiles(logFnames):
     # end of loop over input files
 
     if thisStep != None:
-        stepData.append(thisStep)
+        completeStep(thisStep)
 
     return stepData
 
