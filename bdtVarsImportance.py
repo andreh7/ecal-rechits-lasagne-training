@@ -200,107 +200,109 @@ def runTasks(threads):
 # main
 #----------------------------------------------------------------------
 
-allVars = [
-    "s4",
-    "scRawE",
-    "scEta",
-    "covIEtaIEta",
-    "rho",
-    "pfPhoIso03",
-    "phiWidth",
-    "covIEtaIPhi",
-    "etaWidth",
-    # "esEffSigmaRR", # endcap only
-    "r9",
-    "pfChgIso03",
-    "pfChgIso03worst",
-    ]
+if __name__ == '__main__':
 
-# DEBUG
-# allVars = [ "s4", "scRawE", "scEta", "covIEtaIEta" ]
+    allVars = [
+        "s4",
+        "scRawE",
+        "scEta",
+        "covIEtaIEta",
+        "rho",
+        "pfPhoIso03",
+        "phiWidth",
+        "covIEtaIPhi",
+        "etaWidth",
+        # "esEffSigmaRR", # endcap only
+        "r9",
+        "pfChgIso03",
+        "pfChgIso03worst",
+        ]
 
-remainingVars = allVars[:]
+    # DEBUG
+    # allVars = [ "s4", "scRawE", "scEta", "covIEtaIEta" ]
 
-#----------
+    remainingVars = allVars[:]
 
-outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
+    #----------
 
-if not os.path.exists(outputDir):
-    os.makedirs(outputDir)
+    outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
 
-results = []
+    if not os.path.exists(outputDir):
+        os.makedirs(outputDir)
 
-jobIndex = [ 0, 0 ]
+    results = []
 
-#----------
-# run one training with all variables (no variable removed)
-# as a reference
-#----------
+    jobIndex = [ 0, 0 ]
 
-thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
-        
-# run the training
-thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars)])
+    #----------
+    # run one training with all variables (no variable removed)
+    # as a reference
+    #----------
 
-results.extend(thisResults)
+    thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
 
-# find the one with the highest AUC
-testAUC = thisResults[0]['testAUC']
-
-print "test AUC of full network:",testAUC
-
-#----------
-
-while len(remainingVars) >= 2:
-    # eliminate one variable at a time
-
-    jobIndex[0] += 1
-    jobIndex[1] = 0
-
-    tasks = []
-
-    for excluded in range(len(remainingVars)):
-
-        jobIndex[1] += 1
-
-        thisVars = remainingVars[:excluded] + remainingVars[excluded + 1:]
-        
-        thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
-        
-        tasks.append(TrainingRunner(thisOutputDir, thisVars))
-
-    # end of loop over variable to be excluded
-
-    # run the trainings
-    thisResults = runTasks(tasks)
-
-    for index, line in enumerate(thisResults):
-        print "test AUC when removing",remainingVars[index],"(%d variables remaining)" % (len(remainingVars) - 1),":",line['testAUC']
-
-    sys.stdout.flush()
+    # run the training
+    thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars)])
 
     results.extend(thisResults)
 
-    # find highest AUC of test data
-    # (and variable when removed giving the highest AUC)
-    highestAUC, highestAUCvarIndex = max([ (line['testAUC'], index) for index, line in enumerate(thisResults) ])
+    # find the one with the highest AUC
+    testAUC = thisResults[0]['testAUC']
 
-    # remove the variable leading to the highest AUC when removed
-    print "removing variable",remainingVars[highestAUCvarIndex]
-    sys.stdout.flush()
+    print "test AUC of full network:",testAUC
 
-    del remainingVars[highestAUCvarIndex]
+    #----------
 
-# end while variables remaining
+    while len(remainingVars) >= 2:
+        # eliminate one variable at a time
 
-print "last remaining variable",remainingVars
+        jobIndex[0] += 1
+        jobIndex[1] = 0
 
-import pickle
+        tasks = []
 
-resultFile = os.path.join(outputDir, "results.pkl")
-pickle.dump(results, open(resultFile,"w"))
+        for excluded in range(len(remainingVars)):
 
-print "wrote results to",resultFile
+            jobIndex[1] += 1
+
+            thisVars = remainingVars[:excluded] + remainingVars[excluded + 1:]
+
+            thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
+
+            tasks.append(TrainingRunner(thisOutputDir, thisVars))
+
+        # end of loop over variable to be excluded
+
+        # run the trainings
+        thisResults = runTasks(tasks)
+
+        for index, line in enumerate(thisResults):
+            print "test AUC when removing",remainingVars[index],"(%d variables remaining)" % (len(remainingVars) - 1),":",line['testAUC']
+
+        sys.stdout.flush()
+
+        results.extend(thisResults)
+
+        # find highest AUC of test data
+        # (and variable when removed giving the highest AUC)
+        highestAUC, highestAUCvarIndex = max([ (line['testAUC'], index) for index, line in enumerate(thisResults) ])
+
+        # remove the variable leading to the highest AUC when removed
+        print "removing variable",remainingVars[highestAUCvarIndex]
+        sys.stdout.flush()
+
+        del remainingVars[highestAUCvarIndex]
+
+    # end while variables remaining
+
+    print "last remaining variable",remainingVars
+
+    import pickle
+
+    resultFile = os.path.join(outputDir, "results.pkl")
+    pickle.dump(results, open(resultFile,"w"))
+
+    print "wrote results to",resultFile
 
 
         
