@@ -34,7 +34,7 @@ def getMeanTestAUC(outputDir, windowSize = 10):
 
     # print "aucs=",aucs
 
-    return np.mean(aucs[-windowSize:])
+    return float(np.mean(aucs[-windowSize:]))
 
 #----------------------------------------------------------------------
 
