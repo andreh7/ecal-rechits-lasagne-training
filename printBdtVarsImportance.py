@@ -179,7 +179,7 @@ def readFromTrainingDir(trainDir):
 
     # end of loop over indices
 
-    return stepData
+    return stepData, overallAUC
 
 
 #----------------------------------------------------------------------
@@ -214,51 +214,77 @@ if __name__ == '__main__':
 
     assert len(ARGV) >= 1
 
-    stepData = readFromLogFiles(ARGV)
+    # stepData = readFromLogFiles(ARGV)
+    stepData, fullNetworkAUC = readFromTrainingDir(ARGV[0])
 
-
-pprint(stepData)
-sys.exit(1)
+# pprint(stepData)
+# printStepDataToCSV(stepData)
+# sys.exit(1)
     
 print "order of removal:"
+print "%-30s: %.4f" % ('before', fullNetworkAUC)
 for step in stepData:
-    print step['removedVariable'],step['aucWithVarRemoved'][step['removedVariable']]
+    print "%-30s: %.4f" % (step['removedVariable'],step['aucWithVarRemoved'][step['removedVariable']])
 
 #----------
 # make plots
 #----------
 
 import pylab
-pylab.figure(facecolor='white')
+pylab.figure(facecolor='white', figsize = (20,12))
 
 xvalues = []
 yvalues = []
-labels  = []
 for step in stepData:
     for varname, auc in step['aucWithVarRemoved'].items():
-        labels.append(varname)
         xvalues.append(step['numRemainingVars'])
         yvalues.append(auc)
 
 pylab.plot(xvalues, yvalues, 'o')
 
 
-# add labels
-# from http://stackoverflow.com/a/5147430/288875
-for x, y, label in zip(xvalues, yvalues, labels):
-    pylab.annotate(
-        label, 
-        xy = (x, y), 
-        xytext = (-20, 20),
-        textcoords = 'offset points', 
-        ha = 'right', va = 'bottom',
-        # bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
-        arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0')
-        )
+if True:
+    # add labels
+    pylab.ylim((0.6, pylab.ylim()[1]))
+
+    ystart = 0.75
+    ylineHeight = 0.01
+
+    for step in stepData:
+        xpos = step['numRemainingVars']
+
+        ypos = ystart
+
+        for index, (auc, varname) in enumerate(sorted([ (auc, varname) for varname, auc in step['aucWithVarRemoved'].items() ],
+                                   reverse = False)):
+            # lowest AUC first
+
+            label = varname
+
+            if index == step['numRemainingVars']:
+                color = 'red'
+            else:
+                color = 'black'
+
+            pylab.text(
+                xpos,
+                ypos,
+                label, 
+                ha = 'center', va = 'top',
+                fontsize = 10,
+                color = color,
+                )
+
+            ypos += ylineHeight
+
 
 
 
 pylab.grid()
 pylab.xlabel('number of remaining input variables')
-pylab.ylabel('test auc')
+pylab.ylabel('test auc when removing variable')
+
+pylab.savefig("bdt-vars-importance.png")
+pylab.savefig("bdt-vars-importance.pdf")
+
 pylab.show()
