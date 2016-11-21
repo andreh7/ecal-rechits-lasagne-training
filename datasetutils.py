@@ -358,4 +358,103 @@ def makeTracksConcatenator(additionalVariables = []):
 
 
 #----------------------------------------------------------------------
+
+# 2D reweighting in pt and eta
+# standard BDT id reweights signal to have the same weight
+# as background
+
+class PtEtaReweighter:
+
+    def __fillHistogram(self, pt, eta):
+
+        print "bins=",[ np.linspace(self.ptBinning['xmin'],  self.ptBinning['xmax'],  self.ptBinning['nbins'] + 1),
+                                                            np.linspace(self.etaBinning['xmin'], self.etaBinning['xmax'], self.etaBinning['nbins'] + 1)
+                                                            ]
+        print "pt=",pt
+        print "eta=",eta
+
+        counts, ptEdges, etaEdges = np.histogram2d(pt, eta, 
+                                                   bins = [ np.linspace(self.ptBinning['xmin'],  self.ptBinning['xmax'],  self.ptBinning['nbins'] + 1),
+                                                            np.linspace(self.etaBinning['xmin'], self.etaBinning['xmax'], self.etaBinning['nbins'] + 1)
+                                                            ])
+        
+        return counts
+
+
+    def __init__(self, pt, eta, isSignal, isBarrel):
+
+        # 4 GeV bins from 0 to 120
+        self.ptBinning = dict(nbins = 30, xmin = 0, xmax = 120)
+
+        if isBarrel:
+            self.etaBinning = dict(nbins = 32, xmin = 0, xmax = 1.6)
+        else:
+            self.etaBinning = dict(nbins = 20, xmin = 1.5, xmax = 2.5)
+        
+        eta = numpy.abs(eta)
+
+        #----------
+        # separate signal and background
+        #----------
+        signalPt  = pt[isSignal == 1]
+        signalEta = eta[isSignal == 1]
+
+        backgroundPt  = pt[isSignal == 0]
+        backgroundEta = eta[isSignal == 0]
+
+        #----------
+
+        # build histograms
+        
+        self.sigHistogram = self.__fillHistogram(signalPt, signalEta)
+        self.bgHistogram  = self.__fillHistogram(backgroundPt, backgroundEta)
+
+        # calculate ratio histogram to reweight signal to background
+        self.ratioHistogram = self.bgHistogram / self.sigHistogram
+
+        # do not reweight events where the background is zero
+        # otherwise, if we get NaNs, this will in the end
+        # make all weights NaNs if we normalize the average
+        # weight to one
+        self.ratioHistogram[self.bgHistogram == 0] = 1.
+
+    #----------------------------------------
+
+
+    def __calculateBinIndices(self, binning, values):
+        
+        binWidth = (binning['xmax'] - binning['xmin']) / binning['nbins']
+
+        binIndices = (values - binning['xmin']) / binWidth
+
+        # round downwards
+        binIndices = binIndices.astype('int32')
+        
+        binIndices = binIndices.clip(0, binning['nbins'] - 1)
+
+        return binIndices
+
+    #----------------------------------------
+
+    def getSignalScaleFactors(self, ptValues, etaValues, isSignal):
+        # returns 1 for background entries
+
+        # calculate bin indices
+        # (ignore rounding errors)
+
+        etaValues = numpy.abs(etaValues)
+
+        ptBins = self.__calculateBinIndices(self.ptBinning, ptValues)
+        etaBins = self.__calculateBinIndices(self.etaBinning, etaValues)
+
+        factors = self.ratioHistogram[ptBins, etaBins]
+
+        # do not reweight background
+        factors[isSignal != 1] = 1.
+
+        return factors
+
+
+
+#----------------------------------------------------------------------
                               
