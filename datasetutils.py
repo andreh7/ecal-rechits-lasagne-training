@@ -91,10 +91,13 @@ class SimpleVariableConcatenator:
     # concatenator for 'simple' variables which are just 1D float tensors
     # keeping individual numpy 1D arrays per variable in a dict
 
-    def __init__(self, varnames):
+    def __init__(self, varnames, accessorFuncs = None):
         # note that varnames is treated as sorted
         # so that we get reproducible results
         # (i.e. the order is important when mapping to the input neurons)
+        # 
+        # @param accessorFuncs: if not None, should be a dict mapping from
+        #                       the variable name to a method returning the data given the input vector
 
         self.data = None
         self.totsize = 0
@@ -104,6 +107,19 @@ class SimpleVariableConcatenator:
         self.varnames = varnames
 
         self.data = None
+        self.accessorFuncs = accessorFuncs
+
+    #----------------------------------------
+
+    def __getVar(self, loaded, varname):
+        if self.accessorFuncs == None or not self.accessorFuncs.has_key(varname):
+            # plain access
+            return loaded[varname]
+
+        else:
+            func = self.accessorFuncs[varname]
+
+            return func(loaded)
 
     #----------------------------------------
 
@@ -117,14 +133,17 @@ class SimpleVariableConcatenator:
             self.data = {}
             for varname in self.varnames:
                 # store additional variables by name, not by index
-                self.data[varname] = loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1))
+                loadedVar = self.__getVar(loaded, varname)
+
+                self.data[varname] = loadedVar.asndarray()[:thisSize].astype('float32').reshape((-1,1))
         else:
             #----------
             # append
             #----------
             # concatenate auxiliary variables
             for varname in self.varnames:
-                self.data[varname] = np.concatenate([ self.data[varname], loaded[varname].asndarray()[:thisSize].astype('float32').reshape((-1,1)) ])
+                loadedVar = self.__getVar(loaded, varname)
+                self.data[varname] = np.concatenate([ self.data[varname], loadedVar.asndarray()[:thisSize].astype('float32').reshape((-1,1)) ])
 
     #----------------------------------------
 
