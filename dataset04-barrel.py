@@ -37,24 +37,6 @@ dataDesc = dict(
     # DEBUG
     # trsize, tesize = 0.01, 0.01
 )
-#----------------------------------------
-
-# this is called after loading and combining the given
-# input files
-def postLoadDataset(label, dataset):
-  # normalize in place
-
-  myutils.normalizeVector(dataset.chgIsoWrtChosenVtx)
-  myutils.normalizeVector(dataset.chgIsoWrtWorstVtx)
-
-  # DEBUG: just set these values to zero -> we should have the same performance as for the previous training
-  # dataset.chgIsoWrtChosenVtx:zero()
-  # dataset.chgIsoWrtWorstVtx:zero()
-
-  # checking mean and stddev after normalization
-
-  print label, "chgIsoWrtChosenVtx:", dataset['chgIsoWrtChosenVtx'].mean(), dataset.chgIsoWrtChosenVtx.std()
-  print label, "chgIsoWrtWorstVtx:",  dataset['chgIsoWrtWorstVtx'].mean(),  dataset.chgIsoWrtWorstVtx.std() 
 
 #----------------------------------------------------------------------
 
