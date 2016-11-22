@@ -85,6 +85,17 @@ class CommonDataConcatenator:
 
         self.data['weights'] *= (self.data['weights'].shape[0] / float(self.data['weights'].sum()))
 
+    #----------------------------------------
+
+    def normalizeSignalToBackgroundWeights(self):
+        # normalize sum of signal weights to be equal to sum of background weights
+        sumSig = self.data['weights'][self.data['labels'] == 1].sum()
+        sumBg = self.data['weights'][self.data['labels'] != 1].sum()
+
+        self.data['weights'][self.data['labels'] == 1] *= sumBg / float(sumSig)
+
+    #----------------------------------------
+
 #----------------------------------------------------------------------
 
 class SimpleVariableConcatenator:
