@@ -205,9 +205,9 @@ print "loading data"
 
 cuda = True
 with Timer("loading training dataset...") as t:
-    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], cuda)
+    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], cuda, True)
 with Timer("loading test dataset...") as t:
-    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda)
+    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, False)
 
 # convert labels from -1..+1 to 0..1 for cross-entropy loss
 # must clone to assign
