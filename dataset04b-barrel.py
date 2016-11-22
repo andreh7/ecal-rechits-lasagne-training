@@ -116,6 +116,10 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
                                                            ptEta.data['eta'][:,0],
                                                            commonData.data['labels'])
       
+      # keep original weights
+      commonData.data['weightsBeforePtEtaReweighting'] = np.copy(commonData.data['weights'])
+
+
       commonData.data['weights'] *= scaleFactors
 
     #----------
