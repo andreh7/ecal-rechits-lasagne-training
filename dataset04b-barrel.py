@@ -121,6 +121,9 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
     #----------
     # normalize event weights
     #----------
+    commonData.normalizeSignalToBackgroundWeights()
+
+    # make average weight equal to one over the sample
     commonData.normalizeWeights()
 
     #----------
@@ -157,6 +160,8 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
                bgHistogram = ptEtaReweighter.bgHistogram,
                )
       print "wrote pt/eta reweighting data to", outputName
+
+      # sys.exit(1)
 
 
     assert totsize == data['rechits']['numRecHits'].shape[0]
