@@ -402,7 +402,7 @@ class PtEtaReweighter:
         else:
             self.etaBinning = dict(nbins = 20, xmin = 1.5, xmax = 2.5)
         
-        eta = numpy.abs(eta)
+        eta = np.abs(eta)
 
         #----------
         # separate signal and background
@@ -453,7 +453,7 @@ class PtEtaReweighter:
         # calculate bin indices
         # (ignore rounding errors)
 
-        etaValues = numpy.abs(etaValues)
+        etaValues = np.abs(etaValues)
 
         ptBins = self.__calculateBinIndices(self.ptBinning, ptValues)
         etaBins = self.__calculateBinIndices(self.etaBinning, etaValues)
