@@ -215,6 +215,7 @@ with Timer("loading test dataset...") as t:
 # TODO: normalize these to same weight for positive and negative samples
 trainWeights = trainData['weights']
 testWeights  = testData['weights']
+trainWeightsBeforePtEtaReweighting = trainData['weightsBeforePtEtaReweighting']
 
 #----------
 if options.outputDir == None:
@@ -241,14 +242,26 @@ fouts = [ sys.stdout, logfile ]
 #----------
 # write out BDT/MVA id labels (for performance comparison)
 #----------
-for name, weights, label, output in (
-    ('train', trainWeights, trainData['labels'], trainData['mvaid']),
-    ('test',  testWeights,  testData['labels'],  testData['mvaid']),
+for name, output in (
+    ('train', trainData['mvaid']),
+    ('test',  testData['mvaid']),
     ):
     np.savez(os.path.join(options.outputDir, "roc-data-%s-mva.npz" % name),
-             weight = weights,
+             # these are the BDT outputs
              output = output,
-             label = label)
+             )
+
+# save weights (just once, we assume the ordering of the events is always the same)
+np.savez(os.path.join(options.outputDir, "weights-labels-train.npz"),
+         weight = trainWeights,             
+         weightBeforePtEtaReweighting = trainWeightsBeforePtEtaReweighting,
+         label = trainData['labels'],
+         )
+np.savez(os.path.join(options.outputDir, "weights-labels-test.npz"),
+         weight = testWeights,             
+         label = testData['labels'],
+         )
+
 
 #----------
 
@@ -510,9 +523,8 @@ while True:
 
         # write network output
         np.savez(os.path.join(options.outputDir, "roc-data-%s-%04d.npz" % (name, epoch)),
-                 weight = weights,
                  output = predictions,
-                 label = labels)
+                 )
 
 
     #----------
