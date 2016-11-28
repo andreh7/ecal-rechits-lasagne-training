@@ -340,3 +340,107 @@ def make2DTracksHistogramModel(input_var):
 
 #----------------------------------------------------------------------
 
+class TrackVarsMaker:
+    # returns variables of the n highest pt tracks
+
+    def __init__(self, 
+                 numTracks
+                 ):
+
+        # number of tracks to keep for each event
+        self.numTracks = numTracks
+
+        # functions which return the value to be
+        # stored, given the dataset and an entry index
+        # 
+        # note that these are called for each of the highest pt rel tracks
+        self.extractionFunctions = []
+        self.varnamePrefixes = []
+
+        # rel pt of tracks
+        self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['relpt'][index])
+        self.varnamePrefixes.append("relpt")
+
+        # dz of track vertex
+        self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['vtxDz'][index])
+        self.varnamePrefixes.append("vtxDz")
+
+        # deta/dphi of track
+        self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['detaAtVertex'][index])
+        self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['dphiAtVertex'][index])
+        self.varnamePrefixes.append("detaAtVertex")
+        self.varnamePrefixes.append("dphiAtVertex")
+
+        #----------
+        assert len(self.varnamePrefixes) == len(self.extractionFunctions)
+
+        # expand variable names
+        self.varnames = []
+        for i in range(self.numTracks):
+            for prefix in self.varnamePrefixes:
+                self.varnames.append(prefix + "%02d" % i)
+        
+        self.numVars = self.numTracks * len(self.extractionFunctions)
+        assert self.numVars == len(self.varnames)
+
+    #----------------------------------------
+
+    def make(self, dataset, rowIndices):
+        # fills trac variables for each event
+        # 
+        # @param rowIndices is the indices of the rows (events)
+        
+
+        # note that we need to 'unpack' the tracks
+
+        batchSize = len(rowIndices)
+
+        # first index:  event index (for minibatch)
+        # second index: variable index
+        retval = np.ones((batchSize, 
+                           self.numVars
+                           ), dtype = 'float32') * -9999.
+
+        varIndex = 0
+
+        # loop over events
+        for eventIndex,rowIndex in enumerate(rowIndices):
+
+            indexOffset = dataset['tracks']['firstIndex'][rowIndex]
+
+            # get indices in track array for this event
+            trackIndices = [ indexOffset + trackIndex 
+                             for trackIndex in range(dataset['tracks']['numTracks'][rowIndex]) ]
+
+            # sort track indices (within an event) by decreasing relpt
+            trackIndices.sort(key = lambda index: dataset['tracks']['relpt'][index], 
+                              reverse = True)
+
+            #----------
+            # unpack the sparse data
+            #----------
+            varIndex = 0
+
+            # loop over all tracks
+            for ind, trackIndex in enumerate(trackIndices):
+
+                # ind is the number of the track within the event/photon
+                # (0 is the highest ptrel etc.)
+                # 
+                # trackIndex is the pointer into the array of the input data
+
+                if ind >= self.numTracks:
+                    # more tracks than we want to keep
+                    break
+
+                # extract track information for each variable
+                for varfunc in self.extractionFunctions: 
+                    retval[eventIndex, varIndex] = varfunc(dataset, trackIndex)
+
+            # end of loop over all tracks of event
+
+        # end of loop over events in this minibatch
+
+        return retval
+
+    #----------------------------------------
