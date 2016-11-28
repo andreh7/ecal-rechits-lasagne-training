@@ -203,9 +203,11 @@ if options.printModelOnlyOutput != None:
 #----------
 print "loading data"
 
+doPtEtaReweighting = globals().get("doPtEtaReweighting", False)
+
 cuda = True
 with Timer("loading training dataset...") as t:
-    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], cuda, True)
+    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], cuda, doPtEtaReweighting)
 with Timer("loading test dataset...") as t:
     testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, False)
 
@@ -215,7 +217,11 @@ with Timer("loading test dataset...") as t:
 # TODO: normalize these to same weight for positive and negative samples
 trainWeights = trainData['weights']
 testWeights  = testData['weights']
-trainWeightsBeforePtEtaReweighting = trainData['weightsBeforePtEtaReweighting']
+
+if doPtEtaReweighting:
+    trainWeightsBeforePtEtaReweighting = trainData['weightsBeforePtEtaReweighting']
+else:
+    trainWeightsBeforePtEtaReweighting = None
 
 #----------
 if options.outputDir == None:
