@@ -164,29 +164,61 @@ class SimpleVariableConcatenator:
 
     #----------------------------------------
 
-    def normalize(self):
+    def normalize(self, selectedVars = None, excludedVars = None):
         # normalize each variable individually to zero mean
         # and unit variance 
+        # 
+        # these are interpreted as fnmatch patterns
+
+        import fnmatch
+
+        #----------
+
+        def anyMatch(patterns, varname):
+            # returns True if any of the given patterns
+            # matches varname
+            for pattern in patterns:
+                if fnmatch.fnmatch(varname, pattern):
+                    return True
+
+            return False
+        #----------
+            
+
+        if selectedVars != None and excludedVars != None:
+            raise Exception("can't specify selectedVars and excludedVars at the same time")
+
+        if selectedVars == None and excludedVars == None:
+            # take all variables
+            selectedVars = set(self.varnames)
+        elif excludedVars != None:
+
+            # expand patterns
+            selectedVars = [ varname for varname in self.varnames if not anyMatch(excludedVars, varname) ]
+        else:
+            # only selectedVars is not None, expand patterns
+            selectedVars = [ varname for varname in self.varnames if anyMatch(excludedVars, varname) ]            
+
+        # keep order
+        selectedVars = [ varname for varname in self.varnames if varname in selectedVars ]
 
         # if a variable has zero variance to start with, 
         # do not normalize the variance but this also
         # implies that all values are the same, i.e. the 
         # variable does not contain any information
-        for varname in self.varnames:
+        for varname in selectedVars:
             self.data[varname] -= self.data[varname].mean()
 
-        print "stddevs before:", [ self.data[varname].std() for varname in self.varnames ]
+        print "stddevs before:", [ self.data[varname].std() for varname in selectedVars ]
 
-        for varname in self.varnames:
+        for varname in selectedVars:
             stddev = self.data[varname].std()
             if stddev > 0:
                 self.data[varname] /= stddev
             else:
                 print "WARNING: variable",varname,"has zero standard deviation"
 
-        print "stddevs after:", [ self.data[varname].std() for varname in self.varnames ]
-
-
+        print "stddevs after:", [ self.data[varname].std() for varname in selectedVars ]
 
 #----------------------------------------------------------------------
 
