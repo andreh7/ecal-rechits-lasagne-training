@@ -403,7 +403,7 @@ class TrackVarsMaker:
         # second index: variable index
         retval = np.ones((batchSize, 
                            self.numVars
-                           ), dtype = 'float32') * -9999.
+                           ), dtype = 'float32') * -99.
 
         varIndex = 0
 
