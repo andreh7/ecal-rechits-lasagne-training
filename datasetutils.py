@@ -96,6 +96,12 @@ class CommonDataConcatenator:
 
     #----------------------------------------
 
+    def getNumEntries(self):
+        # returns the number of entries (samples) 
+        return len(self.data['labels'])
+
+    #----------------------------------------
+
 #----------------------------------------------------------------------
 
 class SimpleVariableConcatenator:
