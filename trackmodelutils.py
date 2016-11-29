@@ -440,6 +440,7 @@ class TrackVarsMaker:
                 # extract track information for each variable
                 for varfunc in self.extractionFunctions: 
                     retval[eventIndex, varIndex] = varfunc(dataset, trackIndex)
+                    varIndex += 1
 
             # end of loop over all tracks of event
 
