@@ -385,14 +385,18 @@ class TrackVarsMaker:
 
     #----------------------------------------
 
-    def make(self, dataset, rowIndices):
-        # fills trac variables for each event
+    def makeVars(self, dataset, normalizeVars = []):
+        # fills track variables for each event
         # 
         # @param rowIndices is the indices of the rows (events)
-        
+        #
+        # @param normalizeVars fnmatch expressions of variables to be normalized
+        # 
+
+        # take the entire dataset
+        rowIndices = range(len(dataset['tracks']['numTracks']))
 
         # note that we need to 'unpack' the tracks
-
         batchSize = len(rowIndices)
 
         # first index:  event index (for minibatch)
@@ -440,6 +444,29 @@ class TrackVarsMaker:
             # end of loop over all tracks of event
 
         # end of loop over events in this minibatch
+
+        #----------
+        # normalize variables if specified
+        #----------
+
+        for varIndex, varname in enumerate(self.varnames):
+            # check if any of the specified patterns
+            # matches
+            import fnmatch
+            matches = False
+            for pattern in normalizeVars:
+                if fnmatch.fnmatch(varname, pattern):
+                    matches = True
+                    break
+
+            if matches:
+                print "normalizing track variable",varname,"range before minimization: %f..%f" % (min(retval[:, varIndex]), max(retval[:, varIndex]))
+                retval[:,varIndex] -= np.mean(retval[:,varIndex])
+                stddev = retval[:,varIndex].std()
+                if stddev > 0:
+                    retval[:,varIndex] /= stddev
+                else:
+                    print "WARNING: variable",varname,"has zero standard deviation"
 
         return retval
 
