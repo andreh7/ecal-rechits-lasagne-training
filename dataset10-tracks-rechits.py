@@ -40,7 +40,16 @@ dataDesc = dict(
     # trsize = 0.01, tesize = 0.01,
 )
 
+# number of tracks to consider 
+numTracksToInclude = 5
+
 #----------------------------------------------------------------------
+
+import trackmodelutils
+# make this a global variable for the moment so we can use
+# it also in the model building file
+tracksVarMaker = trackmodelutils.TrackVarsMaker(numTracksToInclude)
+
 
 def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
 
@@ -135,15 +144,22 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
     data['rechits'] = recHits.data
 
     #----------
-    # normalize track variables to zero mean and unit variance
+    # convert raw (arbitrary size) track information
+    # to variables corresponding to first n tracks
+    # in the event
+    #
+    # we do this here so that we can easily normalize
+    # the variables
     #----------
-    # commented out for the moment
-    # trackVars.normalize()
+    
+    sortedTrackVars = tracksVarMaker.makeVars(dataset = dict(tracks = trackVars.data),
+                                              normalizeVars = [ "relpt*",
+                                                                "vtxDz*"])
 
     #----------
     # add track variables
     #----------
-    data['tracks'] = trackVars.data
+    data['sortedTracks'] = sortedTrackVars
 
     #----------
     # cross check for pt/eta reweighting, dump some variables

@@ -33,8 +33,6 @@ batchSize = 32
 # data transfers to the GPU)
 batchesPerSuperBatch = math.floor(3345197 / batchSize)
 
-numTracksToInclude = 5
-
 #----------------------------------------------------------------------
 # function to prepare input data samples
 #----------------------------------------------------------------------
@@ -77,8 +75,6 @@ unpacker = rechitmodelutils.RecHitsUnpacker(
     # recHitsYoffset = -18 + 12,
     )
 
-# make a consistent binning for the tracks
-trackVarsMaker = trackmodelutils.TrackVarsMaker(numTracksToInclude)
 
 def makeInput(dataset, rowIndices, inputDataIsSparse):
     assert inputDataIsSparse,"non-sparse input data is not supported"
