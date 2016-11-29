@@ -82,7 +82,7 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
     return [ 
         # unpack rechits
         unpacker.unpack(dataset, rowIndices),
-        trackVarsMaker.make(dataset, rowIndices)
+        dataset['sortedTracks'][rowIndices,:],
         ]
 
 #----------------------------------------------------------------------
@@ -101,7 +101,7 @@ def makeModel():
                                    name = 'rechits',
                                    )
 
-    inputVarsTracks = InputLayer(shape=(None, trackVarsMaker.numVars),
+    inputVarsTracks = InputLayer(shape=(None, tracksVarMaker.numVars),
                                  input_var = inputVarTracks,
                                  name = 'trackVars',
                                  )
