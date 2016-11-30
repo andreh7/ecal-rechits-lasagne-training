@@ -6,14 +6,14 @@ datasetDir = '../data/2016-11-18-photon-et'
 isBarrel = True
 
 dataDesc = dict(
-    train_files = [ # datasetDir + '/GJet20to40_rechits-barrel-train.t7',
+    train_files = [ datasetDir + '/GJet20to40_rechits-barrel-train.t7',
                     datasetDir + '/GJet20toInf_rechits-barrel-train.t7',
-                    # datasetDir + '/GJet40toInf_rechits-barrel-train.t7',
+                    datasetDir + '/GJet40toInf_rechits-barrel-train.t7',
                     ],
 
-    test_files  = [ # datasetDir + '/GJet20to40_rechits-barrel-test.t7',
+    test_files  = [ datasetDir + '/GJet20to40_rechits-barrel-test.t7',
                     datasetDir + '/GJet20toInf_rechits-barrel-test.t7',
-                    # datasetDir + '/GJet40toInf_rechits-barrel-test.t7'
+                    datasetDir + '/GJet40toInf_rechits-barrel-test.t7'
                     ],
 
     inputDataIsSparse = True,
