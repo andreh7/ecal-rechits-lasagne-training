@@ -154,7 +154,11 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
     
     sortedTrackVars = tracksVarMaker.makeVars(dataset = dict(tracks = trackVars.data),
                                               normalizeVars = [ "relpt*",
-                                                                "vtxDz*"])
+                                                                "vtxDz*",
+                                                                "charge*",
+                                                                "detaAtVertex*",
+                                                                "dphiAtVertex*",
+                                                                ])
 
     #----------
     # add track variables
