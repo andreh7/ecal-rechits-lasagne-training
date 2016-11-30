@@ -182,6 +182,7 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
                scaleFactors = scaleFactors,
                sigHistogram = ptEtaReweighter.sigHistogram,
                bgHistogram = ptEtaReweighter.bgHistogram,
+               ratioHistogram = ptEtaReweighter.ratioHistogram,
                )
       print "wrote pt/eta reweighting data to", outputName
 
