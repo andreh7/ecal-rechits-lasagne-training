@@ -472,6 +472,17 @@ class PtEtaReweighter:
         # unchanged)
         self.ratioHistogram[np.isinf(self.ratioHistogram)] = 1.
 
+        # find NaNs in the ratio histogram: even a single
+        # NaN will spoil all event weights because
+        # the sum of weights (which is then used
+        # to normalize the event weights) is then NaN
+        
+        if np.isnan(self.ratioHistogram).any():
+            raise Exception("2D pt/eta reweighting has NaN values")
+
+        if np.isinf(self.ratioHistogram).any():
+            raise Exception("2D pt/eta reweighting has INF values")
+
     #----------------------------------------
 
 
