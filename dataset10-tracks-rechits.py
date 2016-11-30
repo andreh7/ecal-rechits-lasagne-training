@@ -40,6 +40,8 @@ dataDesc = dict(
     # trsize = 0.01, tesize = 0.01,
 )
 
+doPtEtaReweighting = False
+
 # number of tracks to consider 
 numTracksToInclude = 5
 
