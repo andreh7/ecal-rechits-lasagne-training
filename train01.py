@@ -230,6 +230,14 @@ if options.outputDir == None:
 if not os.path.exists(options.outputDir):
     os.makedirs(options.outputDir)
 
+# try to set the process name
+try:
+    import procname
+    procname.setprocname("train " + 
+                         os.path.basename(options.outputDir.rstrip('/')))
+except ImportError, ex:
+    pass
+
 #----------
 # write training file paths to result directory
 #----------
