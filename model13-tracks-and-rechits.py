@@ -83,6 +83,7 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
         # unpack rechits
         unpacker.unpack(dataset, rowIndices),
         dataset['sortedTracks'][rowIndices,:],
+        dataset['numTracks'],
         ]
 
 #----------------------------------------------------------------------
@@ -94,6 +95,7 @@ def makeModel():
     #
     inputVarRecHits        = T.tensor4('rechits')
     inputVarTracks         = T.matrix('trackVars')
+    inputVarNumTracks      = T.matrix('numTracks')
 
     # 2D convolution layers require a dimension for the input channels
     inputLayerRecHits = InputLayer(shape=(None, 1 , width, height),
@@ -106,6 +108,11 @@ def makeModel():
                                  name = 'trackVars',
                                  )
 
+    inputAuxVars = InputLayer(shape=(None, 1),
+                                 input_var = inputVarNumTracks,
+                                 name = 'numTracks',
+                                 )
+
     #----------
     recHitsModel = rechitmodelutils.makeRecHitsModel(inputLayerRecHits, nstates[:2], filtsize, poolsize)
 
@@ -114,7 +121,7 @@ def makeModel():
     # rechits with track isolation variables
     #----------
 
-    network = ConcatLayer([ recHitsModel, inputVarsTracks ],
+    network = ConcatLayer([ recHitsModel, inputVarsTracks, inputAuxVars ],
                           axis = 1)
 
     network = DenseLayer(
@@ -133,6 +140,6 @@ def makeModel():
         W = GlorotUniform(),
         )
 
-    return [ inputVarRecHits, inputVarTracks ], network
+    return [ inputVarRecHits, inputVarTracks, inputVarNumTracks ], network
 
 #----------------------------------------------------------------------
