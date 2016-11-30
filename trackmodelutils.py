@@ -365,6 +365,10 @@ class TrackVarsMaker:
         self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['vtxDz'][index])
         self.varnamePrefixes.append("vtxDz")
 
+        # charge
+        self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['charge'][index])
+        self.varnamePrefixes.append("charge")
+
         # deta/dphi of track
         self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['detaAtVertex'][index])
         self.extractionFunctions.append(lambda dataset, index: dataset['tracks']['dphiAtVertex'][index])
