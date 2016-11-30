@@ -467,6 +467,11 @@ class PtEtaReweighter:
         # weight to one
         self.ratioHistogram[self.bgHistogram == 0] = 1.
 
+        # avoid INF values (leading to NaNs later on)
+        # (just leave the corresponding signal weights 
+        # unchanged)
+        self.ratioHistogram[np.isinf(self.ratioHistogram)] = 1.
+
     #----------------------------------------
 
 
