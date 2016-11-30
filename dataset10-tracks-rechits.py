@@ -165,6 +165,10 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
     #----------
     data['sortedTracks'] = sortedTrackVars
 
+    data['numTracks'] = np.atleast_2d(
+        trackVars.data['numTracks'].astype('float32')
+        ).T
+
     #----------
     # cross check for pt/eta reweighting, dump some variables
     #----------
