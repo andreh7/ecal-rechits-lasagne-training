@@ -115,9 +115,14 @@ doPtEtaReweighting = globals().get("doPtEtaReweighting", False)
 
 cuda = True
 with Timer("loading training dataset...") as t:
-    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], cuda, doPtEtaReweighting)
+    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], 
+                                            cuda = cuda, 
+                                            isTraining = True,
+                                            reweightPtEta = doPtEtaReweighting)
 with Timer("loading test dataset...") as t:
-    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, False)
+    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
+                                            isTraining = False,
+                                            reweightPtEta = False)
 
 # convert labels from -1..+1 to 0..1 for cross-entropy loss
 # must clone to assign
