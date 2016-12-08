@@ -261,6 +261,21 @@ with Timer("unpacking test dataset...", fouts) as t:
     testInput  = makeInput(testData, range(len(testData['weights'])), inputDataIsSparse = True)
     testTarget = makeTarget(testData, range(len(testData['weights'])))
 
+#----------
+# save weights and target values (just once, we assume the ordering of the events is always the same)
+#----------
+np.savez(os.path.join(options.outputDir, "weights-labels-train.npz"),
+         weight = trainWeights,             
+         # weightBeforePtEtaReweighting = trainWeightsBeforePtEtaReweighting,
+         target = trainTarget
+         )
+np.savez(os.path.join(options.outputDir, "weights-labels-test.npz"),
+         weight = testWeights,             
+         target = testTarget
+         )
+
+#----------
+
 print "params=",params
 print
 print 'starting training at', time.asctime()
