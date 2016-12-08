@@ -122,8 +122,6 @@ with Timer("loading training dataset...") as t:
                                             reweightPtEta = False
                                             )
 
-    print "KKKPP",trainData['otherVars']['chgIsoWrtChosenVtx'].shape
-
 with Timer("loading test dataset...") as t:
     testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], 
                                             cuda = cuda,
@@ -274,10 +272,8 @@ with Timer("compiling network output function...", fouts) as t:
 #
 # TODO: can we use slicing instead of unpacking these again for the minibatches ?
 with Timer("unpacking training dataset...", fouts) as t:
-    print "KKK2",trainData['otherVars']['chgIsoWrtChosenVtx'].shape
     trainInput = makeInput(trainData, range(len(trainData['weights'])), inputDataIsSparse = True)
     assert len(trainInput) == len(input_vars), "number of sets of values (%d) is not equal to number of input variables (%d)" % (len(trainInput), len(input_vars))
-    print "KKK3",trainData['otherVars']['chgIsoWrtChosenVtx'].shape
 
     trainTarget = makeTarget(trainData, range(len(trainData['weights'])))
 
