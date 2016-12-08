@@ -162,29 +162,6 @@ logfile = open(os.path.join(options.outputDir, "train.log"), "w")
 
 fouts = [ sys.stdout, logfile ]
 
-#----------
-# write out BDT/MVA id labels (for performance comparison)
-#----------
-for name, output in (
-    ('train', trainData['mvaid']),
-    ('test',  testData['mvaid']),
-    ):
-    np.savez(os.path.join(options.outputDir, "roc-data-%s-mva.npz" % name),
-             # these are the BDT outputs
-             output = output,
-             )
-
-# save weights (just once, we assume the ordering of the events is always the same)
-np.savez(os.path.join(options.outputDir, "weights-labels-train.npz"),
-         weight = trainWeights,             
-         # weightBeforePtEtaReweighting = trainWeightsBeforePtEtaReweighting,
-         label = trainData['labels'],
-         )
-np.savez(os.path.join(options.outputDir, "weights-labels-test.npz"),
-         weight = testWeights,             
-         label = testData['labels'],
-         )
-
 
 #----------
 # write graphviz output to results directory
