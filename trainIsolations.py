@@ -202,11 +202,13 @@ target_var = T.matrix('targets')
 train_prediction = lasagne.layers.get_output(model)
 # train_loss       = squared_error(train_prediction, target_var).mean()
 
-train_loss = aggregate(squared_error(train_prediction, target_var), mode = "mean")
+weight_var = T.matrix('weights')
+
+train_loss = aggregate(squared_error(train_prediction, target_var), mode = "mean", weights = weight_var)
 
 # deterministic = True is e.g. set to replace dropout layers by a fixed weight
 test_prediction = lasagne.layers.get_output(model, deterministic = True)
-test_loss       = squared_error(test_prediction, target_var).mean()
+test_loss       = aggregate(squared_error(test_prediction, target_var), mode = "mean", weights = weight_var)
 
 # method for updating weights
 params = lasagne.layers.get_all_params(model, trainable = True)
@@ -252,14 +254,15 @@ else:
 #----------
 
 with Timer("compiling train dataset loss function...", fouts) as t:
-    train_function = theano.function(input_vars + [ target_var ], train_loss, updates = updates, name = 'train_function')
+    train_function = theano.function(input_vars + [ target_var, weight_var ], train_loss, updates = updates, name = 'train_function')
 
     if options.monitorGradient:
         # see e.g. http://stackoverflow.com/a/37384861/288875
-        get_train_function_grad = theano.function(input_vars + [ target_var ], train_loss_grad)
+        get_train_function_grad = theano.function(input_vars + [ target_var, weight_var ], train_loss_grad)
 
+# TODO: this is actually never used later on...
 with Timer("compiling test dataset loss function...", fouts) as t:
-    test_function = theano.function(input_vars + [ target_var ], test_loss)
+    test_function = theano.function(input_vars + [ target_var, weight_var ], test_loss)
 
 # function to calculate the output of the network
 with Timer("compiling network output function...", fouts) as t:
@@ -324,16 +327,17 @@ while True:
         # inputs = makeInput(trainData, indices, inputDataIsSparse = True)
 
         inputs = [ inp[indices] for inp in trainInput]
+        thisWeights = trainWeights[indices].reshape((-1,1))
 
         # this also updates the weights ?
-        sum_train_loss += train_function(* (inputs + [ targets ]))
+        sum_train_loss += train_function(* (inputs + [ targets, thisWeights ]))
 
         # this leads to an error
         # print train_prediction.eval()
 
         if options.monitorGradient:
             # this actually returns a list of CudaNdarray objects
-            gradients = get_train_function_grad(* (inputs + [ targets ]))
+            gradients = get_train_function_grad(* (inputs + [ targets, thisWeights ]))
 
             gradients = [ np.ndarray.flatten(np.asarray(grad)) for grad in gradients ]
 
