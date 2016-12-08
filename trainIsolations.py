@@ -421,9 +421,9 @@ while True:
         fout.close()
 
         # write network output
-        # np.savez(os.path.join(options.outputDir, "rmse-data-%s-%04d.npz" % (name, epoch)),
-        #          output = predictions,
-        #          )
+        np.savez(os.path.join(options.outputDir, "rmse-data-%s-%04d.npz" % (name, epoch)),
+                 output = predictions,
+                 )
 
 
     #----------
