@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 import numpy as np
+from lasagne.updates import get_or_compute_grads
+
+import theano.tensor as T
+import theano
 
 #----------------------------------------------------------------------
 
