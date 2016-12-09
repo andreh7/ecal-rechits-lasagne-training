@@ -19,7 +19,7 @@ import trackmodelutils, rechitmodelutils
 # hidden units, filter sizes for convolutional network
 numHiddenUnits = 128
 
-numHiddenLayers = 1
+numHiddenLayers = 3
 
 
 #----------------------------------------------------------------------
