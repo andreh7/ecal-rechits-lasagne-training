@@ -129,7 +129,9 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = False):
                                                                 "charge*",
                                                                 "detaAtVertex*",
                                                                 "dphiAtVertex*",
-                                                                ])
+                                                                ],
+                                              trackSelFunc = lambda data, index: data['vtxDz'][index] < 0.01
+                                              )
 
     #----------
     # add track variables
