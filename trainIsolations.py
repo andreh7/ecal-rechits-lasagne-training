@@ -264,12 +264,12 @@ with Timer("unpacking test dataset...", fouts) as t:
 #----------
 # save weights and target values (just once, we assume the ordering of the events is always the same)
 #----------
-np.savez(os.path.join(options.outputDir, "weights-labels-train.npz"),
+np.savez(os.path.join(options.outputDir, "weights-targets-train.npz"),
          weight = trainWeights,             
          # weightBeforePtEtaReweighting = trainWeightsBeforePtEtaReweighting,
          target = trainTarget
          )
-np.savez(os.path.join(options.outputDir, "weights-labels-test.npz"),
+np.savez(os.path.join(options.outputDir, "weights-targets-test.npz"),
          weight = testWeights,             
          target = testTarget
          )
