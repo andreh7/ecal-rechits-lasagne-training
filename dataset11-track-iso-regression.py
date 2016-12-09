@@ -30,10 +30,10 @@ dataDesc = dict(
 # limiting the size for the moment because
 # with the full set we ran out of memory after training
 # on the first epoch
-    trsize = 0.5, tesize = 0.5,
+    # trsize = 0.5, tesize = 0.5,
 
     # use the full dataset
-    # trsize = None, tesize = None,
+    trsize = None, tesize = None,
 
     # trsize, tesize = 0.05, 0.05
 
