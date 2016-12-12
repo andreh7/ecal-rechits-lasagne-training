@@ -7,7 +7,7 @@
 
 from lasagne.layers import InputLayer, DenseLayer, ConcatLayer
 from lasagne.init import GlorotUniform
-from lasagne.nonlinearities import rectify, softmax
+from lasagne.nonlinearities import rectify, sigmoid
 
 import rechitmodelutils
 
@@ -105,8 +105,8 @@ def makeModel():
     # output
     network = DenseLayer(
         network,
-        num_units = 2,  # need two class classification, seems not to work well with sigmoid
-        nonlinearity = softmax,
+        num_units = 1,  
+        nonlinearity = sigmoid,
         W = GlorotUniform(),
         )
 
