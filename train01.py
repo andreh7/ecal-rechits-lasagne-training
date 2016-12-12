@@ -132,9 +132,10 @@ trainWeights = trainData['weights']
 testWeights  = testData['weights']
 
 if doPtEtaReweighting:
-    trainWeightsBeforePtEtaReweighting = trainData['weightsBeforePtEtaReweighting']
+    origTrainWeights = trainData['weightsBeforePtEtaReweighting']
 else:
-    trainWeightsBeforePtEtaReweighting = None
+    # they're the same
+    origTrainWeights = trainWeights
 
 #----------
 if options.outputDir == None:
@@ -186,8 +187,9 @@ for name, output in (
 
 # save weights (just once, we assume the ordering of the events is always the same)
 np.savez(os.path.join(options.outputDir, "weights-labels-train.npz"),
-         weight = trainWeights,             
-         weightBeforePtEtaReweighting = trainWeightsBeforePtEtaReweighting,
+         trainWeight = trainWeights,             
+         origTrainWeights = origTrainWeights,
+         doPtEtaReweighting = doPtEtaReweighting,
          label = trainData['labels'],
          )
 np.savez(os.path.join(options.outputDir, "weights-labels-test.npz"),
@@ -435,8 +437,11 @@ while True:
     #----------
 
     for name, predictions, labels, weights in  (
-        ('train', train_output, trainData['labels'], trainData['weights']),
-        ('test',  test_output,  testData['labels'],  testData['weights']),
+        # we use the original weights (before pt/eta reweighting)
+        # here for printing for the train set, i.e. not necessarily
+        # the weights used for training
+        ('train', train_output, trainData['labels'], origTrainWeights),
+        ('test',  test_output,  testData['labels'],  testWeights),
         ):
         auc = roc_auc_score(labels,
                             predictions,
