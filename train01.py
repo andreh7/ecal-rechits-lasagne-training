@@ -129,7 +129,7 @@ with Timer("loading test dataset...") as t:
 
 # TODO: normalize these to same weight for positive and negative samples
 trainWeights = trainData['weights'].reshape((-1,1))
-testWeights  = testData['weights']
+testWeights  = testData['weights'].reshape((-1,1))
 
 if doPtEtaReweighting:
     origTrainWeights = trainData['weightsBeforePtEtaReweighting']
@@ -426,7 +426,7 @@ while True:
 
             thisOutput[start:end] = test_prediction_function(
                 *[ inp[start:end] for inp in input]
-                )[:,1]
+                )[:,0]
 
         outputs.append(thisOutput)
 
