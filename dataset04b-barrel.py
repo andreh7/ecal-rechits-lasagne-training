@@ -101,6 +101,9 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
         #----------
         if reweightPtEta:
           ptEta.add(loaded, thisSize)
+
+        # encourage garbage collection
+        del loaded
   
     # end of loop over input files
 
