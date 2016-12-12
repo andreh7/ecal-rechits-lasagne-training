@@ -1,17 +1,11 @@
 #!/usr/bin/env python
 
 # given a results-* directory, finds the 
-# Torch tensor files with the network outputs
+# .npz files with the network outputs
 # for different epochs, calculates the ROC area
 # and plots the progress
 
-# given a table of serialized Torch labels,
-# weights and target values, calculates and prints
-# the area under the ROC curve (using sklearn)
-
 import sys, os
-sys.path.append(os.path.expanduser("~aholz/torchio"))
-import torchio
 
 import glob, re
 import numpy as np
@@ -189,21 +183,12 @@ def readROC(resultDirData, fname, isTrain, returnFullCurve = False):
 
     print "reading",fname
     
-    if fname.endswith(".npz"):
-        data = np.load(fname)
+    assert fname.endswith(".npz")
+    data = np.load(fname)
 
-        weights = resultDirData.getWeights(isTrain)
-        labels  = resultDirData.getLabels(isTrain)
-        outputs = data['output']
-
-    else:
-        # assume this is a torch file
-        fin = torchio.InputFile(fname, "binary")
-        data = fin.readObject()
-
-        weights = data['weight'].asndarray()
-        labels  = data['label'].asndarray()
-        outputs = data['output'].asndarray()
+    weights = resultDirData.getWeights(isTrain)
+    labels  = resultDirData.getLabels(isTrain)
+    outputs = data['output']
 
     from sklearn.metrics import roc_curve, auc
 
@@ -284,12 +269,8 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
 
     if includeCached:
         # read cached version first
-        inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.t7.cached-auc.py")) 
-        inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.t7.bz2.cached-auc.py")) 
         inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.npz.cached-auc.py")) 
 
-    inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.t7")) 
-    inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.t7.bz2")) 
     inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.npz")) 
 
     if not inputFiles:
@@ -309,12 +290,10 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
         basename = os.path.basename(inputFname)
 
         # example names:
-        #  roc-data-test-mva.t7
-        #  roc-data-train-0002.t7
+        #  roc-data-test-mva.npz
+        #  roc-data-train-0002.npz
 
-        mo = re.match("roc-data-(\S+)-mva\.t7(\.gz|\.bz2)?$", basename)
-        if not mo:
-            mo = re.match("roc-data-(\S+)-mva\.npz$", basename)
+        mo = re.match("roc-data-(\S+)-mva\.npz$", basename)
 
         if mo:
             sampleType = mo.group(1)
@@ -328,12 +307,7 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
 
             continue
 
-        mo = re.match("roc-data-(\S+)-(\d+)\.t7(\.gz|\.bz2)?$", basename)
-        if not mo:
-            mo = re.match("roc-data-(\S+)-(\d+)\.npz$", basename)
-
-        if not mo and includeCached:
-            mo = re.match("roc-data-(\S+)-(\d+)\.t7(\.gz|\.bz2)?\.cached-auc\.py$", basename)
+        mo = re.match("roc-data-(\S+)-(\d+)\.npz$", basename)
 
         if not mo and includeCached:
             mo = re.match("roc-data-(\S+)-(\d+)\.npz\.cached-auc\.py$", basename)
