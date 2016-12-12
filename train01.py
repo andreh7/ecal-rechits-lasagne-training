@@ -166,6 +166,12 @@ logfile = open(os.path.join(options.outputDir, "train.log"), "w")
 
 fouts = [ sys.stdout, logfile ]
 
+
+#----------
+
+for fout in fouts:
+    print >> fout, "doPtEtaReweighting=",doPtEtaReweighting
+
 #----------
 # write out BDT/MVA id labels (for performance comparison)
 #----------
