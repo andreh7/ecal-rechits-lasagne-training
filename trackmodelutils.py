@@ -389,13 +389,16 @@ class TrackVarsMaker:
 
     #----------------------------------------
 
-    def makeVars(self, dataset, normalizeVars = []):
+    def makeVars(self, dataset, normalizeVars = [], trackSelFunc = None):
         # fills track variables for each event
         # 
         # @param rowIndices is the indices of the rows (events)
         #
         # @param normalizeVars fnmatch expressions of variables to be normalized
         # 
+        # @param trackSelFunc a function taking dataset['tracks'] and a track index
+        #        which must return True iff the track should be selected.
+        #        If None, no selection is applied
 
         # take the entire dataset
         rowIndices = range(len(dataset['tracks']['numTracks']))
@@ -428,13 +431,24 @@ class TrackVarsMaker:
             # unpack the sparse data
             #----------
             varIndex = 0
+            storeIndex = 0   # index of the next selected track
+
+            # find which tracks are selected
+            if trackSelFunc != None:
+                selectedTrackIndices = []
+
+                for trackIndex in trackIndices:
+
+                    # check if track is selected
+                    if trackSelFunc(dataset['tracks'], trackIndex):
+                        # track is selected
+                        selectedTrackIndices.append(trackIndex)
+            else:
+                selectedTrackIndices = trackIndices
 
             # loop over all tracks
-            for ind, trackIndex in enumerate(trackIndices):
+            for ind, trackIndex in enumerate(selectedTrackIndices):
 
-                # ind is the number of the track within the event/photon
-                # (0 is the highest ptrel etc.)
-                # 
                 # trackIndex is the pointer into the array of the input data
 
                 if ind >= self.numTracks:
