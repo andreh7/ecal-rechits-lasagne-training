@@ -5,7 +5,7 @@ import numpy as np
 import os, sys
 
 import lasagne
-from lasagne.objectives import categorical_crossentropy, aggregate
+from lasagne.objectives import binary_crossentropy, aggregate
 from lasagne.updates import adam, nesterov_momentum, sgd, get_or_compute_grads
 
 from sklearn.metrics import roc_auc_score
@@ -128,7 +128,7 @@ with Timer("loading test dataset...") as t:
 # must clone to assign
 
 # TODO: normalize these to same weight for positive and negative samples
-trainWeights = trainData['weights']
+trainWeights = trainData['weights'].reshape((-1,1))
 testWeights  = testData['weights']
 
 if doPtEtaReweighting:
@@ -227,18 +227,18 @@ if False:
 
 #----------
 
-target_var = T.ivector('targets')
+target_var = T.imatrix('targets')
 # target_var = T.vector('targets2')
-weight_var = T.vector('weights')
+weight_var = T.matrix('weights')
 
 
 # these are of type theano.tensor.var.TensorVariable
 train_prediction = lasagne.layers.get_output(model)
-train_loss       = aggregate(categorical_crossentropy(train_prediction, target_var), mode = "mean", weights = weight_var)
+train_loss       = aggregate(binary_crossentropy(train_prediction, target_var), mode = "mean", weights = weight_var)
 
 # deterministic = True is e.g. set to replace dropout layers by a fixed weight
 test_prediction = lasagne.layers.get_output(model, deterministic = True)
-test_loss       = aggregate(categorical_crossentropy(test_prediction, target_var), mode = "mean", weights = weight_var)
+test_loss       = aggregate(binary_crossentropy(test_prediction, target_var), mode = "mean", weights = weight_var)
 
 # method for updating weights
 params = lasagne.layers.get_all_params(model, trainable = True)
@@ -302,7 +302,7 @@ with Timer("compiling network output function...", fouts) as t:
 #----------
 
 for data in (trainData, testData):
-    data['labels'] = data['labels'].astype('int32')
+    data['labels'] = data['labels'].astype('int32').reshape((-1,1))
 
 #----------
 # produce test and training input once
