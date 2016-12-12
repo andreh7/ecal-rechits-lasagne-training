@@ -22,7 +22,7 @@ class ResultDirData:
         self.description = readDescription(inputDir)
 
         # we don't have this for older trainings
-        self.trainWeightsBeforePtEtaReweighting = None
+        # self.trainWeightsBeforePtEtaReweighting = None
 
         # check for dedicated weights and labels file
         # train dataset
@@ -30,8 +30,8 @@ class ResultDirData:
 
         if os.path.exists(fname):
             data = np.load(fname)
-            self.trainWeights = data['weight']
-            self.trainWeightsBeforePtEtaReweighting = data['weightBeforePtEtaReweighting']
+            self.origTrainWeights = data['origTrainWeights']
+            # self.trainWeightsBeforePtEtaReweighting = data['weightBeforePtEtaReweighting']
             self.trainLabels = data['label']
         else:
             # try the BDT file (but we don't have weights before eta/pt reweighting there)
@@ -68,14 +68,17 @@ class ResultDirData:
             # if there are no trainWeightsBeforePtEtaReweighting, these are array(None, dtype=object)
 
             
-            if self.useWeightsAfterPtEtaReweighting:
-                assert self.hasTrainWeightsBeforePtEtaReweighting()
-                return self.trainWeights
-            
-            if self.trainWeightsBeforePtEtaReweighting.shape == (): 
-                return self.trainWeights
-            else:
-                return self.trainWeightsBeforePtEtaReweighting
+            # if self.useWeightsAfterPtEtaReweighting:
+            #     assert self.hasTrainWeightsBeforePtEtaReweighting()
+            #     return self.trainWeights
+            # 
+            # if self.trainWeightsBeforePtEtaReweighting.shape == (): 
+            #     return self.trainWeights
+            # else:
+            #     return self.trainWeightsBeforePtEtaReweighting
+
+            # original weights, before any reweighting
+            return self.origTrainWeights
 
         else:
             return self.testWeights
