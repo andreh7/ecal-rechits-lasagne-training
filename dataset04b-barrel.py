@@ -40,7 +40,7 @@ dataDesc = dict(
     # trsize = 0.01, tesize = 0.01,
 )
 
-doPtEtaReweighting = True
+doPtEtaReweighting = False
 
 #----------------------------------------------------------------------
 
