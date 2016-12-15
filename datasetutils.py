@@ -249,7 +249,7 @@ class SimpleVariableConcatenatorToMatrix:
     #----------------------------------------
 
     def add(self, loaded, thisSize):
-        if self.data == None:
+        if self.data is None:
             #----------
             # first file
             #----------
