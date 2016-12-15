@@ -73,7 +73,9 @@ dataDesc = dict(
 
 #----------------------------------------------------------------------
 
-def datasetLoadFunction(fnames, size, cuda):
+def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
+
+    assert not reweightPtEta, "pt/eta reweighting not yet supported"
 
     data = None
 
