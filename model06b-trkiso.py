@@ -52,6 +52,7 @@ def makeModel():
     inputVarRecHits        = T.tensor4('rechits')
     inputVarTrackIsoChosen = T.matrix('trackIsoChosen')
     inputVarTrackIsoWorst  = T.matrix('trackIsoWorst')
+    inputVarScRawE         = T.matrix('scRawE')
 
     ninputLayers = 1
     network = InputLayer(shape=(None, ninputLayers, width, height),
@@ -63,6 +64,8 @@ def makeModel():
 
     inputLayerTrackIsoChosen = InputLayer(shape = (None,1), input_var = inputVarTrackIsoChosen, name = 'chosen vtx track iso')
     inputLayerTrackIsoWorst  = InputLayer(shape = (None,1), input_var = inputVarTrackIsoWorst, name = 'worst vtx track iso')
+    inputLayerScRawE         = InputLayer(shape = (None,1), input_var = inputVarScRawE,        name = 'scRawE')
+
 
     ### #----------
     ### # track isolation variables 
@@ -86,7 +89,7 @@ def makeModel():
     # rechits with track isolation variables
     #----------
 
-    network = ConcatLayer([ recHitsModel, inputLayerTrackIsoChosen, inputLayerTrackIsoWorst ],
+    network = ConcatLayer([ recHitsModel, inputLayerTrackIsoChosen, inputLayerTrackIsoWorst, inputLayerScRawE ],
                           axis = 1)
 
     #----------
@@ -110,7 +113,7 @@ def makeModel():
         W = GlorotUniform(),
         )
 
-    return [ inputVarRecHits, inputVarTrackIsoChosen, inputVarTrackIsoWorst ], network
+    return [ inputVarRecHits, inputVarTrackIsoChosen, inputVarTrackIsoWorst, inputVarScRawE ], network
 
 
 #----------------------------------------------------------------------
@@ -137,6 +140,7 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
     return [ recHits, 
              dataset['chgIsoWrtChosenVtx'][rowIndices],
              dataset['chgIsoWrtWorstVtx'][rowIndices],
+             dataset['scRawE'][rowIndices],
              ]
 
 # ----------------------------------------------------------------------

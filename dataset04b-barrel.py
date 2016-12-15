@@ -66,8 +66,11 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
                                          )
 
     # some of the BDT input variables
-    otherVars = SimpleVariableConcatenator(['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ])
+    otherVars = SimpleVariableConcatenator(['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx', 'scRawE' ],
+                                           dict(scRawE = lambda loaded: loaded['phoIdInput']['scRawE'])
+                                           )
   
+
     # load all input files
     for fname in fnames:
   
