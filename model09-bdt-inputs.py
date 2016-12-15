@@ -2,7 +2,7 @@
 
 from lasagne.layers import InputLayer, DenseLayer
 from lasagne.init import GlorotUniform
-from lasagne.nonlinearities import rectify, softmax
+from lasagne.nonlinearities import rectify, sigmoid
 
 import numpy as np
 import theano.tensor as T
@@ -75,10 +75,9 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
 
             # sigmoid at output: can't get this
             # to work with minibatch size > 1
-            # nonlinearity = sigmoid
-            nonlinearity = softmax
+            nonlinearity = sigmoid
 
-            num_units = 2
+            num_units = 1
 
         model = DenseLayer(model,
                            num_units = num_units,
