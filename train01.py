@@ -70,6 +70,13 @@ parser.add_argument('--output-dir',
                     help='manually specify the output directory',
                     )
 
+parser.add_argument('--param',
+                    dest = "params",
+                    default = [],
+                    help='additional python to be evaluated after reading model and dataset file. Can be used to change some parameters. Option can be specified multiple times.',
+                    action = 'append',
+                    )
+
 
 parser.add_argument('modelFile',
                     metavar = "modelFile.py",
@@ -93,6 +100,10 @@ batchsize = 32
 
 execfile(options.modelFile[0])
 execfile(options.dataFile[0])
+
+for param in options.params:
+    # python 2
+    exec param
 
 #----------
 print "building model"
