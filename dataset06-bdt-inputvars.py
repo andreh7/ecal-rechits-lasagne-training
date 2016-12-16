@@ -133,6 +133,9 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
 
         bdtVars.add(loaded, thisSize)
 
+        # encourage garbage collection
+        del loaded
+
     # end of loop over input files
 
     bdtVars.normalize()
