@@ -78,7 +78,7 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
     # only apply pt/eta reweighting for training dataset
     reweightPtEta = reweightPtEta and isTraining
 
-    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, SimpleVariableConcatenatorToMatrix, getActualSize
+    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, SimpleVariableConcatenatorToMatrix, getActualSize, PtEtaReweighter
 
     #----------
     if reweightPtEta:
