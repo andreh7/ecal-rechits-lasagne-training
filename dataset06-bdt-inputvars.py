@@ -75,13 +75,23 @@ dataDesc = dict(
 
 def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
 
-    assert not reweightPtEta, "pt/eta reweighting not yet supported"
+    # only apply pt/eta reweighting for training dataset
+    reweightPtEta = reweightPtEta and isTraining
 
+    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, SimpleVariableConcatenatorToMatrix, getActualSize
+
+    #----------
+    if reweightPtEta:
+      # for reweighting (use reconstructed pt and eta)
+      ptEta = SimpleVariableConcatenator(['pt', 'eta'],
+                                         dict(pt = lambda loaded:  loaded['phoVars']['phoEt'],
+                                              eta = lambda loaded: loaded['phoIdInput']['scEta'])
+                                         )
+
+    #----------
     data = None
 
     totsize = 0
-
-    from datasetutils import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenatorToMatrix, getActualSize
 
     commonData = CommonDataConcatenator()
 
@@ -133,12 +143,38 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
 
         bdtVars.add(loaded, thisSize)
 
+        #----------
+        # pt/eta reweighting variables
+        #----------
+        if reweightPtEta:
+          ptEta.add(loaded, thisSize)
+
         # encourage garbage collection
         del loaded
 
     # end of loop over input files
 
     bdtVars.normalize()
+
+    #----------
+    # reweight signal to have the same background shape
+    # using a 2D (pt, eta) histogram
+    #----------
+    if reweightPtEta:
+      ptEtaReweighter = PtEtaReweighter(ptEta.data['pt'][:,0],
+                                        ptEta.data['eta'][:,0],
+                                        commonData.data['labels'],
+                                        isBarrel)
+
+      scaleFactors = ptEtaReweighter.getSignalScaleFactors(ptEta.data['pt'][:,0],
+                                                           ptEta.data['eta'][:,0],
+                                                           commonData.data['labels'])
+      
+      # keep original weights
+      commonData.data['weightsBeforePtEtaReweighting'] = np.copy(commonData.data['weights'])
+
+
+      commonData.data['weights'] *= scaleFactors
 
     #----------
     # normalize event weights
@@ -148,6 +184,23 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
     # combine the datas
     data = commonData.data
     data['input'] = bdtVars.data
+
+    #----------
+    # cross check for pt/eta reweighting, dump some variables
+    #----------
+    if reweightPtEta:
+      outputName = "/tmp/pt-reweighting.npz"
+      np.savez(outputName,
+               pt = ptEta.data['pt'][:,0],
+               eta = ptEta.data['eta'][:,0],
+               weights = commonData.data['weights'],
+               labels = commonData.data['labels'],
+               scaleFactors = scaleFactors,
+               sigHistogram = ptEtaReweighter.sigHistogram,
+               bgHistogram = ptEtaReweighter.bgHistogram,
+               )
+      print "wrote pt/eta reweighting data to", outputName
+
 
     assert totsize == data['input'].shape[0]
   
