@@ -9,18 +9,23 @@ import theano
 #----------------------------------------------------------------------
 
 # taken from the Lasagne mnist example and modified
-def iterate_minibatches(targets, batchsize, shuffle = False):
+def iterate_minibatches(targets, batchsize, shuffle = False, selectedIndices = None):
     # generates list of indices and target values
 
-    if shuffle:
+    if not selectedIndices is None:
+        # a subset of indices was specified
+        # make a copy
+        indices = list(selectedIndices)
+    else:
         indices = np.arange(len(targets))
+
+    if shuffle:
         np.random.shuffle(indices)
 
-    for start_idx in range(0, len(targets) - batchsize + 1, batchsize):
-        if shuffle:
-            excerpt = indices[start_idx:start_idx + batchsize]
-        else:
-            excerpt = slice(start_idx, start_idx + batchsize)
+    for start_idx in range(0, len(indices) - batchsize + 1, batchsize):
+
+        excerpt = indices[start_idx:start_idx + batchsize]
+
         yield excerpt, targets[excerpt]
 
 import time
