@@ -741,6 +741,8 @@ if __name__ == '__main__':
 
     #----------
 
-    pylab.show()
+    if not options.savePlots:
+        # show plots interactively
+        pylab.show()
 
 
