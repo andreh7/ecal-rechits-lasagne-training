@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from lasagne.layers import InputLayer, DenseLayer
+from lasagne.layers import InputLayer, DenseLayer, DropoutLayer
 from lasagne.init import GlorotUniform
 from lasagne.nonlinearities import rectify, sigmoid
 
@@ -70,11 +70,10 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
 
             num_units = nodesPerHiddenLayer
         else:
-            # add a dropout layer at the end ?
-            #  model:add(nn.Dropout(0.3))
+            # add a dropout layer at the end
+            model = DropoutLayer(model, p = 0.5)
 
-            # sigmoid at output: can't get this
-            # to work with minibatch size > 1
+            # sigmoid at output
             nonlinearity = sigmoid
 
             num_units = 1
