@@ -117,4 +117,45 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
 # 
 # end
 
-# ----------------------------------------------------------------------
+#----------------------------------------------------------------------
+
+def trainEventSelectionFunction(epoch, trainLabels, trainWeights, trainOutput):
+    nevents = len(trainLabels)
+
+    # ignore events with trainOutput above this fraction of background
+    # events
+    targetBgFraction = 0.2
+
+    if epoch == 1:
+        return np.arange(nevents)
+
+    # sort background events by decreasing trainOutput
+    indices = range(nevents)
+    
+    indices.sort(key = lambda index: trainOutput[index],
+                 reverse = True
+                 )
+
+
+    sumBg = 0.
+
+    totBg = trainWeights[trainLabels == 0].sum()
+
+    maxBg = totBg * targetBgFraction
+
+    retval = [] 
+
+    # TODO: could use cumulative sum and filtering
+    for index in indices:
+        if trainLabels[index] == 0:
+            # background
+            sumBg += trainWeights[index]
+            
+        if sumBg < maxBg:
+            # note that we also append this for signal
+            # as long as they are in a region of high purity
+            retval.append(index)
+
+    return retval
+
+#----------------------------------------------------------------------
