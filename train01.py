@@ -332,6 +332,8 @@ print "params=",params
 print
 print 'starting training at', time.asctime()
 
+train_output = np.zeros(len(trainData['labels']))
+
 epoch = 1
 while True:
 
@@ -353,20 +355,45 @@ while True:
         fout.flush()
 
     #----------
+    # check if we should only train on a subset of indices
+    #----------
+    if globals().has_key("adaptiveTrainingSample") and adaptiveTrainingSample:
+        assert globals().has_key('trainEventSelectionFunction'), "function trainEventSelectionFunction(..) not defined"
+
+        if epoch == 1:
+            for fout in fouts:
+                print >> fout, "using adaptive training event selection"
+
+        selectedIndices = trainEventSelectionFunction(epoch, 
+                                                      trainData['labels'],
+                                                      trainWeights,
+                                                      train_output,
+                                                      )
+
+        # make sure this is an np.array(..)
+        selectedIndices = np.array(selectedIndices)
+    else:
+        selectedIndices = np.arange(len(trainData['labels']))
+
+    #----------
     # training 
     #----------
 
     sum_train_loss = 0
     train_batches = 0
 
-    progbar = tqdm.tqdm(total = len(trainData['labels']), mininterval = 1.0, unit = 'samples')
+    if len(selectedIndices) < len(trainData['labels']):
+        for fout in fouts:
+            print >> fout, "training on",len(selectedIndices),"out of",len(trainData['labels']),"samples"
+
+    progbar = tqdm.tqdm(total = len(selectedIndices), mininterval = 1.0, unit = 'samples')
 
     # magnitude of overall gradient. index is minibatch within epoch
     if options.monitorGradient:
         gradientMagnitudes = []
 
     startTime = time.time()
-    for indices, targets in iterate_minibatches(trainData['labels'], batchsize, shuffle = True):
+    for indices, targets in iterate_minibatches(trainData['labels'], batchsize, shuffle = True, selectedIndices = selectedIndices):
 
         # inputs = makeInput(trainData, indices, inputDataIsSparse = True)
 
@@ -406,7 +433,7 @@ while True:
         print >> fout, "time to learn 1 sample: %.3f ms" % ( deltaT / len(trainWeights) * 1000.0)
         print >> fout, "time to train entire batch: %.2f min" % (deltaT / 60.0)
         print >> fout
-        print >> fout, "avg train loss:",sum_train_loss / float(len(trainData['labels']))
+        print >> fout, "avg train loss:",sum_train_loss / float(len(selectedIndices))
         print >> fout
         fout.flush()
 
