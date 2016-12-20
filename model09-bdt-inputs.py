@@ -19,7 +19,8 @@ else:
     else:
         ninputs = 13
 
-
+# set to None to disable the dropout layer
+dropOutProb = 0.5
 
 #----------------------------------------
 modelParams = dict(
@@ -70,8 +71,9 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
 
             num_units = nodesPerHiddenLayer
         else:
-            # add a dropout layer at the end
-            model = DropoutLayer(model, p = 0.5)
+            if dropOutProb != None:
+                # add a dropout layer at the end
+                model = DropoutLayer(model, p = dropOutProb)
 
             # sigmoid at output
             nonlinearity = sigmoid
