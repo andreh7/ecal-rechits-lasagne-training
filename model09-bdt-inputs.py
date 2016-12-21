@@ -22,6 +22,10 @@ else:
 # set to None to disable the dropout layer
 dropOutProb = 0.5
 
+# default parameters
+numHiddenLayers = 3
+nodesPerHiddenLayer = ninputs * 2
+
 #----------------------------------------
 modelParams = dict(
     # maxGradientNorm = 3.3, # typically 0.99 percentile of the gradient norm before diverging
@@ -94,8 +98,8 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
 
 def makeModel():
     return makeModelHelper(
-        numHiddenLayers = 3,
-        nodesPerHiddenLayer = ninputs * 2
+        numHiddenLayers = numHiddenLayers,
+        nodesPerHiddenLayer = nodesPerHiddenLayer
         )
 
 #----------------------------------------------------------------------
