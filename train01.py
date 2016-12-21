@@ -260,6 +260,10 @@ if globals().has_key('modelParams') and modelParams.has_key('maxGradientNorm'):
     train_loss_grad = lasagne.updates.total_norm_constraint(train_loss_grad, modelParams['maxGradientNorm'])
 
 
+#----------
+for fout in fouts:
+    print "using",options.optimizer,"optimizer"
+
 if options.optimizer == 'adam':
     updates = adam(train_loss_grad, params)
 elif options.optimizer == 'sgd':
@@ -288,6 +292,8 @@ else:
 
 # updates = nesterov_momentum(
 #           train_loss, params, learning_rate=0.01, momentum=0.9)
+
+#----------
 
 
 #----------
