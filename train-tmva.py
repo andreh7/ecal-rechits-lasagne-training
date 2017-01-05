@@ -199,12 +199,15 @@ factory = ROOT.TMVA.Factory("TMVAClassification", tmvaOutputFile,
                                 "!Silent",
                                 "Color",
                                 "DrawProgressBar",
-                                "Transformations=I;D;P;G,D",
+                                # "Transformations=I;D;P;G,D",
                                 "AnalysisType=Classification"]
                                      ))
 
 for varIndex in range(numInputVars):
     factory.AddVariable("var%02d" % varIndex,"F")
+
+# needed because we use Add{Training,Test}Event(..) methods
+factory.CreateEventAssignTrees("inputTree")
  
 #----------
 # convert input data for TMVA
@@ -228,20 +231,50 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
                 values[index] = value
             
             if labels[row] == 1:
-                method("signal", values, weights[row])
+                method("Signal", values, weights[row])
             else:
-                method("background", values, weights[row])
+                method("Background", values, weights[row])
+
+factory.PrepareTrainingAndTestTree(ROOT.TCut(""),
+                                   ",".join([
+            "nTrain_Signal=%d" % len(testData['labels']),
+            "nTrain_Background=%d" % len(testData['labels']),
+            "SplitMode=Block",
+            ]))
 
 #----------
-# setup training with TMVA
+# run training with TMVA
 #----------
 
-raise Exception("arrived here !")
+method = factory.BookMethod(ROOT.TMVA.Types.kBDT, "BDT",
+                   ":".join([
 
-#----------
-
+            # from https://raw.githubusercontent.com/InnaKucher/flashgg/0726271781a6a9379471cc1e848075cd6102db43/MicroAOD/data/MVAweights_80X_barrel_ICHEP_wShift.xml
+                       "!H",
+                       "!V",
+                       "IgnoreNegWeightsInTraining",
+                       "NTrees=1000",
+                       "MaxDepth=3",
+                       "nCuts=2000",
+                       "BoostType=Grad",
+                       "Shrinkage=1.000000e-01",
+                       "!UseYesNoLeaf",
+                       "!UseBaggedGrad",
+                       ]))
 
 print 'starting training at', time.asctime()
+ 
+factory.TrainAllMethods()
+factory.TestAllMethods()
+factory.EvaluateAllMethods()
+
+print "done with training at", time.asctime()
+sys.exit(0)
+
+#----------
+
+
+
 
 train_output = np.zeros(len(trainData['labels']))
 
