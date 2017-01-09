@@ -190,8 +190,11 @@ with Timer("unpacking test dataset...", fouts) as t:
 #----------
 
 import ROOT
+ROOT.TMVA.gConfig().GetIONames().fWeightFileDir = options.outputDir
+
 ROOT.TMVA.Tools.Instance()
-tmvaOutputFile = ROOT.TFile(os.path.join(options.outputDir, "tmva.root"),"RECREATE")
+tmvaFname = os.path.join(options.outputDir, "tmva.root")
+tmvaOutputFile = ROOT.TFile(tmvaFname,"RECREATE")
 
 factory = ROOT.TMVA.Factory("TMVAClassification", tmvaOutputFile,
                             ":".join([
