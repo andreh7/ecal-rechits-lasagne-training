@@ -243,10 +243,19 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
             else:
                 method("Background", values, weights[row])
 
+
+nTrain_Signal     = sum(trainData['labels'] == 1)
+nTrain_Background = sum(trainData['labels'] != 1)
+nTest_Signal      = sum(testData['labels'] == 1)
+nTest_Background  = sum(testData['labels'] != 1)
+
+
 factory.PrepareTrainingAndTestTree(ROOT.TCut(""),
                                    ",".join([
-            "nTrain_Signal=%d" % len(testData['labels']),
-            "nTrain_Background=%d" % len(testData['labels']),
+            "nTrain_Signal=%d" % nTrain_Signal,
+            "nTrain_Background=%d" % nTrain_Background,
+            "nTest_Signal=%d" % nTest_Signal,
+            "nTest_Background=%d" % nTest_Background,
             "SplitMode=Block",
             ]))
 
