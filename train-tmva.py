@@ -269,184 +269,44 @@ factory.TestAllMethods()
 factory.EvaluateAllMethods()
 
 print "done with training at", time.asctime()
-sys.exit(0)
 
 #----------
+# evaluate AUC
+#----------
+ROOT.gROOT.cd()
+tmvaOutputFile.Close()
 
+# reopen
+tmvaOutputFile = ROOT.TFile(tmvaFname)
 
+for name, treeName in (('train', 'TrainTree'),
+                       ('test', 'TestTree')):
+    
+    tree = tmvaOutputFile.Get(treeName)
+    ROOT.gROOT.cd()
 
+    assert tree != None, "could not find tree " + treeName
 
-train_output = np.zeros(len(trainData['labels']))
+    if tree.GetEntries() > 1000000:
+        tree.SetEstimate(tree.GetEntries())
 
-epoch = 1
-while True:
+    tree.Draw("classID:BDT:weight","","goff")
+    nentries = tree.GetSelectedRows()
 
-    #----------
+    v1 = tree.GetV1(); v2 = tree.GetV2(); v3 = tree.GetV3()
 
-    if options.maxEpochs != None and epoch > options.maxEpochs:
-        break
+    labels      = [ v1[i] for i in range(nentries) ]
+    predictions = [ v2[i] for i in range(nentries) ]
+    weights     = [ v3[i] for i in range(nentries) ]
 
-    #----------
-
-    nowStr = time.strftime("%Y-%m-%d %H:%M:%S")
-        
-    for fout in fouts:
-
-        print >> fout, "----------------------------------------"
-        print >> fout, "starting epoch %d at" % epoch, nowStr
-        print >> fout, "----------------------------------------"
-        print >> fout, "output directory is", options.outputDir
-        fout.flush()
-
-    #----------
-    # check if we should only train on a subset of indices
-    #----------
-    if globals().has_key("adaptiveTrainingSample") and adaptiveTrainingSample:
-        assert globals().has_key('trainEventSelectionFunction'), "function trainEventSelectionFunction(..) not defined"
-
-        if epoch == 1:
-            for fout in fouts:
-                print >> fout, "using adaptive training event selection"
-
-        selectedIndices = trainEventSelectionFunction(epoch, 
-                                                      trainData['labels'],
-                                                      trainWeights,
-                                                      train_output,
-                                                      )
-
-        # make sure this is an np.array(..)
-        selectedIndices = np.array(selectedIndices)
-    else:
-        selectedIndices = np.arange(len(trainData['labels']))
-
-    #----------
-    # training 
-    #----------
-
-    sum_train_loss = 0
-    train_batches = 0
-
-    if len(selectedIndices) < len(trainData['labels']):
-        for fout in fouts:
-            print >> fout, "training on",len(selectedIndices),"out of",len(trainData['labels']),"samples"
-
-    # magnitude of overall gradient. index is minibatch within epoch
-    if options.monitorGradient:
-        gradientMagnitudes = []
-
-    startTime = time.time()
-    for indices, targets in iterate_minibatches(trainData['labels'], batchsize, shuffle = True, selectedIndices = selectedIndices):
-
-        # inputs = makeInput(trainData, indices, inputDataIsSparse = True)
-
-        inputs = [ inp[indices] for inp in trainInput]
-
-        thisWeights = trainWeights[indices]
-
-        # this also updates the weights ?
-        sum_train_loss += train_function(* (inputs + [ targets, thisWeights ]))
-
-        # this leads to an error
-        # print train_prediction.eval()
-
-        train_batches += 1
-
-        progbar.update(batchsize)
-
-    # end of loop over minibatches
-    progbar.close()
-
-    #----------
-
-    deltaT = time.time() - startTime
+    auc = roc_auc_score(labels,
+                        predictions,
+                        sample_weight = weights,
+                        average = None,
+                        )
 
     for fout in fouts:
         print >> fout
-        print >> fout, "time to learn 1 sample: %.3f ms" % ( deltaT / len(trainWeights) * 1000.0)
-        print >> fout, "time to train entire batch: %.2f min" % (deltaT / 60.0)
-        print >> fout
-        print >> fout, "avg train loss:",sum_train_loss / float(len(selectedIndices))
-        print >> fout
+        print >> fout, "%s AUC: %f" % (name, auc)
         fout.flush()
 
-    #----------
-    # save gradient magnitudes
-    #----------
-
-    if options.monitorGradient:
-        np.savez(os.path.join(options.outputDir, "gradient-magnitudes-%04d.npz" % epoch),
-                 gradientMagnitudes = np.array(gradientMagnitudes),
-                 )
-
-    #----------
-    # calculate outputs of train and test samples
-    #----------
-
-    evalBatchSize = 10000
-
-    outputs = []
-
-    for input in (trainInput, testInput):
-        numSamples = input[0].shape[0]
-        
-        thisOutput = np.zeros(numSamples)
-
-        for start in range(0,numSamples,evalBatchSize):
-            end = min(start + evalBatchSize,numSamples)
-
-            thisOutput[start:end] = test_prediction_function(
-                *[ inp[start:end] for inp in input]
-                )[:,0]
-
-        outputs.append(thisOutput)
-
-    train_output, test_output = outputs
-            
-    # evaluating all at once exceeds the GPU memory in some cases
-    # train_output = test_prediction_function(*trainInput)[:,1]
-    # test_output = test_prediction_function(*testInput)[:,1]
-
-    #----------
-    # calculate AUCs
-    #----------
-
-    for name, predictions, labels, weights in  (
-        # we use the original weights (before pt/eta reweighting)
-        # here for printing for the train set, i.e. not necessarily
-        # the weights used for training
-        ('train', train_output, trainData['labels'], origTrainWeights),
-        ('test',  test_output,  testData['labels'],  testWeights),
-        ):
-        auc = roc_auc_score(labels,
-                            predictions,
-                            sample_weight = weights,
-                            average = None,
-                            )
-
-        for fout in fouts:
-            print >> fout
-            print >> fout, "%s AUC: %f" % (name, auc)
-            fout.flush()
-
-        # write out online calculated auc to the result directory
-        fout = open(os.path.join(options.outputDir, "auc-%s-%04d.txt" % (name, epoch)), "w")
-        print >> fout, auc
-        fout.close()
-
-        # write network output
-        np.savez(os.path.join(options.outputDir, "roc-data-%s-%04d.npz" % (name, epoch)),
-                 output = predictions,
-                 )
-
-
-    #----------
-    # saving the model weights
-    #----------
-
-    np.savez(os.path.join(options.outputDir, 'model-%04d.npz' % epoch), 
-             *lasagne.layers.get_all_param_values(model))
-
-    #----------
-    # prepare next iteration
-    #----------
-    epoch += 1
