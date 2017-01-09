@@ -209,6 +209,8 @@ factory = ROOT.TMVA.Factory("TMVAClassification", tmvaOutputFile,
 for varIndex in range(numInputVars):
     factory.AddVariable("var%02d" % varIndex,"F")
 
+factory.AddSpectator("istrain","F")
+
 # needed because we use Add{Training,Test}Event(..) methods
 factory.CreateEventAssignTrees("inputTree")
  
@@ -223,16 +225,19 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
     # sigTuple = ROOT.TNtuple("sigTuple", "sigTuple", varnames.join(":"))
     # bgTuple  = ROOT.TNtuple("bgTuple",  "bgTuple",  varnames.join(":"))
 
-    values = ROOT.vector('double')(numInputVars)
+    #                                             spectator
+    values = ROOT.vector('double')(numInputVars + 1)
 
-    for inputData, labels, weights, method in ((trainInput, trainData['labels'], trainData['weights'], factory.AddTrainingEvent),
-                                               (testInput,  testData['labels'],  testData['weights'], factory.AddTestEvent)):
+    for inputData, labels, weights, method, istrain in ((trainInput, trainData['labels'], trainData['weights'], factory.AddTrainingEvent, 1),
+                                               (testInput,  testData['labels'],  testData['weights'], factory.AddTestEvent, 0)):
 
         for row in range(inputData.shape[0]):
 
             for index, value in enumerate(inputData[row]):
                 values[index] = value
             
+            values[numInputVars] = istrain
+
             if labels[row] == 1:
                 method("Signal", values, weights[row])
             else:
