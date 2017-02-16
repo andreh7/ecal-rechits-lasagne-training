@@ -162,7 +162,7 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
 
     if savePlots:
         for suffix in (".png", ".pdf", ".svg"):
-            outputFname = os.path.join(inputDirData.inputDir, "last-auc")
+            outputFname = os.path.join(inputDir, "last-auc")
 
             if xmax != None:
                 outputFname += "-%.2f" % xmax
