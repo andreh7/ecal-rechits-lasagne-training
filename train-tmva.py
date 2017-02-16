@@ -211,6 +211,9 @@ for varIndex in range(numInputVars):
 
 factory.AddSpectator("istrain","F")
 
+# official photon id
+factory.AddSpectator("origmva","F")
+
 # needed because we use Add{Training,Test}Event(..) methods
 factory.CreateEventAssignTrees("inputTree")
  
@@ -225,18 +228,20 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
     # sigTuple = ROOT.TNtuple("sigTuple", "sigTuple", varnames.join(":"))
     # bgTuple  = ROOT.TNtuple("bgTuple",  "bgTuple",  varnames.join(":"))
 
-    #                                             spectator
-    values = ROOT.vector('double')(numInputVars + 1)
+    #                                             spectators
+    values = ROOT.vector('double')(numInputVars + 2)
 
-    for inputData, labels, weights, method, istrain in ((trainInput, trainData['labels'], trainData['weights'], factory.AddTrainingEvent, 1),
-                                               (testInput,  testData['labels'],  testData['weights'], factory.AddTestEvent, 0)):
+    for inputData, labels, weights, method, origmva, istrain in (
+        (trainInput, trainData['labels'], trainData['weights'], factory.AddTrainingEvent, trainData['mvaid'], 1),
+        (testInput,  testData['labels'],  testData['weights'], factory.AddTestEvent, testData['mvaid'], 0)):
 
         for row in range(inputData.shape[0]):
 
             for index, value in enumerate(inputData[row]):
                 values[index] = value
             
-            values[numInputVars] = istrain
+            values[numInputVars]   = istrain
+            values[numInputVars+1] = origmva[row]
 
             if labels[row] == 1:
                 method("Signal", values, weights[row])
@@ -327,3 +332,4 @@ for name, treeName in (('train', 'TrainTree'),
         print >> fout, "%s AUC: %f" % (name, auc)
         fout.flush()
 
+print "output directory is",options.outputDir
