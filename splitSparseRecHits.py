@@ -82,6 +82,7 @@ def makeOutputDataRecHits(indices, inputData, outputData):
     outputDataY = outputData['X/y']
     outputDataE = outputData['X/energy']
     outputDataFirstIndex = outputData['X/firstIndex']
+    outputDataNumRecHits = outputData['X/numRecHits']
 
     for i in range(numOutputRows):
 
@@ -98,6 +99,7 @@ def makeOutputDataRecHits(indices, inputData, outputData):
         baseInputIndex = inputFirstIndex[index] - 1
 
         thisNumRecHits = inputNumRecHits[index]
+        outputDataNumRecHits[i] = thisNumRecHits
 
         # copy coordinates and energy over
         # note that firstIndex is one based
