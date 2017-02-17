@@ -65,7 +65,7 @@ def makeOutputDataRecHits(indices, inputData, outputData):
 
     import tqdm
     progbar = tqdm.tqdm(total = numOutputRows, 
-                        mininterval = 1.0, 
+                        mininterval = 0.1, 
                         unit = 'photons',
                         desc = 'splitting rechits')
   
@@ -100,6 +100,8 @@ def makeOutputDataRecHits(indices, inputData, outputData):
         progbar.update(1)
 
     # end -- loop over photons
+
+    progbar.close()
 
 #----------------------------------------------------------------------
 
