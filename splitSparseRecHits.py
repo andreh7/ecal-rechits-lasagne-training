@@ -77,17 +77,17 @@ def makeOutputDataRecHits(indices, inputData, outputData):
         # baseInputIndex is zero based
         baseInputIndex = inputData['X/firstIndex'][index] - 1
     
-        for j in range(inputData['X/numRecHits'][index]):
-            # copy coordinates and energy over
-            # note that firstIndex is one based
-            
-            # TODO: this loop could be vectorized
+        thisNumRecHits = inputData['X/numRecHits'][index]
 
-            outputData['X/x'][firstIndex - 1]      = inputData['X/x'][baseInputIndex + j] 
-            outputData['X/y'][firstIndex - 1]      = inputData['X/y'][baseInputIndex + j] 
-            outputData['X/energy'][firstIndex - 1] = inputData['X/energy'][baseInputIndex + j] 
+        # copy coordinates and energy over
+        # note that firstIndex is one based
+        
+
+        outputData['X/x']     [(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputData['X/x']     [(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
+        outputData['X/y']     [(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputData['X/y']     [(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
+        outputData['X/energy'][(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputData['X/energy'][(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
       
-            firstIndex += 1
+        firstIndex += thisNumRecHits
       
         # end -- loop over rechits of this photon
   
