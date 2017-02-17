@@ -62,6 +62,12 @@ def makeOutputDataRecHits(indices, inputData, outputData):
     # note that we keep the one based convention from Torch here for
     # historical reasons
     firstIndex = 1
+
+    import tqdm
+    progbar = tqdm.tqdm(total = numOutputRows, 
+                        mininterval = 1.0, 
+                        unit = 'photons',
+                        desc = 'splitting rechits')
   
     for i in range(numOutputRows):
 
@@ -91,6 +97,8 @@ def makeOutputDataRecHits(indices, inputData, outputData):
       
         # end -- loop over rechits of this photon
   
+        progbar.update(1)
+
     # end -- loop over photons
 
 #----------------------------------------------------------------------
