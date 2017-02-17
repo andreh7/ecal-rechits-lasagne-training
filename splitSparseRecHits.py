@@ -69,29 +69,43 @@ def makeOutputDataRecHits(indices, inputData, outputData):
                         unit = 'photons',
                         desc = 'splitting rechits')
   
+
+    # assign to variables to avoid dict lookups all the time (which makes it very slow, at least for npz files...)
+
+    inputFirstIndex = inputData['X/firstIndex']
+    inputNumRecHits = inputData['X/numRecHits']
+    inputDataX = inputData['X/x']     
+    inputDataY = inputData['X/y']     
+    inputDataE = inputData['X/energy']
+
+    outputDataX = outputData['X/x']
+    outputDataY = outputData['X/y']
+    outputDataE = outputData['X/energy']
+    outputDataFirstIndex = outputData['X/firstIndex']
+
     for i in range(numOutputRows):
 
         # this is zero based
         index = indices[i]
     
-        outputData['X/firstIndex'][i] = firstIndex
+        outputDataFirstIndex[i] = firstIndex
     
         # sanity check of input data
-        assert inputData['X/firstIndex'][index] >= 1
-        assert inputData['X/firstIndex'][index] + inputData['X/numRecHits'][index] - 1 <= len(inputData['X/energy']), "failed at index=" + str(index)
+        assert inputFirstIndex[index] >= 1
+        assert inputFirstIndex[index] + inputNumRecHits[index] - 1 <= len(inputDataE), "failed at index=" + str(index)
     
         # baseInputIndex is zero based
-        baseInputIndex = inputData['X/firstIndex'][index] - 1
-    
-        thisNumRecHits = inputData['X/numRecHits'][index]
+        baseInputIndex = inputFirstIndex[index] - 1
+
+        thisNumRecHits = inputNumRecHits[index]
 
         # copy coordinates and energy over
         # note that firstIndex is one based
         
 
-        outputData['X/x']     [(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputData['X/x']     [(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
-        outputData['X/y']     [(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputData['X/y']     [(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
-        outputData['X/energy'][(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputData['X/energy'][(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
+        outputDataX[(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputDataX[(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
+        outputDataY[(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputDataY[(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
+        outputDataE[(firstIndex - 1):(firstIndex - 1 + thisNumRecHits)] = inputDataE[(baseInputIndex):(baseInputIndex + thisNumRecHits)] 
       
         firstIndex += thisNumRecHits
       
