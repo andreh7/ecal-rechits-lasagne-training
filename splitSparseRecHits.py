@@ -121,6 +121,82 @@ def makeOutputDataRecHits(indices, inputData, outputData):
 
 #----------------------------------------------------------------------
 
+def makeOutputDataTracks(indices, inputData, outputData):
+
+    numOutputRows = len(indices)
+  
+    #----------
+    # calculate the total number of output tracks
+    #----------
+    numOutputTracks = inputData['tracks/numTracks'][indices].sum()
+  
+    #----------
+  
+    # now that we know the total number of output rechits, 
+    # copy the vectors related to the rechits 
+  
+    # variables other than the indexing variables 'firstIndex'
+    # and 'numTracks'
+    otherVarNames = []
+  
+    for key, value in inputData.keys():
+        if not key.startswith("tracks/"):
+            continue
+
+        if key == 'tracks/firstIndex' or key == 'tracks/numTracks':
+            outputData['key'] = -1 * np.ones(numOutputRows, dtype = 'int32')
+    
+        elif key == 'tracks/charge':
+            # normal int variables
+            outputData[key] = -1 * np.ones(numOutputTracks, dtype = 'int32')
+            otherVarNames.append(key)
+    
+        else:
+          # assume it's a float vector
+          outputData[key] = -1 * np.ones(numOutputTracks, dtype = 'float32')
+    
+          otherVarNames.append(key)
+
+    # end -- loop over keys of inputData.tracks
+
+    # note that we keep the Torch/Lua convention of one based indices
+    firstIndex = 1
+  
+    # make local variables for input and output variables
+    # to avoid dict/npz file lookups within the loop
+    inputDataNumTracks   = inputData['tracks/numTracks']
+    inputDataFirstIndex  = inputData['tracks/firstIndex']
+    inputDataRelpt       = inputData['tracks/relpt']
+
+    outputDataFirstIndex = outputData['tracks/firstIndex']
+    
+
+    for i in range(numOutputRows):
+  
+        index = indices[i]
+    
+        outputDataFirstIndex[i] = firstIndex
+        outputDataNumTracks[i]  = inputDataNumTracks[index]
+    
+        # sanity check of input data
+        assert inputDataFirstIndex[index] >= 1
+        assert inputDataFirstIndex[index] + inputDataNumTracks[index] - 1 <= len(inputDataRelpt), "failed at index=" + str(index)
+    
+        baseInputIndex = inputDatafirstIndex[index] - 1
+    
+        for j in range(inputDataNumTracks)[index]:
+            # copy per track variables over
+      
+            for varname in otherVarNames:
+                outputData[varname][firstIndex] = inputData.tracks[varname][baseInputIndex + j] 
+      
+            firstIndex += 1
+    
+        # end -- loop over tracks of this photon
+  
+    # end -- loop over photons
+
+#----------------------------------------------------------------------
 
 def makeOutputData(indices, inputData):
 
