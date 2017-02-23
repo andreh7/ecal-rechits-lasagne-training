@@ -26,6 +26,9 @@ dropOutProb = 0.5
 numHiddenLayers = 3
 nodesPerHiddenLayer = ninputs * 2
 
+# put a dropout layer after each layer, not only at the end
+dropOutPerLayer = False
+
 #----------------------------------------
 modelParams = dict(
     # maxGradientNorm = 3.3, # typically 0.99 percentile of the gradient norm before diverging
@@ -69,20 +72,24 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
 
     for i in range(numHiddenLayers):
 
-        if i < numHiddenLayers - 1:
+        isLastLayer = i == numHiddenLayers - 1
+
+        if not isLastLayer:
             # ReLU
             nonlinearity = rectify
 
             num_units = nodesPerHiddenLayer
         else:
-            if dropOutProb != None:
-                # add a dropout layer at the end
-                model = DropoutLayer(model, p = dropOutProb)
-
             # sigmoid at output
             nonlinearity = sigmoid
 
             num_units = 1
+
+        if dropOutProb != None:
+            if isLastLayer or dropOutPerLayer and i > 0:
+                # add a dropout layer at the end
+                # or in between (but not at the beginning)
+                model = DropoutLayer(model, p = dropOutProb)
 
         model = DenseLayer(model,
                            num_units = num_units,
