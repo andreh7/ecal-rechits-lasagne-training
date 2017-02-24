@@ -340,6 +340,15 @@ print 'starting training at', time.asctime()
 
 train_output = np.zeros(len(trainData['labels']))
 
+#----------
+# try to serialize the model structure itself
+# will not work if used e.g. on CPU instead of GPU etc.
+import pickle
+pickle.dump(model, open(os.path.join(options.outputDir,
+                                     "model-structure.pkl"),"w"))
+#----------
+
+
 epoch = 1
 while True:
 
