@@ -62,6 +62,7 @@ def addNumEvents(numEventsTrain, numEventsTest):
         ):
 
         if numEvents != None:
+            import pylab
             pylab.gca().text(x0, -0.08, '# ' + label + ' ev.: ' + str(numEvents),
                              horizontalalignment = halign,
                              verticalalignment = 'center',
