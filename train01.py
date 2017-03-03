@@ -349,7 +349,23 @@ pickle.dump(
          input_vars = input_vars), open(os.path.join(options.outputDir,
                                                      "model-structure.pkl"),"w"))
 #----------
+# dump input data
+#----------
+if True:
+    for inp, label in (
+        (trainInput, 'train'),
+        (testInput,  'test')):
+        
+        # save in pickled format so we can have arbitrary structures
+        # (unlike np.savez(..) which in principle could work also)
+        fout = open(os.path.join(options.outputDir,
+                                 "input-%s.pkl" % label), "w")
+        
+        pickle.dump(inp, fout)
+        fout.close()
 
+
+#----------
 
 epoch = 1
 while True:
