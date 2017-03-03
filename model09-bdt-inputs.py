@@ -2,7 +2,7 @@
 
 from lasagne.layers import InputLayer, DenseLayer, DropoutLayer
 from lasagne.init import GlorotUniform
-from lasagne.nonlinearities import rectify, sigmoid
+from lasagne.nonlinearities import rectify, LeakyRectify, sigmoid
 
 import numpy as np
 import theano.tensor as T
@@ -28,6 +28,8 @@ nodesPerHiddenLayer = ninputs * 2
 
 # put a dropout layer after each layer, not only at the end
 dropOutPerLayer = False
+
+reluLeak = None
 
 #----------------------------------------
 modelParams = dict(
@@ -75,8 +77,11 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
         isLastLayer = i == numHiddenLayers - 1
 
         if not isLastLayer:
-            # ReLU
-            nonlinearity = rectify
+            # ReLU/Leaky ReLU (fixed parameter, not trainable)
+            if reluLeak == None:
+                nonlinearity = rectify
+            else:
+                nonlinearity = LeakyRectify(reluLeak)
 
             num_units = nodesPerHiddenLayer
         else:
