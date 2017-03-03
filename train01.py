@@ -262,7 +262,7 @@ if globals().has_key('modelParams') and modelParams.has_key('maxGradientNorm'):
 
 #----------
 for fout in fouts:
-    print "using",options.optimizer,"optimizer"
+    print >> fout, "using",options.optimizer,"optimizer"
 
 if options.optimizer == 'adam':
     updates = adam(train_loss_grad, params)
