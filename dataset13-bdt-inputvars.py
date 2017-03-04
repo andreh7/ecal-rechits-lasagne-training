@@ -72,6 +72,13 @@ dataDesc = dict(
 #       scRawE : FloatTensor - size: 431989              12
 #     }
 
+# names of variables (without the preceding 'phoIdInput/') for
+# which we should take the absolute value
+absVarNames = [
+ 'covIEtaIPhi', # not sure whether this is symmetric by design ?
+ 'scEta',
+    ]
+
 # by default, normalize input variables
 # (can be overridden on the command line)
 normalizeBDTvars = True
@@ -159,6 +166,11 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
         del loaded
 
     # end of loop over input files
+
+    # take absolute value of some variables
+    for col,varname in enumerate(sortedVarnames):
+        if varname in absVarNames:
+            bdtVars.makeAbsValue(col)
 
     if normalizeBDTvars:
         bdtVars.normalize()
