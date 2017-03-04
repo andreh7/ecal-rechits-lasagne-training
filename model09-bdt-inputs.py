@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from lasagne.layers import InputLayer, DenseLayer, DropoutLayer
+from lasagne.layers import InputLayer, DenseLayer, DropoutLayer, prelu
 from lasagne.init import GlorotUniform
-from lasagne.nonlinearities import rectify, LeakyRectify, sigmoid
+from lasagne.nonlinearities import rectify, LeakyRectify, softplus, sigmoid
 
 import numpy as np
 import theano.tensor as T
@@ -29,7 +29,7 @@ nodesPerHiddenLayer = ninputs * 2
 # put a dropout layer after each layer, not only at the end
 dropOutPerLayer = False
 
-reluLeak = None
+nonlinearity = rectify
 
 #----------------------------------------
 modelParams = dict(
@@ -77,16 +77,13 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
         isLastLayer = i == numHiddenLayers - 1
 
         if not isLastLayer:
-            # ReLU/Leaky ReLU (fixed parameter, not trainable)
-            if reluLeak == None:
-                nonlinearity = rectify
-            else:
-                nonlinearity = LeakyRectify(reluLeak)
 
+            thisNonlinearity = nonlinearity
             num_units = nodesPerHiddenLayer
+
         else:
             # sigmoid at output
-            nonlinearity = sigmoid
+            thisNonlinearity = sigmoid
 
             num_units = 1
 
@@ -96,12 +93,23 @@ def makeModelHelper(numHiddenLayers, nodesPerHiddenLayer):
                 # or in between (but not at the beginning)
                 model = DropoutLayer(model, p = dropOutProb)
 
-        model = DenseLayer(model,
-                           num_units = num_units,
-                           W = GlorotUniform(),
-                           nonlinearity = nonlinearity
-                           )
+        if thisNonlinearity == 'prelu':
+            # special treatment for prelu layers
+            # (these have a trainable parameter and
+            # need a different treatment)
+            model = DenseLayer(model,
+                               num_units = num_units,
+                               W = GlorotUniform(),
+                               )
+            model = prelu(model)
 
+        else:    
+            model = DenseLayer(model,
+                               num_units = num_units,
+                               W = GlorotUniform(),
+                               nonlinearity = thisNonlinearity
+                               )
+            
     # end of loop over hidden layers
 
     return [ input_var ], model
