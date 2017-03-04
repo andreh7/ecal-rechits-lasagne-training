@@ -72,6 +72,10 @@ dataDesc = dict(
 #       scRawE : FloatTensor - size: 431989              12
 #     }
 
+# by default, normalize input variables
+# (can be overridden on the command line)
+normalizeBDTvars = True
+
 #----------------------------------------------------------------------
 
 def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
@@ -156,7 +160,8 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
 
     # end of loop over input files
 
-    bdtVars.normalize()
+    if normalizeBDTvars:
+        bdtVars.normalize()
 
     #----------
     # reweight signal to have the same background shape
