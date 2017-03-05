@@ -119,7 +119,10 @@ def readROC(resultDirData, fname, isTrain, returnFullCurve = False):
     print "reading",fname
     
     assert fname.endswith(".npz")
-    data = np.load(fname)
+    try:
+        data = np.load(fname)
+    except Exception, ex:
+        raise Exception("error caught reading " + fname, ex)
 
     weights = resultDirData.getWeights(isTrain)
     labels  = resultDirData.getLabels(isTrain)
