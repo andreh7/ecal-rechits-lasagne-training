@@ -4,6 +4,24 @@ import sys, os
 import numpy as np
 
 #----------------------------------------------------------------------
+def findHighestEpoch(outputDir, sample):
+    import glob, re
+    fnames = glob.glob(os.path.join(outputDir, "roc-data-%s-*.npz" % sample))
+    
+    highest = -1
+    for fname in fnames:
+        mo = re.match("roc-data-" + sample + "-(\d+).npz$", os.path.basename(fname))
+        if mo:
+            # note that 'mva' can also appear where otherwise the epoch number
+            # appears
+            highest = max(highest, int(mo.group(1), 10))
+
+    if highest == -1:
+        return None
+    else:
+        return highest
+
+#----------------------------------------------------------------------
 # main
 #----------------------------------------------------------------------
 
@@ -11,6 +29,8 @@ from optparse import OptionParser
 parser = OptionParser("""
 
   usage: %prog [options] result-directory epoch
+
+  use epoch = 0 for highest epoch number found
 
 """
 )
