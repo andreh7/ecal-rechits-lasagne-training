@@ -169,6 +169,9 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta):
 
     # take absolute value of some variables
     for col,varname in enumerate(sortedVarnames):
+        if varname.startswith(groupVarName + "/"):
+            varname = varname[(len(groupVarName) + 1):]
+
         if varname in absVarNames:
             bdtVars.makeAbsValue(col)
 
