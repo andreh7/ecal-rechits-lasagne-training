@@ -55,18 +55,24 @@ assert len(ARGV) == 2, "usage: plotNNoutput.py result-directory epoch"
 
 outputDir, epoch = ARGV
 epoch = int(epoch)
+if epoch == 0:
+    epoch = findHighestEpoch(outputDir, options.sample)
+
 
 #----------------------------------------
-
-
-options.sample = "train"
 
 
 weightsLabelsFile = os.path.join(outputDir, "weights-labels-" + options.sample + ".npz")
 
 weightsLabels = np.load(weightsLabelsFile)
 
-weights = weightsLabels[options.sample + 'Weight']
+if options.sample == 'train':
+    weightVarName = "trainWeight"
+else:
+    # test sample
+    weightVarName = "weight"
+
+weights = weightsLabels[weightVarName]
 labels  = weightsLabels['label']
 
 outputsFile = os.path.join(outputDir, "roc-data-%s-%04d.npz" % (options.sample, epoch))
