@@ -3,6 +3,8 @@
 import sys, os
 import numpy as np
 
+from plotROCutils import addTimestamp, addDirname, addNumEvents, readDescription
+
 #----------------------------------------------------------------------
 def findHighestEpoch(outputDir, sample):
     import glob, re
@@ -88,6 +90,10 @@ pylab.legend()
 pylab.xlabel('NN output')
 pylab.title(options.sample + " epoch %d" % epoch)
 pylab.grid()
+
+addTimestamp(outputDir)
+addDirname(outputDir)
+# addNumEvents(numEvents.get('train', None), numEvents.get('test', None))
 
 if options.savePlots:
     outputFname = os.path.join(outputDir, "nn-output-" + options.sample + "-%04d.pdf" % epoch)
