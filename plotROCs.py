@@ -12,6 +12,8 @@ import numpy as np
 
 from plotROCutils import addTimestamp, addDirname, addNumEvents, readDescription
 
+maxNumThreads = 8
+
 #----------------------------------------------------------------------
 
 class ResultDirData:
@@ -152,6 +154,20 @@ def readROC(resultDirData, fname, isTrain, returnFullCurve = False):
         return aucValue
 
 #----------------------------------------------------------------------
+    
+class Func:
+    # function wrapper used with the multiprocessing module
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, args):
+        return self.func(*args)
+
+#----------------------------------------------------------------------
+
+def __readROCfilesLambda(resultDirData, fname, isTrain):
+    # default transformation function for readROCfiles
+    return fname
 
 def readROCfiles(resultDirData, transformation = None, includeCached = False, maxEpoch = None,
                  excludedEpochs = None):
@@ -165,7 +181,7 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
     # just the name is stored.
 
     if transformation == None:
-        transformation = lambda resultDirData, fname, isTrain: fname
+        transformation = __readROCfilesLambda
 
     inputDir = resultDirData.inputDir
 
@@ -189,6 +205,13 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
 
     # MVA id ROC areas
     mvaROC = dict(train = None, test = None)
+
+    tasks = []
+
+    # to avoid scheduling tasks twice (because the result
+    # is not present yet), in particular avoid re-reading
+    # the full file even though the cached file is present
+    scheduledTasks = dict(train = set(), test = set())
 
     for inputFname in inputFiles:
 
@@ -230,10 +253,34 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
                         # (priority is given to the cached files)
                         continue
 
-                rocValues[sampleType][epoch] = transformation(resultDirData, inputFname, isTrain)
+                    if epoch in scheduledTasks[sampleType]:
+                        # already scheduled, no need to schedule twice
+                        continue
+
+                tasks.append(dict(
+                        sampleType = sampleType,
+                        epoch = epoch,
+                        args = (resultDirData, inputFname, isTrain),
+                        ))
+                scheduledTasks[sampleType].add(epoch)
+
             continue
 
         print >> sys.stderr,"WARNING: unmatched filename",inputFname
+
+    # calculate the AUC values
+    from multiprocessing import Process, Pool
+
+    procPool = Pool(processes = maxNumThreads)
+
+    results = procPool.map(Func(transformation), [ task['args'] for task in tasks ])
+
+    # wait for processes to complete
+    procPool.close()
+    procPool.join()
+    
+    for task, res in zip(tasks, results):
+        rocValues[task['sampleType']][task['epoch']] = res
 
     return mvaROC, rocValues
 
