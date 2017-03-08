@@ -97,13 +97,18 @@ else:
     origTrainWeights = trainWeights
 
 #----------
+# initialize output directory
+#----------
+
 if options.outputDir == None:
     options.outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
 
 if not os.path.exists(options.outputDir):
     os.makedirs(options.outputDir)
 
+#----------
 # try to set the process name
+#----------
 try:
     import procname
     procname.setprocname("train " + 
