@@ -117,6 +117,13 @@ except ImportError, ex:
     pass
 
 #----------
+# setup logging
+#----------
+logfile = open(os.path.join(options.outputDir, "train.log"), "w")
+
+fouts = [ sys.stdout, logfile ]
+
+#----------
 # write training file paths to result directory
 #----------
 
@@ -124,13 +131,6 @@ fout = open(os.path.join(options.outputDir, "samples.txt"), "w")
 for fname in dataDesc['train_files']:
     print >> fout, fname
 fout.close()
-
-#----------
-
-logfile = open(os.path.join(options.outputDir, "train.log"), "w")
-
-fouts = [ sys.stdout, logfile ]
-
 
 #----------
 
