@@ -173,6 +173,8 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
             varname = varname[(len(groupVarName) + 1):]
 
         if varname in absVarNames:
+            for fout in logStreams:
+                print >> fout, "taking absolute value of",varname
             bdtVars.makeAbsValue(col)
 
     if normalizeBDTvars:
