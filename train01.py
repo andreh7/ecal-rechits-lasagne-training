@@ -120,6 +120,34 @@ if options.printModelOnlyOutput != None:
     sys.exit(0)
 
 #----------
+# initialize output directory
+#----------
+
+if options.outputDir == None:
+    options.outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
+
+if not os.path.exists(options.outputDir):
+    os.makedirs(options.outputDir)
+
+#----------
+# try to set the process name
+#----------
+try:
+    import procname
+    procname.setprocname("train " + 
+                         os.path.basename(options.outputDir.rstrip('/')))
+except ImportError, ex:
+    pass
+
+#----------
+# setup logging
+#----------
+logfile = open(os.path.join(options.outputDir, "train.log"), "w")
+
+fouts = [ sys.stdout, logfile ]
+
+#----------
+
 print "loading data"
 
 doPtEtaReweighting = globals().get("doPtEtaReweighting", False)
@@ -149,19 +177,6 @@ else:
     origTrainWeights = trainWeights
 
 #----------
-if options.outputDir == None:
-    options.outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
-
-if not os.path.exists(options.outputDir):
-    os.makedirs(options.outputDir)
-
-# try to set the process name
-try:
-    import procname
-    procname.setprocname("train " + 
-                         os.path.basename(options.outputDir.rstrip('/')))
-except ImportError, ex:
-    pass
 
 #----------
 # write training file paths to result directory
@@ -171,13 +186,6 @@ fout = open(os.path.join(options.outputDir, "samples.txt"), "w")
 for fname in dataDesc['train_files']:
     print >> fout, fname
 fout.close()
-
-#----------
-
-logfile = open(os.path.join(options.outputDir, "train.log"), "w")
-
-fouts = [ sys.stdout, logfile ]
-
 
 #----------
 
