@@ -157,11 +157,13 @@ with Timer("loading training dataset...") as t:
     trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], 
                                             cuda = cuda, 
                                             isTraining = True,
-                                            reweightPtEta = doPtEtaReweighting)
+                                            reweightPtEta = doPtEtaReweighting,
+                                            logStreams = fouts)
 with Timer("loading test dataset...") as t:
     testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
                                             isTraining = False,
-                                            reweightPtEta = False)
+                                            reweightPtEta = False,
+                                            logStreams = fouts)
 
 # convert labels from -1..+1 to 0..1 for cross-entropy loss
 # must clone to assign
