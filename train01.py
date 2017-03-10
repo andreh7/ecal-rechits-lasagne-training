@@ -166,18 +166,6 @@ with Timer("loading test dataset...") as t:
                                             logStreams = fouts)
 
 
-# TODO: normalize these to same weight for positive and negative samples
-trainWeights = trainData['weights'].reshape((-1,1))
-testWeights  = testData['weights'].reshape((-1,1))
-
-if doPtEtaReweighting:
-    origTrainWeights = trainData['weightsBeforePtEtaReweighting']
-else:
-    # they're the same
-    origTrainWeights = trainWeights
-
-#----------
-
 #----------
 # write training file paths to result directory
 #----------
@@ -220,8 +208,6 @@ if False:
 #----------
 
 target_var = T.imatrix('targets')
-# target_var = T.vector('targets2')
-weight_var = T.matrix('weights')
 
 
 # these are of type theano.tensor.var.TensorVariable
@@ -235,18 +221,38 @@ assert len(outputShape) == 2
 assert outputShape[0] == None
 numOutputNodes = outputShape[1]
 
+#----------
 # check whether we have one or two outputs 
+#----------
 if numOutputNodes == 1:
     lossFunc = binary_crossentropy
+
+    # TODO: normalize these to same weight for positive and negative samples
+    trainWeights = trainData['weights'].reshape((-1,1))
+    testWeights  = testData['weights'].reshape((-1,1))
+
+    weight_var = T.matrix('weights')
 elif numOutputNodes == 2:
 
     # we have two outputs (typically from a softmax output layer)
     lossFunc = categorical_crossentropy
 
+    # TODO: normalize these to same weight for positive and negative samples
+    trainWeights = trainData['weights'].reshape((-1,))
+    testWeights  = testData['weights'].reshape((-1,))
+
+    weight_var = T.vector('weights')
+
 else:
     raise Exception("don't know how to handle %d output nodes" % numOutputNodes)
 
 #----------
+if doPtEtaReweighting:
+    origTrainWeights = trainData['weightsBeforePtEtaReweighting']
+else:
+    # they're the same
+    origTrainWeights = trainWeights
+
 #----------
 # write out BDT/MVA id labels (for performance comparison)
 #----------
