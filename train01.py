@@ -192,33 +192,6 @@ fout.close()
 for fout in fouts:
     print >> fout, "doPtEtaReweighting=",doPtEtaReweighting
 
-#----------
-# write out BDT/MVA id labels (for performance comparison)
-#----------
-for name, output in (
-    ('train', trainData['mvaid']),
-    ('test',  testData['mvaid']),
-    ):
-    np.savez(os.path.join(options.outputDir, "roc-data-%s-mva.npz" % name),
-             # these are the BDT outputs
-             output = output,
-             )
-
-# save weights (just once, we assume the ordering of the events is always the same)
-np.savez(os.path.join(options.outputDir, "weights-labels-train.npz"),
-         trainWeight = trainWeights,             
-         origTrainWeights = origTrainWeights,
-         doPtEtaReweighting = doPtEtaReweighting,
-         label = trainData['labels'],
-         )
-np.savez(os.path.join(options.outputDir, "weights-labels-test.npz"),
-         weight = testWeights,             
-         label = testData['labels'],
-         )
-
-
-#----------
-
 ### print "----------"
 ### print "model:"
 ### print model.summary()
@@ -272,6 +245,32 @@ elif numOutputNodes == 2:
 
 else:
     raise Exception("don't know how to handle %d output nodes" % numOutputNodes)
+
+#----------
+#----------
+# write out BDT/MVA id labels (for performance comparison)
+#----------
+for name, output in (
+    ('train', trainData['mvaid']),
+    ('test',  testData['mvaid']),
+    ):
+    np.savez(os.path.join(options.outputDir, "roc-data-%s-mva.npz" % name),
+             # these are the BDT outputs
+             output = output,
+             )
+
+# save weights (just once, we assume the ordering of the events is always the same)
+np.savez(os.path.join(options.outputDir, "weights-labels-train.npz"),
+         trainWeight = trainWeights,             
+         origTrainWeights = origTrainWeights,
+         doPtEtaReweighting = doPtEtaReweighting,
+         label = trainData['labels'],
+         )
+np.savez(os.path.join(options.outputDir, "weights-labels-test.npz"),
+         weight = testWeights,             
+         label = testData['labels'],
+         )
+
 
 #----------
     
