@@ -165,8 +165,6 @@ with Timer("loading test dataset...") as t:
                                             reweightPtEta = False,
                                             logStreams = fouts)
 
-# convert labels from -1..+1 to 0..1 for cross-entropy loss
-# must clone to assign
 
 # TODO: normalize these to same weight for positive and negative samples
 trainWeights = trainData['weights'].reshape((-1,1))
