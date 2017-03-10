@@ -68,6 +68,34 @@ for param in options.params:
     exec param
 
 #----------
+# initialize output directory
+#----------
+
+if options.outputDir == None:
+    options.outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
+
+if not os.path.exists(options.outputDir):
+    os.makedirs(options.outputDir)
+
+#----------
+# try to set the process name
+#----------
+try:
+    import procname
+    procname.setprocname("train " + 
+                         os.path.basename(options.outputDir.rstrip('/')))
+except ImportError, ex:
+    pass
+
+#----------
+# setup logging
+#----------
+logfile = open(os.path.join(options.outputDir, "train.log"), "w")
+
+fouts = [ sys.stdout, logfile ]
+
+#----------
+
 print "loading data"
 
 doPtEtaReweighting = globals().get("doPtEtaReweighting", False)
@@ -77,11 +105,13 @@ with Timer("loading training dataset...") as t:
     trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], 
                                             cuda = cuda, 
                                             isTraining = True,
-                                            reweightPtEta = doPtEtaReweighting)
+                                            reweightPtEta = doPtEtaReweighting,
+                                            logStreams = fouts)
 with Timer("loading test dataset...") as t:
     testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
                                             isTraining = False,
-                                            reweightPtEta = False)
+                                            reweightPtEta = False,
+                                            logStreams = fouts)
 
 # convert labels from -1..+1 to 0..1 for cross-entropy loss
 # must clone to assign
@@ -97,21 +127,6 @@ else:
     origTrainWeights = trainWeights
 
 #----------
-if options.outputDir == None:
-    options.outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
-
-if not os.path.exists(options.outputDir):
-    os.makedirs(options.outputDir)
-
-# try to set the process name
-try:
-    import procname
-    procname.setprocname("train " + 
-                         os.path.basename(options.outputDir.rstrip('/')))
-except ImportError, ex:
-    pass
-
-#----------
 # write training file paths to result directory
 #----------
 
@@ -119,13 +134,6 @@ fout = open(os.path.join(options.outputDir, "samples.txt"), "w")
 for fname in dataDesc['train_files']:
     print >> fout, fname
 fout.close()
-
-#----------
-
-logfile = open(os.path.join(options.outputDir, "train.log"), "w")
-
-fouts = [ sys.stdout, logfile ]
-
 
 #----------
 
@@ -214,6 +222,15 @@ factory.AddSpectator("istrain","F")
 # official photon id
 factory.AddSpectator("origmva","F")
 
+# index of event in our numpy arrays
+factory.AddSpectator("origindex","I")
+
+# weight which we gave to TMVA for training
+# (TMVA potentially normalizes the per class sum of weights differently,
+# i.e. weights are scaled per class)
+factory.AddSpectator("trainWeight","F")
+factory.AddSpectator("origTrainWeights","F")
+
 # needed because we use Add{Training,Test}Event(..) methods
 factory.CreateEventAssignTrees("inputTree")
  
@@ -229,11 +246,11 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
     # bgTuple  = ROOT.TNtuple("bgTuple",  "bgTuple",  varnames.join(":"))
 
     #                                             spectators
-    values = ROOT.vector('double')(numInputVars + 2)
+    values = ROOT.vector('double')(numInputVars + 5)
 
-    for inputData, labels, weights, method, origmva, istrain in (
-        (trainInput, trainData['labels'], trainData['weights'], factory.AddTrainingEvent, trainData['mvaid'], 1),
-        (testInput,  testData['labels'],  testData['weights'], factory.AddTestEvent, testData['mvaid'], 0)):
+    for inputData, labels, weights, origWeights, method, origmva, istrain in (
+        (trainInput, trainData['labels'], trainData['weights'], origTrainWeights,    factory.AddTrainingEvent, trainData['mvaid'], 1),
+        (testInput,  testData['labels'],  testData['weights'],  testData['weights'], factory.AddTestEvent, testData['mvaid'], 0)):
 
         for row in range(inputData.shape[0]):
 
@@ -242,6 +259,15 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
             
             values[numInputVars]   = istrain
             values[numInputVars+1] = origmva[row]
+
+            # origindex
+            values[numInputVars+2] = row
+
+            # our training weight
+            values[numInputVars+3] = weights[row]
+
+            # original event weight potentially before eta/pt reweighting (for performance comparison)
+            values[numInputVars+4] = origWeights[row]
 
             if labels[row] == 1:
                 method("Signal", values, weights[row])
@@ -270,18 +296,47 @@ factory.PrepareTrainingAndTestTree(ROOT.TCut(""),
 
 method = factory.BookMethod(ROOT.TMVA.Types.kBDT, "BDT",
                    ":".join([
-
-            # from https://raw.githubusercontent.com/InnaKucher/flashgg/0726271781a6a9379471cc1e848075cd6102db43/MicroAOD/data/MVAweights_80X_barrel_ICHEP_wShift.xml
-                       "!H",
-                       "!V",
-                       "IgnoreNegWeightsInTraining",
-                       "NTrees=1000",
-                       "MaxDepth=3",
-                       "nCuts=2000",
-                       "BoostType=Grad",
-                       "Shrinkage=1.000000e-01",
-                       "!UseYesNoLeaf",
-                       "!UseBaggedGrad",
+            "!V",
+            "VerbosityLevel=Default",
+            "VarTransform=None",
+            "!H",
+            "!CreateMVAPdfs",
+            "!IgnoreNegWeightsInTraining",
+            "NTrees=2000",
+            "MaxDepth=6",
+            "MinNodeSize=5%",
+            "nCuts=2000",
+            "BoostType=Grad",
+            "AdaBoostR2Loss=quadratic",
+            "!UseBaggedBoost",
+            "Shrinkage=1.000000e-01",
+            "AdaBoostBeta=5.000000e-01",
+            "!UseRandomisedTrees",
+            "UseNvars=4",
+            "UsePoissonNvars",
+            "BaggedSampleFraction=6.000000e-01",
+            "UseYesNoLeaf",
+            "NegWeightTreatment=ignorenegweightsintraining",
+            "Css=1.000000e+00",
+            "Cts_sb=1.000000e+00",
+            "Ctb_ss=1.000000e+00",
+            "Cbb=1.000000e+00",
+            "NodePurityLimit=5.000000e-01",
+            "SeparationType=giniindex",
+            "!DoBoostMonitor",
+            "!UseFisherCuts",
+            "MinLinCorrForFisher=8.000000e-01",
+            "!UseExclusiveVars",
+            "!DoPreselection",
+            "SigToBkgFraction=1.000000e+00",
+            "PruneMethod=costcomplexity",
+            "PruneStrength=5.000000e+00",
+            "PruningValFraction=5.000000e-01",
+            "nEventsMin=0",
+            "!UseBaggedGrad",
+            "GradBaggingFraction=6.000000e-01",
+            "UseNTrainEvents=0",
+            "NNodesMax=0",
                        ]))
 
 print 'starting training at', time.asctime()
