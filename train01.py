@@ -98,6 +98,15 @@ options = parser.parse_args()
 
 batchsize = 32
 
+# if not None, set average background
+# weight to one and the average signal
+# weight such that the sum of signal
+# weights is sigToBkgFraction times the
+# number of background weights
+sigToBkgFraction = None
+
+#----------
+
 execfile(options.modelFile[0])
 execfile(options.dataFile[0])
 
@@ -228,7 +237,6 @@ numOutputNodes = outputShape[1]
 if numOutputNodes == 1:
     lossFunc = binary_crossentropy
 
-    # TODO: normalize these to same weight for positive and negative samples
     trainWeights = trainData['weights'].reshape((-1,1))
     testWeights  = testData['weights'].reshape((-1,1))
 
@@ -238,7 +246,6 @@ elif numOutputNodes == 2:
     # we have two outputs (typically from a softmax output layer)
     lossFunc = categorical_crossentropy
 
-    # TODO: normalize these to same weight for positive and negative samples
     trainWeights = trainData['weights'].reshape((-1,))
     testWeights  = testData['weights'].reshape((-1,))
 
@@ -248,11 +255,43 @@ else:
     raise Exception("don't know how to handle %d output nodes" % numOutputNodes)
 
 #----------
+# pt/eta reweighting
+#----------
 if doPtEtaReweighting:
     origTrainWeights = trainData['weightsBeforePtEtaReweighting']
 else:
     # they're the same
     origTrainWeights = trainWeights
+
+#----------
+# fix ratio of sum of signal and background
+# events if requested
+#----------
+
+if sigToBkgFraction != None:
+    
+    # normalize average background weight to one
+    # (just for the training dataset)
+    bkgIndices = trainData['labels'] == 0
+
+    numBkgEvents = sum(bkgIndices)
+    sumBkgWeights = float(sum(trainWeights[bkgIndices]))
+
+    trainWeights[bkgIndices] *= numBkgEvents / sumBkgWeights
+
+    #----------
+    sigIndices = trainData['labels'] == 1
+
+    sumSigWeights = float(sum(trainWeights[sigIndices]))
+
+    # note that we now multiply with numBkgEvents
+    # instead of the original sumBkgWeights
+    targetSumSigWeights = sigToBkgFraction * numBkgEvents
+
+    trainWeights[sigIndices] *= targetSumSigWeights / sumSigWeights
+
+    for fout in fouts:
+        print >> fout, "sum train sig weights:",sum(trainWeights[sigIndices]),"train sum bkg weights:",sum(trainWeights[bkgIndices])
 
 #----------
 # write out BDT/MVA id labels (for performance comparison)
