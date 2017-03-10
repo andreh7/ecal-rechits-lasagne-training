@@ -222,6 +222,15 @@ factory.AddSpectator("istrain","F")
 # official photon id
 factory.AddSpectator("origmva","F")
 
+# index of event in our numpy arrays
+factory.AddSpectator("origindex","I")
+
+# weight which we gave to TMVA for training
+# (TMVA potentially normalizes the per class sum of weights differently,
+# i.e. weights are scaled per class)
+factory.AddSpectator("trainWeight","F")
+factory.AddSpectator("origTrainWeights","F")
+
 # needed because we use Add{Training,Test}Event(..) methods
 factory.CreateEventAssignTrees("inputTree")
  
@@ -237,11 +246,11 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
     # bgTuple  = ROOT.TNtuple("bgTuple",  "bgTuple",  varnames.join(":"))
 
     #                                             spectators
-    values = ROOT.vector('double')(numInputVars + 2)
+    values = ROOT.vector('double')(numInputVars + 5)
 
-    for inputData, labels, weights, method, origmva, istrain in (
-        (trainInput, trainData['labels'], trainData['weights'], factory.AddTrainingEvent, trainData['mvaid'], 1),
-        (testInput,  testData['labels'],  testData['weights'], factory.AddTestEvent, testData['mvaid'], 0)):
+    for inputData, labels, weights, origWeights, method, origmva, istrain in (
+        (trainInput, trainData['labels'], trainData['weights'], origTrainWeights,    factory.AddTrainingEvent, trainData['mvaid'], 1),
+        (testInput,  testData['labels'],  testData['weights'],  testData['weights'], factory.AddTestEvent, testData['mvaid'], 0)):
 
         for row in range(inputData.shape[0]):
 
@@ -250,6 +259,15 @@ with Timer("passing train+test data to TMVA factory...", fouts) as t:
             
             values[numInputVars]   = istrain
             values[numInputVars+1] = origmva[row]
+
+            # origindex
+            values[numInputVars+2] = row
+
+            # our training weight
+            values[numInputVars+3] = weights[row]
+
+            # original event weight potentially before eta/pt reweighting (for performance comparison)
+            values[numInputVars+4] = origWeights[row]
 
             if labels[row] == 1:
                 method("Signal", values, weights[row])
