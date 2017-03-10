@@ -559,6 +559,11 @@ while True:
         ('train', train_output, trainData['labels'], origTrainWeights),
         ('test',  test_output,  testData['labels'],  testWeights),
         ):
+
+        if numOutputNodes == 2:
+            # make sure we only have one column
+            labels = labels[:,0]
+
         auc = roc_auc_score(labels,
                             predictions,
                             sample_weight = weights,
