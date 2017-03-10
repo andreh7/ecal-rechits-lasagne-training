@@ -5,7 +5,7 @@ import numpy as np
 import os, sys
 
 import lasagne
-from lasagne.objectives import binary_crossentropy, aggregate
+from lasagne.objectives import binary_crossentropy, categorical_crossentropy, aggregate
 from lasagne.updates import adam, nesterov_momentum, sgd, get_or_compute_grads
 
 from sklearn.metrics import roc_auc_score
@@ -255,11 +255,33 @@ weight_var = T.matrix('weights')
 
 # these are of type theano.tensor.var.TensorVariable
 train_prediction = lasagne.layers.get_output(model)
-train_loss       = aggregate(binary_crossentropy(train_prediction, target_var), mode = "mean", weights = weight_var)
+
+#----------
+# get the number of output nodes of the model
+#----------
+outputShape = lasagne.layers.get_output_shape(model)
+assert len(outputShape) == 2
+assert outputShape[0] == None
+numOutputNodes = outputShape[1]
+
+# check whether we have one or two outputs 
+if numOutputNodes == 1:
+    lossFunc = binary_crossentropy
+elif numOutputNodes == 2:
+
+    # we have two outputs (typically from a softmax output layer)
+    lossFunc = categorical_crossentropy
+
+else:
+    raise Exception("don't know how to handle %d output nodes" % numOutputNodes)
+
+#----------
+    
+train_loss       = aggregate(lossFunc(train_prediction, target_var), mode = "mean", weights = weight_var)
 
 # deterministic = True is e.g. set to replace dropout layers by a fixed weight
 test_prediction = lasagne.layers.get_output(model, deterministic = True)
-test_loss       = aggregate(binary_crossentropy(test_prediction, target_var), mode = "mean", weights = weight_var)
+test_loss       = aggregate(lossFunc(test_prediction, target_var), mode = "mean", weights = weight_var)
 
 # method for updating weights
 params = lasagne.layers.get_all_params(model, trainable = True)
@@ -330,6 +352,12 @@ with Timer("compiling network output function...", fouts) as t:
 
 for data in (trainData, testData):
     data['labels'] = data['labels'].astype('int32').reshape((-1,1))
+
+    # check whether we have two outputs 
+    if numOutputNodes == 2:
+        # we have two outputs (typically from a softmax output layer)
+        # we set the second output target values to 1 - labels
+        data['labels'] = np.column_stack([ data['labels'], 1 - data['labels'] ])
 
 #----------
 # produce test and training input once
