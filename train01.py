@@ -196,10 +196,11 @@ for fout in fouts:
 #----------
 # write graphviz output to results directory
 #----------
-networkGraphvizFname = os.path.join(options.outputDir, "model.gv")
-dot.write(networkGraphvizFname, format = "raw")
+networkGraphvizFname = os.path.join(options.outputDir, "model")
+dot.write(networkGraphvizFname + ".gv",  format = "raw")
+dot.write(networkGraphvizFname + ".pdf", format = "pdf")
 
-# runs dot externally but graphviz is not installed on the machines...
+# runs dot externally (assume graphviz is installed on the machine)
 if False:
     for suffix in ("svg",):
         draw_net.draw_to_file(lasagne.layers.get_all_layers(model), 
