@@ -12,9 +12,10 @@ from plotROCutils import addTimestamp, addDirname, addNumEvents, readDescription
 
 #----------------------------------------------------------------------
 
-def readROC(fname, isTrain, returnFullCurve = False):
+def readROC(fname, isTrain, returnFullCurve = False, origMVA = False):
     # reads the TMVA output file under the ROC curve for it
     # 
+    # @param origMVA if True, returns the values corresponding to the original 
 
     print "reading",fname
     
@@ -42,12 +43,19 @@ def readROC(fname, isTrain, returnFullCurve = False):
     predictions = []
     weights = []
 
+    if origMVA:
+        # official photon id
+        varname = "origmva"
+    else:
+        # our own training
+        varname = "BDT"
+
     for className, label in (('Signal', 1), 
                              ('Background',0)):
 
         # note that class e.g. can be zero for signal etc.
         # so we better rely on className 
-        tree.Draw("BDT:weight",'className == "%s"' % className,"goff")
+        tree.Draw(varname + ":weight",'className == "%s"' % className,"goff")
         nentries = tree.GetSelectedRows()
 
         v1 = tree.GetV1(); v2 = tree.GetV2()
@@ -97,17 +105,24 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
     inputDir = os.path.dirname(tmvaOutputFname)
 
     pylab.figure(facecolor='white')
+
+    # first index is 'MVA' (for official photon id) or 'TMVA'
+    # for our own training
     
     auc = {}
     fpr = {}
     tpr = {}
     numEvents = {}
 
-    for sample in ('train', 'test'):
-        auc[sample], fpr[sample], tpr[sample], numEvents[sample] = readROC(tmvaOutputFname, sample == 'train', True)
-
-    # TODO: implement this later
-    mvaROC = None
+    for key in ('BDT', 'TMVA'):
+        auc[key] = {}
+        fpr[key] = {}
+        tpr[key] = {}
+        numEvents[key] = {}
+        origMVA = key == 'BDT'
+        for sample in ('train', 'test'):
+            auc[key][sample], fpr[key][sample], tpr[key][sample], numEvents[key][sample] = readROC(tmvaOutputFname, sample == 'train', True,
+                                                                                                   origMVA = origMVA)
 
     #----------
 
@@ -122,20 +137,19 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
         ('test', 'red'),
         ):
 
-        isTrain = sample == 'train'
+        for key, lineStyle, lineWidth in (
+            ('TMVA', '-', 2),
+            ('BDT',  '--', 1),
+            ):
 
-        if ignoreTrain and isTrain:
-            continue
-        
-        drawSingleROCcurve(auc[sample], fpr[sample], tpr[sample], 
-                           "TMVA " + sample + " (auc {auc:.3f})", color, '-', 2)
-        updateHighestTPR(highestTPRs, fpr[sample], tpr[sample], xmax)
+            isTrain = sample == 'train'
 
-        # draw the ROC curve for the MVA id if available
-        
-        if False:
-            drawSingleROCcurve(fname, isTrain, "BDT " + sample + " (auc {auc:.3f})", color, '--', 1)
-            updateHighestTPR(highestTPRs, fpr, tpr, xmax)            
+            if ignoreTrain and isTrain:
+                continue
+
+            drawSingleROCcurve(auc[key][sample], fpr[key][sample], tpr[key][sample], 
+                               key + " " + sample + " (auc {auc:.3f})", color, lineStyle, lineWidth)
+            updateHighestTPR(highestTPRs, fpr[key][sample], tpr[key][sample], xmax)
 
     pylab.xlabel('fraction of false positives')
     pylab.ylabel('fraction of true positives')
