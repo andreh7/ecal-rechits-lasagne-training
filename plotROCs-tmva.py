@@ -55,7 +55,7 @@ def readROC(fname, isTrain, returnFullCurve = False, origMVA = False):
 
         # note that class e.g. can be zero for signal etc.
         # so we better rely on className 
-        tree.Draw(varname + ":weight",'className == "%s"' % className,"goff")
+        tree.Draw(varname + ":origTrainWeights",'className == "%s"' % className,"goff")
         nentries = tree.GetSelectedRows()
 
         v1 = tree.GetV1(); v2 = tree.GetV2()
