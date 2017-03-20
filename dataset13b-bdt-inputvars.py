@@ -85,7 +85,8 @@ normalizeBDTvars = True
 
 #----------------------------------------------------------------------
 
-def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams):
+def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds):
+    # @param returnEventIds if True, returns also a dict with sample/run/ls/event numbers 
 
     # only apply pt/eta reweighting for training dataset
     reweightPtEta = reweightPtEta and isTraining
@@ -110,10 +111,12 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
 
     bdtVars = None 
                                                  
-  
     # sort the names of the input variables
     # so that we get reproducible results
     sortedVarnames = {}
+
+    if returnEventIds:
+        eventIDs = {}
   
     # load all input files
     for fname in fnames:
@@ -162,7 +165,19 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
         if reweightPtEta:
           ptEta.add(loaded, thisSize)
 
+        #----------
+        # run/event etc.
+        #----------
+        if returnEventIds:
+            for key in ('sample', 'run', 'ls', 'event'):
+                if eventIDs.has_key(key):
+                    eventIDs[key] = np.concatenate( [ eventIDs[key], loaded[key] ])
+                else:
+                    eventIDs[key] = loaded[key]
+
+        #----------
         # encourage garbage collection
+        #----------
         del loaded
 
     # end of loop over input files
@@ -227,8 +242,11 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
 
 
     assert totsize == data['input'].shape[0]
-  
-    return data, totsize
+
+    if returnEventIds:
+        return data, totsize, eventIDs
+    else:
+        return data, totsize
 
 #----------------------------------------------------------------------
 
