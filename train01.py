@@ -167,12 +167,14 @@ with Timer("loading training dataset...") as t:
                                             cuda = cuda, 
                                             isTraining = True,
                                             reweightPtEta = doPtEtaReweighting,
-                                            logStreams = fouts)
+                                            logStreams = fouts,
+                                            returnEventIds = False)
 with Timer("loading test dataset...") as t:
     testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
                                             isTraining = False,
                                             reweightPtEta = False,
-                                            logStreams = fouts)
+                                            logStreams = fouts,
+                                            returnEventIds = False)
 
 
 #----------
