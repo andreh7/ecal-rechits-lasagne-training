@@ -167,6 +167,24 @@ def addTracks(allData, thisData):
 
 
 #----------------------------------------------------------------------
+
+def makeSampleId(fname, numEntries):
+    # @return a number determined from the file name 
+    fname = os.path.basename(fname)
+
+    fname = fname.split('_')[0]
+
+    num = "".join([ ch for ch in fname if ch >= '0' and ch <= '9' ])
+
+    if num == "":
+        num = -1
+    else:
+        num = int(num, 10)
+
+    return np.ones(numEntries, dtype = 'i4') * num
+
+
+#----------------------------------------------------------------------
 # main
 #----------------------------------------------------------------------
 from optparse import OptionParser
@@ -243,6 +261,8 @@ for subdet in ("barrel", "endcap"):
             if allData == None:
 
                 allData = {}
+
+                allData['sample'] = makeSampleId(fname, len(thisData['y']))
         
                 for key in thisData.keys():
 
@@ -265,6 +285,9 @@ for subdet in ("barrel", "endcap"):
             else:
                 # append to existing data
           
+                allData['sample'] = catItem(allData['sample'],
+                                            makeSampleId(fname, len(thisData['y'])))
+
                 for key in thisData.keys():
                     value = thisData[key]
 
