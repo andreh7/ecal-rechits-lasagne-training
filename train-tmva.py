@@ -102,16 +102,18 @@ doPtEtaReweighting = globals().get("doPtEtaReweighting", False)
 
 cuda = True
 with Timer("loading training dataset...") as t:
-    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], 
-                                            cuda = cuda, 
-                                            isTraining = True,
-                                            reweightPtEta = doPtEtaReweighting,
-                                            logStreams = fouts)
+    trainData, trsize, trainEventIds = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], 
+                                                           cuda = cuda, 
+                                                           isTraining = True,
+                                                           reweightPtEta = doPtEtaReweighting,
+                                                           logStreams = fouts,
+                                                           returnEventIds = True)
 with Timer("loading test dataset...") as t:
-    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
-                                            isTraining = False,
-                                            reweightPtEta = False,
-                                            logStreams = fouts)
+    testData,  tesize, testEventIds = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
+                                                          isTraining = False,
+                                                          reweightPtEta = False,
+                                                          logStreams = fouts,
+                                                          returnEventIds = True)
 
 # convert labels from -1..+1 to 0..1 for cross-entropy loss
 # must clone to assign
@@ -197,7 +199,7 @@ with Timer("unpacking test dataset...", fouts) as t:
 # initialize TMVA factory
 #----------
 
-import ROOT
+import ROOT; gcs = []
 ROOT.TMVA.gConfig().GetIONames().fWeightFileDir = options.outputDir
 
 ROOT.TMVA.Tools.Instance()
@@ -354,10 +356,10 @@ ROOT.gROOT.cd()
 tmvaOutputFile.Close()
 
 # reopen
-tmvaOutputFile = ROOT.TFile(tmvaFname)
+tmvaOutputFile = ROOT.TFile(tmvaFname, "UPDATE")
 
-for name, treeName in (('train', 'TrainTree'),
-                       ('test', 'TestTree')):
+for name, treeName, eventIds in (('train', 'TrainTree', trainEventIds),
+                                 ('test', 'TestTree',   testEventIds)):
     
     tree = tmvaOutputFile.Get(treeName)
     ROOT.gROOT.cd()
@@ -367,14 +369,15 @@ for name, treeName in (('train', 'TrainTree'),
     if tree.GetEntries() > 1000000:
         tree.SetEstimate(tree.GetEntries())
 
-    tree.Draw("classID:BDT:weight","","goff")
+    tree.Draw("classID:BDT:weight:origindex","","goff")
     nentries = tree.GetSelectedRows()
 
-    v1 = tree.GetV1(); v2 = tree.GetV2(); v3 = tree.GetV3()
+    v1 = tree.GetV1(); v2 = tree.GetV2(); v3 = tree.GetV3(); v4 = tree.GetV4()
 
     labels      = [ v1[i] for i in range(nentries) ]
     predictions = [ v2[i] for i in range(nentries) ]
     weights     = [ v3[i] for i in range(nentries) ]
+    origindex   = [ int(v4[i] + 0.5) for i in range(nentries) ]
 
     auc = roc_auc_score(labels,
                         predictions,
@@ -387,4 +390,41 @@ for name, treeName in (('train', 'TrainTree'),
         print >> fout, "%s AUC: %f" % (name, auc)
         fout.flush()
 
+
+    #----------
+    # add another tree with sample/run/ls/event numbers
+    # (this tree can be friended afterwards)
+    #----------
+
+    eventTree = ROOT.TTree(treeName + "Events", treeName + "Events")
+    gcs.append(eventTree)
+
+    import array
+    # upper case are unsigned
+    arrSample = array.array( 'I', [ 0 ] )
+    arrRun    = array.array( 'I', [ 0 ] )
+    arrLS     = array.array( 'I', [ 0 ] )
+    arrEvent  = array.array( 'L', [ 0 ] )
+
+    # lowercase characters are unsigned
+    eventTree.Branch('sample', arrSample, 'sample/i') 
+    eventTree.Branch('run',    arrRun,    'run/i') 
+    eventTree.Branch('ls',     arrLS,     'ls/i') 
+    eventTree.Branch('event',  arrEvent,  'event/l') 
+
+    for origInd in origindex:
+        arrSample[0] = eventIds['sample'][origInd]
+        arrRun[0]    = eventIds['run']   [origInd]
+        arrLS[0]     = eventIds['ls']    [origInd]
+        arrEvent[0]  = eventIds['event'] [origInd]
+
+        eventTree.Fill()
+
+    tmvaOutputFile.cd()
+    eventTree.Write()
+
+ROOT.gROOT.cd()
+tmvaOutputFile.Close()
+
+#----------
 print "output directory is",options.outputDir
