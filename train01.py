@@ -420,10 +420,6 @@ with Timer("unpacking training dataset...", fouts) as t:
 with Timer("unpacking test dataset...", fouts) as t:
     testInput  = makeInput(testData, range(len(testData['labels'])), inputDataIsSparse = True)
 
-print "params=",params
-print
-print 'starting training at', time.asctime()
-
 train_output = np.zeros(len(trainData['labels']))
 
 #----------
@@ -454,6 +450,11 @@ if dumpInputData:
 
 
 #----------
+
+print "params=",params
+print
+print 'starting training at', time.asctime()
+
 
 epoch = 1
 while True:
