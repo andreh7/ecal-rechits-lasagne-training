@@ -44,15 +44,15 @@ class RecHitsUnpacker:
             # in datasetutils.py
             indexOffset = indexOffsets[rowIndex]
 
-            for recHitIndex in range(numRecHits[rowIndex]):
+            nrec = numRecHits[rowIndex]
 
-                # we subtract -1 from the coordinates because these are one based
-                # coordinates for Torch (and SparseConcatenator does NOT subtract this)
-                xx = rechitsX[indexOffset + recHitIndex] - 1 + self.recHitsXoffset
-                yy = rechitsY[indexOffset + recHitIndex] - 1 + self.recHitsYoffset
+            # we subtract -1 from the coordinates because these are one based
+            # coordinates for Torch (and SparseConcatenator does NOT subtract this)
+            xx = rechitsX[indexOffset:indexOffset+nrec] - 1 + self.recHitsXoffset
+            yy = rechitsY[indexOffset:indexOffset+nrec] - 1 + self.recHitsYoffset
 
-                if xx >= 0 and xx < self.width and yy >= 0 and yy < self.height:
-                    recHits[i, 0, xx, yy] = rechitsE[indexOffset + recHitIndex]
+            selected = (xx >= 0) & (xx < self.width) & (yy >= 0) & (yy < self.height)
+            recHits[i, 0, xx[selected], yy[selected]] = rechitsE[indexOffset:indexOffset+nrec][selected]
 
             # end of loop over rechits of this photon
         # end of loop over minibatch indices
