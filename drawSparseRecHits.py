@@ -146,18 +146,33 @@ options = parser.parse_args()
 
 
 print "loading data..."
-data = np.load(options.inputFile[0])
+inputFname = options.inputFile[0]
+
+if inputFname.endswith('.npz'):
+    data = np.load(inputFname)
+
+    firstIndices = data['X/firstIndex']
+    numRecHits = data['X/numRecHits']
+    xcoords = data['X/x']
+    ycoords = data['X/y']
+    energies = data['X/energy']
+    labels = data['y']
+
+elif inputFname.endswith(".t7"):
+    data = torchio.read(inputFname)
+
+    firstIndices = data['X']['firstIndex']
+    numRecHits = data['X']['numRecHits']
+    xcoords = data['X']['x']
+    ycoords = data['X']['y']
+    energies = data['X']['energy']
+    labels = data['y']
+
 
 # TODO: read this from the file
 width = 35
 height = 35
 
-firstIndices = data['X/firstIndex']
-numRecHits = data['X/numRecHits']
-xcoords = data['X/x']
-ycoords = data['X/y']
-energies = data['X/energy']
-labels = data['y']
 
 print "done loading data"
 
