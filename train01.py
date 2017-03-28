@@ -105,6 +105,9 @@ batchsize = 32
 # number of background weights
 sigToBkgFraction = None
 
+
+dumpInputData = False
+
 #----------
 
 execfile(options.modelFile[0])
@@ -434,10 +437,12 @@ pickle.dump(
 #----------
 # dump input data
 #----------
-if True:
+if dumpInputData:
     for inp, label in (
         (trainInput, 'train'),
         (testInput,  'test')):
+
+        print "dumping input data for",label,"sample"
         
         # save in pickled format so we can have arbitrary structures
         # (unlike np.savez(..) which in principle could work also)
