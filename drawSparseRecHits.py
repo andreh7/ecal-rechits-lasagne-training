@@ -48,9 +48,12 @@ def drawIndividual(photonIndices):
 
 #----------------------------------------------------------------------
 
-def drawSummary():
+def drawSummary(maxEntries = None):
     # draw a projection of all photon candidates, separated
     # by label
+
+    if maxEntries == None:
+        maxEntries = len(labels)
 
     for label in (0, 1):
 
@@ -64,6 +67,9 @@ def drawSummary():
         XX, YY = np.meshgrid(np.arange(width) + 1.5, np.arange(height) + 1.5)
 
         for photonIndex in range(len(labels)):
+
+            if photonIndex >= maxEntries:
+                break
 
             if labels[photonIndex] != label:
                 continue
@@ -104,14 +110,43 @@ def drawSummary():
 # main
 #----------------------------------------------------------------------
 
-ARGV = sys.argv[1:]
+# parse command line arguments
+import argparse
 
-assert len(ARGV) >= 2
+parser = argparse.ArgumentParser(prog='drawSparseRecHits',
+                                 formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+                                 )
 
-inputFname = ARGV.pop(0)
+
+parser.add_argument('--max-entries',
+                    metavar = "n",
+                    type = int,
+                    default = None,
+                    help='maximum number of photon candidates to consider when drawing the summary',
+                    dest = "maxEntries",
+                    )
+
+
+parser.add_argument('inputFile',
+                    metavar = "inputFile",
+                    type = str,
+                    nargs = 1,
+                    help='input file',
+                    )
+
+parser.add_argument('indices',
+                    metavar = "indices",
+                    type = int,
+                    nargs = '+',
+                    help='indices of photon candidates to be drawn or -1 for summary',
+                    )
+
+options = parser.parse_args()
+#----------------------------------------
+
 
 print "loading data..."
-data = np.load(inputFname)
+data = np.load(options.inputFile[0])
 
 # TODO: read this from the file
 width = 35
@@ -130,11 +165,11 @@ print "done loading data"
 numPhotons = len(labels)
 print "read",numPhotons,"photons"
 
-photonIndices = [ int(photonIndex) for photonIndex in ARGV ]
+photonIndices = options.indices
 
 if photonIndices == [ -1 ]:
     # draw average of all photons, separated by label
-    drawSummary()
+    drawSummary(maxEntries = options.maxEntries)
 else:
     drawIndividual(photonIndices)
 
