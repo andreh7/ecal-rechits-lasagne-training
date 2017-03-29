@@ -44,7 +44,9 @@ doPtEtaReweighting = True
 
 #----------------------------------------------------------------------
 
-def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
+def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds):
+
+    assert not returnEventIds
 
     data = None
 
@@ -71,7 +73,9 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
     # load all input files
     for fname in fnames:
   
-        print "reading",fname
+        for log in logStreams:
+            print >> log, "reading",fname
+
         loaded = torchio.read(fname)
 
         #----------
