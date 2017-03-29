@@ -32,7 +32,7 @@ dataDesc = dict(
 # on the first epoch
     trsize = 0.5, tesize = 0.5,
 
-    # trsize, tesize = 0.05, 0.05
+    # trsize = 0.05, tesize = 0.05,
 
     # trsize, tesize = 100, 100
 
