@@ -50,6 +50,15 @@ parser.add_argument('--print-model-only',
                     metavar = 'file.gv',
                     )
 
+parser.add_argument('--dump-inputs-only',
+                    dest = "dumpInputsOnlyDir",
+                    type = str,
+                    default = None,
+                    help='only dump expanded dumps to the given directory and exit. ' + 
+                         'WARNING: existing files are overwritten witihout notification.',
+                    metavar = 'dir',
+                    )
+
 parser.add_argument('--monitor-gradient',
                     dest = "monitorGradient",
                     default = False,
@@ -96,6 +105,12 @@ options = parser.parse_args()
 
 #----------
 
+if options.printModelOnlyOutput and options.dumpInputsOnlyDir:
+    print >> sys.stderr,"--print-model-only and --dump-inputs-only are mutually exclusive"
+    sys.exit(1)
+
+#----------
+
 batchsize = 32
 
 # if not None, set average background
@@ -104,9 +119,6 @@ batchsize = 32
 # weights is sigToBkgFraction times the
 # number of background weights
 sigToBkgFraction = None
-
-
-dumpInputData = False
 
 #----------
 
@@ -433,7 +445,7 @@ pickle.dump(
 #----------
 # dump input data
 #----------
-if dumpInputData:
+if options.dumpInputsOnlyDir:
     for inp, label in (
         (trainInput, 'train'),
         (testInput,  'test')):
@@ -442,12 +454,13 @@ if dumpInputData:
         
         # save in pickled format so we can have arbitrary structures
         # (unlike np.savez(..) which in principle could work also)
-        fout = open(os.path.join(options.outputDir,
+        fout = open(os.path.join(options.dumpInputsOnlyDir,
                                  "input-%s.pkl" % label), "w")
         
         pickle.dump(inp, fout)
         fout.close()
 
+    sys.exit(0)
 
 #----------
 
