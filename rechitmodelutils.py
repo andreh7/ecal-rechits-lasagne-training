@@ -52,6 +52,9 @@ class RecHitsUnpacker:
             yy = rechitsY[indexOffset:indexOffset+nrec] - 1 + self.recHitsYoffset
 
             selected = (xx >= 0) & (xx < self.width) & (yy >= 0) & (yy < self.height)
+
+            # note that in principle we may have more than one rechit per cell (e.g. in 
+            # different bunch crossings)
             recHits[i, 0, xx[selected], yy[selected]] = rechitsE[indexOffset:indexOffset+nrec][selected]
 
             # end of loop over rechits of this photon
