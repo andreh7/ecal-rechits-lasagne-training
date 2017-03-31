@@ -77,8 +77,10 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
 
     # load all input files
     for fname in fnames:
-  
-        print "reading",fname
+
+        for log in logStreams:
+            print >> log, "reading",fname
+
         loaded = np.load(fname)
 
         #----------
