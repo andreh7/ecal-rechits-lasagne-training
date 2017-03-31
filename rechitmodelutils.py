@@ -32,7 +32,7 @@ class RecHitsUnpacker:
         indexOffsets = dataset['rechits']['firstIndex']
         numRecHits   = dataset['rechits']['numRecHits']
         rechitsX     = dataset['rechits']['x']
-        rechitsY     = dataset['rechits']['x']
+        rechitsY     = dataset['rechits']['y']
         rechitsE     = dataset['rechits']['energy']
 
         for i in range(batchSize):
