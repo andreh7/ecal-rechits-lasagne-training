@@ -59,6 +59,15 @@ parser.add_argument('--dump-inputs-only',
                     metavar = 'dir',
                     )
 
+parser.add_argument('--dump-input-size',
+                    dest = "dumpInputsSize",
+                    type = str,
+                    default = None,
+                    help='used with --dump-inputs-only: specifiy the number of events or fraction ' + 
+                    'of events for which to dump the input data',
+                    metavar = 'n',
+                    )
+
 parser.add_argument('--monitor-gradient',
                     dest = "monitorGradient",
                     default = False,
@@ -108,6 +117,22 @@ options = parser.parse_args()
 if options.printModelOnlyOutput and options.dumpInputsOnlyDir:
     print >> sys.stderr,"--print-model-only and --dump-inputs-only are mutually exclusive"
     sys.exit(1)
+
+if options.dumpInputsSize != None:
+    if not options.dumpInputsOnlyDir:
+        print >> sys.stderr,"--dump-input-size requires --dump-inputs-only"
+        sys.exit(1)
+
+    # try to convert to an integer first
+    try:
+        options.dumpInputsSize = int(options.dumpInputsSize)
+    except ValueError:
+        try:
+            # now try float
+            options.dumpInputsSize = float(options.dumpInputsSize)
+        except ValueError:
+            print >> sys.stderr,"unrecognized format for --dump-input-size value",options.dumpInputsSize
+            sys.exit(1)
 
 #----------
 
@@ -457,6 +482,15 @@ if options.dumpInputsOnlyDir:
         fout = open(os.path.join(options.dumpInputsOnlyDir,
                                  "input-%s.pkl" % label), "w")
         
+        # limit size of inputs
+        if options.dumpInputsSize != None:
+            if options.dumpInputsSize < 1:
+                # a fraction was specified
+                inp = [ item[:int(len(item) * options.dumpInputsSize + 0.5)] for item in inp ]
+            else:
+                # an absolute size was specified
+                inp = [ item[:min(len(item), options.dumpInputsSize)] for item in inp ]
+
         pickle.dump(inp, fout)
         fout.close()
 
