@@ -7,6 +7,8 @@ import numpy as np
 
 datasetDir = '../data/2017-03-19-npy-mass-cut'
 
+isBarrel = True
+
 dataDesc = dict(
 
     train_files = [ datasetDir + '/GJet20to40_rechits-barrel-train.npz',
@@ -47,7 +49,8 @@ doPtEtaReweighting = True
 
 #----------------------------------------------------------------------
 
-def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds):
+def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds,
+                                addTrkIso):
     # @param returnEventIds if True, returns also a dict with sample/run/ls/event numbers 
 
     from datasetutils import getActualSize
@@ -75,6 +78,10 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
                                                  
     assert not returnEventIds
 
+    # some of the BDT input variables
+    if addTrkIso:
+        otherVars = SimpleVariableConcatenator(['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ])
+
     # load all input files
     for fname in fnames:
 
@@ -99,6 +106,12 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
         # combine rechits
         #----------
         recHits.add(loaded, thisSize)
+    
+        #----------
+        # auxiliary variables
+        #----------
+        if addTrkIso:
+            otherVars.add(loaded, thisSize)
 
         #----------
         # pt/eta reweighting variables
@@ -136,6 +149,7 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
     #----------
     # normalize event weights
     #----------
+    # make average weight equal to one over the sample
     commonData.normalizeWeights()
         
     # combine the datas
@@ -143,6 +157,20 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
 
     # add rechits
     data['rechits'] = recHits.data
+
+    #----------
+    # normalize auxiliary variables to zero mean and unit variance
+    #----------
+    if addTrkIso:
+        otherVars.normalize()
+
+        #----------
+        # add auxiliary variables
+        #----------
+        for key, value in otherVars.data.items():
+            assert not key in data
+            data[key] = value
+
 
     #----------
     # cross check for pt/eta reweighting, dump some variables
@@ -166,3 +194,9 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
     return data, totsize
 
 #----------------------------------------------------------------------
+
+
+def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds):
+    return __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, logStreams, 
+                                       returnEventIds, 
+                                       addTrkIso = False)
