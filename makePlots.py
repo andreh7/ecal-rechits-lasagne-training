@@ -42,6 +42,28 @@ for theDir in options.dirs:
             ]
 
     if options.legendLoc != None:
+
+        validLegendLocs = [
+            "right",
+            "center left",
+            "upper right",
+            "lower right",
+            "best",
+            "center",
+            "lower left",
+            "center right",
+            "upper left",
+            "upper center",
+            "lower center",
+            ]
+
+        if not options.legendLoc in validLegendLocs:
+            print >> sys.stderr,"unsupported legend location '%s'. Supported are: %s" % (
+                options.legendLoc,
+                ", ".join(validLegendLocs)
+                )
+            sys.exit(1)
+
         cmdParts.append("--legend-loc '" + options.legendLoc + "'")
 
     cmdParts.append("&")
