@@ -638,7 +638,7 @@ if __name__ == '__main__':
                             label = "BDT %s (auc=%.3f)" % (sample, auc))
 
         pylab.grid()
-        pylab.xlabel('training epoch')
+        pylab.xlabel('training epoch (last: %d)' % max(epochs))
         pylab.ylabel('AUC')
 
         pylab.legend(loc = options.legendLocation)
