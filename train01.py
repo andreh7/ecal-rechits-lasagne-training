@@ -471,9 +471,9 @@ pickle.dump(
 # dump input data
 #----------
 if options.dumpInputsOnlyDir:
-    for inp, label in (
-        (trainInput, 'train'),
-        (testInput,  'test')):
+    for inp, data, weights, label in (
+        (trainInput, trainData, trainWeights, 'train'),
+        (testInput,  testData,  testWeights, 'test')):
 
         print "dumping input data for",label,"sample"
         
@@ -484,14 +484,27 @@ if options.dumpInputsOnlyDir:
         
         # limit size of inputs
         if options.dumpInputsSize != None:
+
             if options.dumpInputsSize < 1:
                 # a fraction was specified
-                inp = [ item[:int(len(item) * options.dumpInputsSize + 0.5)] for item in inp ]
+                thisSize = int(len(item) * options.dumpInputsSize + 0.5)
             else:
                 # an absolute size was specified
-                inp = [ item[:min(len(item), options.dumpInputsSize)] for item in inp ]
+                thisSize = min(len(data['labels']), options.dumpInputsSize)
 
-        pickle.dump(inp, fout)
+            inp = [ item[:thisSize] for item in inp ]
+        else:
+            thisSize = len(data['labels'])
+
+        pickle.dump(dict(
+                input = inp,
+                labels = data['labels'][:thisSize],
+                mvaid = data['mvaid'][:thisSize],
+
+                # these are the weights actually used for training
+                # (i.e. after pt/eta reweighting)
+                weights = weights[:thisSize],
+                ), fout)
         fout.close()
 
     sys.exit(0)
