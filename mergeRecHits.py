@@ -36,6 +36,7 @@ def addSparseRecHits(allData, thisData):
     else:
         assert allData['X/numRecHits'].sum() == len(allData['X/energy'])
         assert allData['X/firstIndex'][-1] + allData['X/numRecHits'][len(allData['X/firstIndex'])-1] - 1 == len(allData['X/energy'])
+        assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
   
         # append the values for x, y, energy and numRecHits 
         # we must add an offset to firstIndex
