@@ -479,9 +479,11 @@ if options.dumpInputsOnlyDir:
         
         # save in pickled format so we can have arbitrary structures
         # (unlike np.savez(..) which in principle could work also)
-        fout = open(os.path.join(options.dumpInputsOnlyDir,
-                                 "input-%s.pkl" % label), "w")
+        foutName = os.path.join(options.dumpInputsOnlyDir,
+                                 "input-%s.npz" % label)
         
+        outputData = {}
+
         # limit size of inputs
         if options.dumpInputsSize != None:
 
@@ -496,16 +498,18 @@ if options.dumpInputsOnlyDir:
         else:
             thisSize = len(data['labels'])
 
-        pickle.dump(dict(
-                input = inp,
-                labels = data['labels'][:thisSize],
-                mvaid = data['mvaid'][:thisSize],
+        for index,item in enumerate(inp):
+            outputData['input/%03d' % index] = item
+            
+        outputData['labels'] = data['labels'][:thisSize]
+        outputData['mvaid']  = data['mvaid'][:thisSize]
+        
+        # these are the weights actually used for training
+        # (i.e. after pt/eta reweighting)
+        outputData['weights'] = weights[:thisSize]
 
-                # these are the weights actually used for training
-                # (i.e. after pt/eta reweighting)
-                weights = weights[:thisSize],
-                ), fout)
-        fout.close()
+        np.savez(foutName, **outputData)
+        print "wrote",foutName
 
     sys.exit(0)
 
