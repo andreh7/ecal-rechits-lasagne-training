@@ -54,27 +54,11 @@ def addSparseRecHits(allData, thisData):
         allData['X/numRecHits'] = np.concatenate([allData['X/numRecHits'], thisData['X/numRecHits']])
   
         # expand the firstIndex field
-  
-        # for sanity checks
-        expectedFirstIndex = 1
         allData['X/firstIndex'] = np.concatenate([allData['X/firstIndex'], thisData['X/firstIndex'] + numRecHitsBefore])
   
         assert thisData['X/firstIndex'][-1] + thisData['X/numRecHits'][-1] - 1 == len(thisData['X/energy'])
-  
-        for i in range (thisNumPhotons):
-            # sanity check of input data
-            assert thisData['X/firstIndex'][i] == expectedFirstIndex
-    
-            assert thisData['X/numRecHits'][i] >= 1
-    
-            if i < thisNumPhotons - 1:
-                assert thisData['X/firstIndex'][i] + thisData['X/numRecHits'][i] == thisData['X/firstIndex'][i+1]
-            else:
-                assert thisData['X/firstIndex'][i] + thisData['X/numRecHits'][i] - 1 == len(thisData['X/energy']), \
-                    str(thisData['X/firstIndex'][i] + thisData['X/numRecHits'][i] - 1) + " " + str(len(thisData['X/energy']))
-    
-    
-            expectedFirstIndex = expectedFirstIndex + thisData['X/numRecHits'][i]
+
+        assert np.all(thisData['X/numRecHits'] >= 1)
   
         # end of loop over photons
   
