@@ -244,6 +244,9 @@ for subdet in ("barrel", "endcap"):
         
             print len(thisData['y']),"photons"
 
+            recHitsAdded = False
+            tracksAdded  = False
+
             if allData == None:
 
                 allData = {}
@@ -255,11 +258,16 @@ for subdet in ("barrel", "endcap"):
                     value = thisData[key]
 
                     if key != 'genDR':
-                        if key == 'X':
-                            # we only support sparse format here
-                            addSparseRecHits(allData, thisData)
-                        elif key == 'tracks':
-                            addTracks(allData, thisData)
+                        if key.startswith('X/'):
+                            if not recHitsAdded:
+                                # we only support sparse format here
+                                addSparseRecHits(allData, thisData)
+                                recHitsAdded = True
+
+                        elif key.startswith('tracks/'): 
+                            if not tracksAdded:
+                                addTracks(allData, thisData)
+                                tracksAdded = True
                         else:
                             # just copy the data 
                             allData[key] = value
@@ -278,11 +286,15 @@ for subdet in ("barrel", "endcap"):
                     value = thisData[key]
 
                     if key != 'genDR':
-                        if key == 'X':
-                            # we only support sparse format here
-                            addSparseRecHits(allData, thisData)
-                        elif key == 'tracks':
-                            addTracks(allData, thisData)
+                        if key.startswith('X/'):
+                            if not recHitsAdded:
+                                # we only support sparse format here
+                                addSparseRecHits(allData, thisData)
+                                recHitsAdded = True
+                        elif key.startswith('tracks/'):
+                            if not tracksAdded:
+                                addTracks(allData, thisData)
+                                tracksAdded = True
                         else:
                             # normal concatenation
                             allData[key] = catItem(allData[key], thisData[key])
