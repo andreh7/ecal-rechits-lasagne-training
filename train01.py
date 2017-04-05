@@ -462,7 +462,7 @@ train_output = np.zeros(len(trainData['labels']))
 #----------
 # try to serialize the model structure itself
 # will not work if used e.g. on CPU instead of GPU etc.
-import pickle
+import cPickle as pickle
 pickle.dump(
     dict(model = model,
          input_vars = input_vars), open(os.path.join(options.outputDir,
