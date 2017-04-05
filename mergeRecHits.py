@@ -54,10 +54,10 @@ def addSparseRecHits(allData, thisData):
         allData['X/numRecHits'] = np.concatenate([allData['X/numRecHits'], thisData['X/numRecHits']])
   
         # expand the firstIndex field
-        allData['X/firstIndex'] = np.concatenate([allData['X/firstIndex'], np.zeros(thisNumPhotons, dtype='int32')])
   
         # for sanity checks
         expectedFirstIndex = 1
+        allData['X/firstIndex'] = np.concatenate([allData['X/firstIndex'], thisData['X/firstIndex'] + numRecHitsBefore])
   
         assert thisData['X/firstIndex'][-1] + thisData['X/numRecHits'][-1] - 1 == len(thisData['X/energy'])
   
@@ -73,9 +73,6 @@ def addSparseRecHits(allData, thisData):
                 assert thisData['X/firstIndex'][i] + thisData['X/numRecHits'][i] - 1 == len(thisData['X/energy']), \
                     str(thisData['X/firstIndex'][i] + thisData['X/numRecHits'][i] - 1) + " " + str(len(thisData['X/energy']))
     
-            # add original firstIndex field
-            # TODO: we could use a np vector operation here
-            allData['X/firstIndex'][numPhotonsBefore + i] = thisData['X/firstIndex'][i] + numRecHitsBefore
     
             expectedFirstIndex = expectedFirstIndex + thisData['X/numRecHits'][i]
   
