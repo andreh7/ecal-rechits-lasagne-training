@@ -255,9 +255,11 @@ for subdet in ("barrel", "endcap"):
     
             fname = fileNames[fileIndex]
 
-            print "opening",fname, fileIndex,"/",len(fileNames)
+            print "opening",fname, fileIndex,"/",len(fileNames),
             thisData = np.load(fname)
         
+            print len(thisData['y']),"photons"
+
             if allData == None:
 
                 allData = {}
