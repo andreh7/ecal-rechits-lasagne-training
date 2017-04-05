@@ -55,6 +55,8 @@ def addSparseRecHits(allData, thisData):
   
         # expand the firstIndex field
         allData['X/firstIndex'] = np.concatenate([allData['X/firstIndex'], thisData['X/firstIndex'] + numRecHitsBefore])
+
+        assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
   
         assert thisData['X/firstIndex'][-1] + thisData['X/numRecHits'][-1] - 1 == len(thisData['X/energy'])
 
