@@ -64,23 +64,6 @@ def makeModel():
     inputLayerTrackIsoChosen = InputLayer(shape = (None,1), input_var = inputVarTrackIsoChosen, name = 'chosen vtx track iso')
     inputLayerTrackIsoWorst  = InputLayer(shape = (None,1), input_var = inputVarTrackIsoWorst, name = 'worst vtx track iso')
 
-    ### #----------
-    ### # track isolation variables 
-    ### # ----------
-    ### # see e.g. http://stackoverflow.com/questions/32630635/torch-nn-handling-text-and-numeric-input
-    ### 
-    ### trackIsoModelChosen = nn.Identity()
-    ### trackIsoModelWorst  = nn.Identity() 
-    ### 
-    ### #----------
-    ### # put rechits and track iso networks in parallel
-    ### #----------
-    ### parallelModel = nn.ParallelTable()
-    ### parallelModel:add(recHitsModel)
-    ### parallelModel:add(trackIsoModelChosen)
-    ### parallelModel:add(trackIsoModelWorst)
-
-
     #----------
     # combine nn output from convolutional layers for
     # rechits with track isolation variables
@@ -139,18 +122,5 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
              dataset['chgIsoWrtWorstVtx'][rowIndices],
              ]
 
-# ----------------------------------------------------------------------
-# function makeInputView(inputValues, first, last)
-# 
-#   assert(first >= 1)
-#   assert(last <= inputValues[1]:size()[1])
-# 
-#   return { inputValues[1]:sub(first,last),
-#            inputValues[2]:sub(first,last),
-#            inputValues[3]:sub(first,last)
-#            }
-#   
-# 
-# end
 
-# ----------------------------------------------------------------------
+#----------------------------------------------------------------------
