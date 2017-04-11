@@ -155,6 +155,8 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
             if selectedVariables != None:
                 sortedVarnames = [ varname for varname in sortedVarnames if varname in selectedVariables ]
 
+                assert sortedVarnames, "no variables left after applying selectedVariables"
+
             bdtVars = SimpleVariableConcatenatorToMatrix(groupVarName, sortedVarnames)
 
         bdtVars.add(loaded, thisSize)
