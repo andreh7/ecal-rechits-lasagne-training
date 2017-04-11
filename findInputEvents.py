@@ -41,14 +41,23 @@ if not options.mvaid:
 #----------------------------------------
 
 for fname in options.inputFiles:
+
+    isTorch = fname.endswith(".t7")
     
-    data = np.load(fname)
+    if isTorch:
+        import torchio
+        data = torchio.read(fname)
+    else:
+        data = np.load(fname)
 
     # produce a vector of bools
     indices = np.ones(len(data['y']), dtype = np.bool)
 
     if options.mvaid:
         mvaid = data['mvaid']
+        if isTorch:
+            mvaid = mvaid.asndarray()
+
         indices = indices & ( np.abs(mvaid - options.mvaid) < 1e-8)
     
     if not np.any(indices):
@@ -56,11 +65,11 @@ for fname in options.inputFiles:
         del data
         continue
 
-    for ind in np.where(indices):
+    for ind in np.where(indices)[0]:
         print "%s:%d" % (fname, ind),
 
         if options.mvaid:
-            print "mvaid=" + str(mvaid[ind][0])
+            print "mvaid=" + str(mvaid[ind])
 
     del data
 
