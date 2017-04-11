@@ -47,11 +47,16 @@ dataDesc = dict(
 
 doPtEtaReweighting = True
 
+# global variable which can be modified from the command line
+additionalVars = []
+
 #----------------------------------------------------------------------
 
 def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds,
-                                addTrkIso):
+                                additionalVars = []):
     # @param returnEventIds if True, returns also a dict with sample/run/ls/event numbers 
+    # @param additionalVars is a list of 'simple' variables such as track isolation variables to be added as
+    #                       a separate group of inputs
 
     from datasetutils import getActualSize
     from datasetutilsnpy import makeRecHitsConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, PtEtaReweighter
@@ -79,8 +84,8 @@ def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, l
     assert not returnEventIds
 
     # some of the BDT input variables
-    if addTrkIso:
-        otherVars = SimpleVariableConcatenator(['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ])
+    if additionalVars:
+        otherVars = SimpleVariableConcatenator(additionalVars)
 
     # load all input files
     for fname in fnames:
@@ -110,7 +115,7 @@ def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, l
         #----------
         # auxiliary variables
         #----------
-        if addTrkIso:
+        if additionalVars:
             otherVars.add(loaded, thisSize)
 
         #----------
@@ -161,7 +166,7 @@ def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, l
     #----------
     # normalize auxiliary variables to zero mean and unit variance
     #----------
-    if addTrkIso:
+    if additionalVars:
         otherVars.normalize()
 
         #----------
@@ -198,5 +203,5 @@ def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, l
 
 def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds):
     return __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, logStreams, 
-                                       returnEventIds, 
-                                       addTrkIso = False)
+                                       returnEventIds,
+                                       additionalVars = additionalVars)
