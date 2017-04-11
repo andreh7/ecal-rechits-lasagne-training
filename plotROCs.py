@@ -38,12 +38,20 @@ class ResultDirData:
             # self.trainWeightsBeforePtEtaReweighting = data['weightBeforePtEtaReweighting']
             self.trainLabels = data['label']
         else:
-            # try the BDT file (but we don't have weights before eta/pt reweighting there)
-            fname = os.path.join(inputDir, "roc-data-%s-mva.npz" % "train")
-            data = np.load(fname)
-            self.trainWeights = data['weight']
-            self.trainLabels = data['label']
-            self.trainWeightsBeforePtEtaReweighting = None
+            fname = os.path.join(inputDir, "weights-labels-train.npz.bz2")
+            if os.path.exists(fname):
+                import bz2
+                data = np.load(bz2.BZ2File(fname))
+                self.origTrainWeights = data['origTrainWeights']
+                # self.trainWeightsBeforePtEtaReweighting = data['weightBeforePtEtaReweighting']
+                self.trainLabels = data['label']
+            else:
+                # try the BDT file (but we don't have weights before eta/pt reweighting there)
+                fname = os.path.join(inputDir, "roc-data-%s-mva.npz" % "train")
+                data = np.load(fname)
+                self.trainWeights = data['weight']
+                self.trainLabels = data['label']
+                self.trainWeightsBeforePtEtaReweighting = None
             
         #----------
         # test dataset
@@ -54,12 +62,21 @@ class ResultDirData:
             data = np.load(fname)
             self.testWeights = data['weight']
             self.testLabels = data['label']
+
         else:
-            # try the BDT file
-            fname = os.path.join(inputDir, "roc-data-%s-mva.npz" % "test")
-            data = np.load(fname)
-            self.testWeights = data['weight']
-            self.testLabels = data['label']
+            fname = os.path.join(inputDir, "weights-labels-test.npz.bz2")
+
+            if os.path.exists(fname):
+                import bz2
+                data = np.load(bz2.BZ2File(fname))
+                self.testWeights = data['weight']
+                self.testLabels = data['label']
+            else:
+                # try the BDT file
+                fname = os.path.join(inputDir, "roc-data-%s-mva.npz" % "test")
+                data = np.load(fname)
+                self.testWeights = data['weight']
+                self.testLabels = data['label']
 
     #----------------------------------------
 
@@ -120,9 +137,13 @@ def readROC(resultDirData, fname, isTrain, returnFullCurve = False):
 
     print "reading",fname
     
-    assert fname.endswith(".npz")
+    assert fname.endswith(".npz") or fname.endswith(".npz.bz2")
     try:
-        data = np.load(fname)
+        if fname.endswith(".npz.bz2"):
+            import bz2
+            data = np.load(bz2.BZ2File(fname))
+        else:
+            data = np.load(fname)
     except Exception, ex:
         raise Exception("error caught reading " + fname, ex)
 
@@ -192,6 +213,7 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
         # read cached version first
         inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.npz.cached-auc.py")) 
 
+    inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.npz.bz2")) 
     inputFiles += glob.glob(os.path.join(inputDir, "roc-data-*.npz")) 
 
     if not inputFiles:
@@ -221,7 +243,7 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
         #  roc-data-test-mva.npz
         #  roc-data-train-0002.npz
 
-        mo = re.match("roc-data-(\S+)-mva\.npz$", basename)
+        mo = re.match("roc-data-(\S+)-mva\.npz(\.bz2)?$", basename)
 
         if mo:
             sampleType = mo.group(1)
@@ -235,7 +257,7 @@ def readROCfiles(resultDirData, transformation = None, includeCached = False, ma
 
             continue
 
-        mo = re.match("roc-data-(\S+)-(\d+)\.npz$", basename)
+        mo = re.match("roc-data-(\S+)-(\d+)\.npz(\.bz2)?$", basename)
 
         if not mo and includeCached:
             mo = re.match("roc-data-(\S+)-(\d+)\.npz\.cached-auc\.py$", basename)
