@@ -16,6 +16,12 @@ dataSetFname = "dataset14-bdt-inputvars.py"
 
 modelFname   = "model09-bdt-inputs.py"
 
+additionalOptions = [
+    "--param doPtEtaReweighting=True",
+    "--param sigToBkgFraction=1.0",
+    "--opt sgd",
+    ]
+
 aucMeanWindowSize = 10
 
 #----------------------------------------------------------------------
@@ -111,6 +117,8 @@ class TrainingRunner(threading.Thread):
             "--max-epochs " + str(maxEpochs),
             "--output-dir " + self.outputDir,
             ])
+
+        cmdParts.extend(additionalOptions)
 
         cmd = " ".join(cmdParts)
 
