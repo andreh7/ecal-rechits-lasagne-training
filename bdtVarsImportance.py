@@ -9,9 +9,18 @@ maxJobsPerGPU = {
     1: 2,
     }
 
+# maximum number of epochs for each training
+maxEpochs = 50
+
+dataSetFname = "dataset06-bdt-inputvars.py"
+
+modelFname   = "model09-bdt-inputs.py"
+
+aucMeanWindowSize = 10
+
 #----------------------------------------------------------------------
 
-def getMeanTestAUC(outputDir, windowSize = 10):
+def getMeanTestAUC(outputDir, windowSize = aucMeanWindowSize):
     fnames = glob.glob(os.path.join(outputDir, "auc-test-*.txt"))
 
     epochToAUC = {}
@@ -74,7 +83,7 @@ class TrainingRunner(threading.Thread):
         print "training with",len(self.varnames),",".join(self.varnames)
 
         # create a temporary dataset file
-        text = open("dataset06-bdt-inputvars.py").read()
+        text = open(dataSetFname).read()
 
         dataSetFile = tempfile.NamedTemporaryFile(suffix = ".py", delete = False)
 
@@ -98,8 +107,8 @@ class TrainingRunner(threading.Thread):
             # so that we know the selected variables
             # at the time we build the model
             dataSetFile.name,
-            "model09-bdt-inputs.py",
-            "--max-epochs 50",
+            modelFname,
+            "--max-epochs " + str(maxEpochs),
             "--output-dir " + self.outputDir,
             ])
 
