@@ -11,7 +11,7 @@ import theano.tensor as T
 
 isBarrel = True
 
-if globals().has_key('selectedVariables'):
+if globals().has_key('selectedVariables') and selectedVariables != None:
     ninputs = len(selectedVariables)
 else:
     if isBarrel:
