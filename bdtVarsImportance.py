@@ -12,7 +12,7 @@ maxJobsPerGPU = {
 # maximum number of epochs for each training
 maxEpochs = 50
 
-dataSetFname = "dataset06-bdt-inputvars.py"
+dataSetFname = "dataset14-bdt-inputvars.py"
 
 modelFname   = "model09-bdt-inputs.py"
 
