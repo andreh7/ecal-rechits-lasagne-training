@@ -238,6 +238,8 @@ if __name__ == '__main__':
     # DEBUG
     # allVars = [ "s4", "scRawE", "scEta", "covIEtaIEta" ]
 
+    allVars = [ "phoIdInput/" + varname for varname in allVars ]
+
     remainingVars = allVars[:]
 
     #----------
