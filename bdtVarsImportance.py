@@ -5,8 +5,8 @@ import numpy as np
 
 
 maxJobsPerGPU = {
-    0: 2,
-    1: 2,
+    0: 3,
+    1: 3,
     }
 
 # maximum number of epochs for each training
