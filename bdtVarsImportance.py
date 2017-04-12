@@ -126,6 +126,8 @@ class TrainingRunner(threading.Thread):
 
         if res != 0:
             print "failed to run",cmd
+        else:
+            print "successfully ran",cmd
 
         #----------
         # write the variable names to the output directory
