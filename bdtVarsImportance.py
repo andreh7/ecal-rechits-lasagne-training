@@ -43,7 +43,7 @@ def getMeanTestAUC(outputDir, windowSize = aucMeanWindowSize):
         epochToAUC[epoch] = auc
 
     # average over the last few iterations
-    assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize)" % (len(epochToAUC), windowSize)
+    assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize) in directory %s" % (len(epochToAUC), windowSize, outputDir)
 
     aucs = zip(*sorted(epochToAUC.items()))[1]
 
