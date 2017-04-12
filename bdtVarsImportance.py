@@ -198,6 +198,9 @@ def runTasks(threads):
                 numThreadsRunning[maxUnusedGpu] += 1
                 print "STARTING ON GPU",maxUnusedGpu
                 task.start()
+            else:
+                # wait until a task completes
+                break
 
         # wait for any task to complete
         thread, thisResult = completionQueue.get()
