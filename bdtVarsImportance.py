@@ -139,7 +139,7 @@ class TrainingRunner(threading.Thread):
         #----------
         # get the results (testAUCs)
         #----------
-        testAUC = getMeanTestAUC(self.outputDir, windowSize = 10)
+        testAUC = getMeanTestAUC(self.outputDir, windowSize = aucMeanWindowSize)
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames)
