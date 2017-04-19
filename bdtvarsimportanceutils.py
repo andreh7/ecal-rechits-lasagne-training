@@ -6,11 +6,12 @@
 
 import os, glob, re
 
-def getMeanTestAUC(outputDir, windowSize = 10):
+#----------------------------------------------------------------------
 
-    import numpy as np
-
-    fnames = glob.glob(os.path.join(outputDir, "auc-test-*.txt"))
+def getAUCs(outputDir, sample = "test"):
+    # returns a dict of epoch number to AUC
+    
+    fnames = glob.glob(os.path.join(outputDir, "auc-" + sample + "-*.txt"))
 
     epochToAUC = {}
 
@@ -25,6 +26,9 @@ def getMeanTestAUC(outputDir, windowSize = 10):
 
         epochToAUC[epoch] = auc
 
+    return epochToAUC
+
+#----------------------------------------------------------------------
     # average over the last few iterations
     assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize) in directory %s" % (len(epochToAUC), windowSize, outputDir)
 
