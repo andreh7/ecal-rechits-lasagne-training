@@ -69,15 +69,22 @@ def readVars(dirname):
 #----------------------------------------------------------------------
 
 def findComplete(trainDir, expectedNumEpochs = 200):
-    # returns (list of subdirectories with the complete number of epochs),
-    #         (list of subdirectories with good name but not complete)
-    completeDirs = []
-    incompleteDirs = []
+    # returns (map of subdirectories with the complete number of epochs),
+    #         (map of subdirectories with good name but not complete)
+    #
+    # keys are (index, subindex), values are directory names
+    #
+    completeDirs = {}
+    incompleteDirs = {}
 
     for dirname in os.listdir(trainDir):
 
-        if not re.match("\d\d-\d\d", dirname):
+        mo = re.match("(\d\d)-(\d\d)", dirname)
+        if not mo:
             continue
+
+        index    = int(mo.group(1),10)
+        subindex = int(mo.group(2),10)
 
         fullPath = os.path.join(trainDir, dirname)
 
@@ -86,11 +93,11 @@ def findComplete(trainDir, expectedNumEpochs = 200):
 
         # check if this is complete
         if isComplete(fullPath, expectedNumEpochs):
-            completeDirs.append(fullPath)
+            completeDirs[(index, subindex)] = fullPath
         else:
-            incompleteDirs.append(fullPath)
+            incompleteDirs[(index, subindex)] = fullPath
 
-    return sorted(completeDirs), sorted(incompleteDirs)
+    return completeDirs, incompleteDirs
 
 #----------------------------------------------------------------------
 

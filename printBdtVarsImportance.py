@@ -124,11 +124,11 @@ if __name__ == '__main__':
     completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(ARGV[0])
 
     print "complete directories:"
-    for theDir in completeDirs:
+    for theDir in sorted(completeDirs.values()):
         print "  %s" % theDir
 
     print "incomplete directories:"
-    for theDir in incompleteDirs:
+    for theDir in sorted(incompleteDirs.values()):
         print "  %s" % theDir
 
 
