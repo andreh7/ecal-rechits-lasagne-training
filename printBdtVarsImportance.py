@@ -120,6 +120,19 @@ if __name__ == '__main__':
 
     assert len(ARGV) >= 1
 
+    # find complete directories
+    completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(ARGV[0])
+
+    print "complete directories:"
+    for theDir in completeDirs:
+        print "  %s" % theDir
+
+    print "incomplete directories:"
+    for theDir in incompleteDirs:
+        print "  %s" % theDir
+
+
+
     # stepData = readFromLogFiles(ARGV)
     stepData, fullNetworkAUC = bdtvarsimportanceutils.readFromTrainingDir(ARGV[0])
 
