@@ -201,7 +201,7 @@ def findComplete(trainDir, expectedNumEpochs = 200):
 
     for dirname in os.listdir(trainDir):
 
-        mo = re.match("(\d\d)-(\d\d)", dirname)
+        mo = re.match("(\d\d)-(\d\d)$", dirname)
         if not mo:
             continue
 
