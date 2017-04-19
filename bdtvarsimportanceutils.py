@@ -29,6 +29,26 @@ def getAUCs(outputDir, sample = "test"):
     return epochToAUC
 
 #----------------------------------------------------------------------
+
+def isComplete(outputDir, numEpochs, sample = "test"):
+
+    epochToAUC = getAUCs(outputDir, sample)
+
+    # check that we have exactly 1..numEpochs as keys
+
+    if len(epochToAUC) != numEpochs:
+        return False
+
+    return all(epochToAUC.has_key(epoch) for epoch in range(1, numEpochs + 1))
+
+#----------------------------------------------------------------------
+
+def getMeanTestAUC(outputDir, windowSize = 10):
+
+    import numpy as np
+
+    epochToAUC = getAUCs(outputDir, "test")
+
     # average over the last few iterations
     assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize) in directory %s" % (len(epochToAUC), windowSize, outputDir)
 
@@ -45,6 +65,32 @@ def readVars(dirname):
     retval = eval(fin.read())
     fin.close()
     return retval
+
+#----------------------------------------------------------------------
+
+def findComplete(trainDir, expectedNumEpochs = 200):
+    # returns (list of subdirectories with the complete number of epochs),
+    #         (list of subdirectories with good name but not complete)
+    completeDirs = []
+    incompleteDirs = []
+
+    for dirname in os.listdir(trainDir):
+
+        if not re.match("\d\d-\d\d", dirname):
+            continue
+
+        fullPath = os.path.join(trainDir, dirname)
+
+        if not os.path.isdir(fullPath):
+            continue
+
+        # check if this is complete
+        if isComplete(fullPath, expectedNumEpochs):
+            completeDirs.append(fullPath)
+        else:
+            incompleteDirs.append(fullPath)
+
+    return sorted(completeDirs), sorted(incompleteDirs)
 
 #----------------------------------------------------------------------
 
