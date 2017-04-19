@@ -134,7 +134,12 @@ if __name__ == '__main__':
 
 
     # stepData = readFromLogFiles(ARGV)
-    stepData, fullNetworkAUC = bdtvarsimportanceutils.readFromTrainingDir(ARGV[0])
+    aucData = bdtvarsimportanceutils.readFromTrainingDir(ARGV[0])
+
+    fullNetworkAUC = aucData.getOverallAUC()
+
+    # from pprint import pprint
+    # print pprint(aucData.data)
 
 # pprint(stepData)
 # printStepDataToCSV(stepData)
@@ -142,8 +147,20 @@ if __name__ == '__main__':
     
 print "order of removal:"
 print "%-30s: %.4f" % ('before', fullNetworkAUC)
-for step in stepData:
-    print "%-30s: %.4f" % (step['removedVariable'],step['aucWithVarRemoved'][step['removedVariable']])
+
+# we only have to up to tot num vars minus two
+for numVarsRemoved in range(aucData.getTotNumVars() - 1):
+    print "%2d vars removed:" % numVarsRemoved,
+    
+    if aucData.isStepComplete(numVarsRemoved):
+        print "complete"
+
+    else:
+        print "incomplete (%d results)" % aucData.getNumResultsAtStep(numVarsRemoved)
+
+    for step in aucData.getStepAUCs(numVarsRemoved):
+        print "%-30s: %.4f" % (step['removedVariable'],step['aucWithVarRemoved'])        
+
 
 #----------
 # make plots
@@ -154,36 +171,62 @@ pylab.figure(facecolor='white', figsize = (20,12))
 
 xvalues = []
 yvalues = []
-for step in stepData:
-    for varname, auc in step['aucWithVarRemoved'].items():
-        xvalues.append(step['numRemainingVars'])
-        yvalues.append(auc)
+labels  = []
+colors  = []
+labels_ypos = []
 
+# for variable name labels
+ystart = 0.75
+ylineHeight = 0.01
+
+for numVarsRemoved in range(aucData.getTotNumVars() - 1):
+    numRemainingVars = aucData.getTotNumVars() - numVarsRemoved
+
+    isCompleteStep = aucData.isStepComplete(numVarsRemoved)
+
+    # if isCompleteStep:
+    #     worstVar = aucData.worstVar(numVarsRemoved)
+    # else:
+    #     worstVar = None
+
+    ypos = ystart
+
+    # sort by lowest AUC first
+    for index, step in enumerate(
+                         sorted(aucData.getStepAUCs(numVarsRemoved),
+                         key = lambda item: item['aucWithVarRemoved']
+                         )):
+        xvalues.append(numRemainingVars)
+        yvalues.append(step['aucWithVarRemoved'])
+        labels.append(step['removedVariable'])
+
+        if isCompleteStep:
+            # label the variable with highest AUC when removed in red
+            if index == numRemainingVars:
+                colors.append('red')
+            else:
+                colors.append('black')
+
+        else:
+            # mark variables of incomplete steps in gray
+            colors.append('gray')
+
+        labels_ypos.append(ypos)
+
+        # prepare next iteration
+        ypos += ylineHeight
+
+
+
+# plot data points
 pylab.plot(xvalues, yvalues, 'o')
 
-
+# add labels
 if True:
-    # add labels
+
     pylab.ylim((0.6, pylab.ylim()[1]))
 
-    ystart = 0.75
-    ylineHeight = 0.01
-
-    for step in stepData:
-        xpos = step['numRemainingVars']
-
-        ypos = ystart
-
-        for index, (auc, varname) in enumerate(sorted([ (auc, varname) for varname, auc in step['aucWithVarRemoved'].items() ],
-                                   reverse = False)):
-            # lowest AUC first
-
-            label = varname
-
-            if index == step['numRemainingVars']:
-                color = 'red'
-            else:
-                color = 'black'
+    for xpos, ypos, label, color in zip(xvalues, labels_ypos, labels, colors):
 
             pylab.text(
                 xpos,
@@ -193,11 +236,6 @@ if True:
                 fontsize = 10,
                 color = color,
                 )
-
-            ypos += ylineHeight
-
-
-
 
 pylab.grid()
 pylab.xlabel('number of remaining input variables')
