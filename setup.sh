@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-export PYTHONHOME=~/python
-export PATH=$PYTHONHOME/bin:$PATH
-export LD_LIBRARY_PATH=$PYTHONHOME/lib:$LD_LIBRARY_PATH
+# export PYTHONHOME=~/python
+# export PATH=$PYTHONHOME/bin:$PATH
+# export LD_LIBRARY_PATH=$PYTHONHOME/lib:$LD_LIBRARY_PATH
+
+source ~/virtualenv/py27-cuda75/bin/activate
 
 # see http://deeplearning.net/software/theano/library/sandbox/cuda/dnn.html
 CUDNN_DIR=~/cudnn-7.5
