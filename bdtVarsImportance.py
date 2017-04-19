@@ -99,6 +99,15 @@ class TrainingRunner(threading.Thread):
 
         dataSetFile.flush()
 
+        #----------
+        # write the variable names to the output directory
+        #----------
+        fout = open(os.path.join(self.outputDir, "variables.py"), "w")
+        print >> fout, self.varnames
+        fout.close()
+
+        #----------
+
         cmdParts = []
 
         if self.gpuindex == 0:
@@ -128,14 +137,6 @@ class TrainingRunner(threading.Thread):
             print "failed to run",cmd
         else:
             print "successfully ran",cmd
-
-        #----------
-        # write the variable names to the output directory
-        #----------
-        fout = open(os.path.join(self.outputDir, "variables.py"), "w")
-        print >> fout, self.varnames
-        fout.close()
-
         #----------
         # get the results (testAUCs)
         #----------
