@@ -224,91 +224,18 @@ def findComplete(trainDir, expectedNumEpochs = 200):
 #----------------------------------------------------------------------
 
 def readFromTrainingDir(trainDir):
-    # reads from the training directory
+    # reads data from the given training directory and
+    # returns an object of class VarImportanceResults
 
-    # read initial training
-    overallDir = os.path.join(trainDir, "00-00")
-    overallAUC = getMeanTestAUC(overallDir)
-    allVars = readVars(overallDir)
+    retval = VarImportanceResults()
 
-    import itertools
+    completeDirs, incompleteDirs = findComplete(trainDir)
 
-    stepData = []
+    for theDir in completeDirs.values():
+        auc = getMeanTestAUC(theDir)
+        variables = readVars(theDir)
+        retval.add(variables, auc)
 
-    allVarsCurrentStep = list(allVars)
-
-    for index in itertools.count(1):
-        thisStep = dict(
-            aucWithVarRemoved = {},
-            )
-
-        remainingVars = None
-        allVariablesOrdered = []
-
-        for subIndex in itertools.count(1):
-            # read variables of this step
-            
-            inputDir = os.path.join(trainDir,
-                                    "%02d-%02d" % (index, subIndex))
-
-            if not os.path.exists(inputDir):
-                break
-
-            thisVars = readVars(inputDir)
-
-            if remainingVars == None:
-                remainingVars = len(thisVars)
-                thisStep['numRemainingVars'] = remainingVars
-            else:
-                assert remainingVars == len(thisVars)
-
-            #----------
-            # find which variable was removed
-            #----------
-            assert len(thisVars) + 1 == len(allVarsCurrentStep)
-
-            removedVar = None
-            
-            for var in allVarsCurrentStep:
-                if not var in thisVars:
-                    removedVar = var
-                    break
-
-            assert removedVar != None
-
-            allVariablesOrdered.append(removedVar)
-
-            # read AUC
-            thisAUC = getMeanTestAUC(inputDir)
-            
-            thisStep['aucWithVarRemoved'][removedVar] = thisAUC
-
-
-        # end of loop over subindices
-
-        if subIndex == 1:
-            # no directory for this index found
-            break
-
-        # end of loop over subIndex
-
-        #----------
-        # complete some more information
-        #----------
-        thisStep['bestAUC'], varToRemove = max( [ (auc, var) for var, auc in thisStep['aucWithVarRemoved'].items() ] )
-        thisStep['removedVariable'] = varToRemove
-        thisStep['allVariables'] = allVariablesOrdered
-
-        stepData.append(thisStep)
-
-        # prepare next iteration
-        allVarsCurrentStep.remove(varToRemove)
-
-    # end of loop over indices
-
-    return stepData, overallAUC
-
+    return retval
 
 #----------------------------------------------------------------------
-
-
