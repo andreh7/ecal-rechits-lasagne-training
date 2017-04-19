@@ -22,36 +22,6 @@ additionalOptions = [
     "--opt sgd",
     ]
 
-aucMeanWindowSize = 10
-
-#----------------------------------------------------------------------
-
-def getMeanTestAUC(outputDir, windowSize = aucMeanWindowSize):
-    fnames = glob.glob(os.path.join(outputDir, "auc-test-*.txt"))
-
-    epochToAUC = {}
-
-    for fname in fnames:
-        mo = re.search("auc-test-(\d+).txt$", fname)
-        if not mo:
-            continue
-
-        epoch = int(mo.group(1), 10)
-
-        auc = eval(open(fname).read())
-
-        epochToAUC[epoch] = auc
-
-    # average over the last few iterations
-    assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize) in directory %s" % (len(epochToAUC), windowSize, outputDir)
-
-    aucs = zip(*sorted(epochToAUC.items()))[1]
-
-    # print "aucs=",aucs
-
-    return float(np.mean(aucs[-windowSize:]))
-
-#----------------------------------------------------------------------
 
 import threading
 
@@ -140,7 +110,7 @@ class TrainingRunner(threading.Thread):
         #----------
         # get the results (testAUCs)
         #----------
-        testAUC = getMeanTestAUC(self.outputDir, windowSize = aucMeanWindowSize)
+        testAUC = getMeanTestAUC(self.outputDir)
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames)
