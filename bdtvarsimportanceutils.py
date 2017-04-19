@@ -8,6 +8,128 @@ import os, glob, re
 
 #----------------------------------------------------------------------
 
+class VarImportanceResults:
+    # keeps track of test AUCs with a given set of variables
+
+    #----------
+
+    def __init__(self):
+        # maps from tuple of variable names
+        # to average test AUC
+        self.data = {}
+
+        self.allVars = set()
+
+    #----------
+
+    def getOverallAUC(self):
+        # returns the AUC with no variable removed
+        return self.getAUC(self.allVars)
+
+    #----------
+    
+    def getAUC(self, varnames):
+        return self.data.get(tuple(sorted(varnames)), None)
+
+    #----------
+    
+    def getTotNumVars(self):
+        return len(self.allVars)
+
+    #----------
+
+    def add(self, varnames, testAUC):
+        varnames = tuple(sorted(varnames))
+        if self.data.has_key(varnames):
+            print "WARNING: adding",varnames,"more than once !!"
+            
+        self.data[varnames] = testAUC
+
+        # update list of all variables seen
+        self.allVars = self.allVars.union(varnames)
+
+    #----------------------------------------
+        
+    def getStepAUCs(self, numVarsRemoved):
+        # returns a list of dicts with 
+        #   var removed, test AUC with var removed
+        
+        remainingVars = len(self.allVars) - numVarsRemoved
+
+        results = []
+
+        allVarsThisStep = set()
+
+        for key in self.data.keys():
+            if len(key) != remainingVars:
+                continue
+            results.append(key)
+
+            allVarsThisStep = allVarsThisStep.union(key)
+
+        # now loop again finding out which variable was removed
+        retval = []
+        for key in results:
+            if numVarsRemoved == 0:
+                # we train on all variables, there is no variable removed
+                removedVariable = None
+            else:
+
+                removedVars = allVarsThisStep - set(key)
+                assert len(removedVars) == 1,"removedVars is " + str(removedVars)
+                removedVariable = list(removedVars)[0]
+
+            retval.append(dict(removedVariable = removedVariable,
+                               aucWithVarRemoved = self.data[key]))
+
+        return retval
+
+    #----------------------------------------
+
+    def getNumResultsAtStep(self, numVarsRemoved):
+
+        totNumVars = len(self.allVars)
+
+        # number of variables remaining for this step
+        remainingVars = totNumVars - numVarsRemoved
+
+        keys = [ key for key in self.data.keys() if len(key) == remainingVars ]
+
+        return len(keys)
+
+    #----------------------------------------
+
+    def isStepComplete(self, numVarsRemoved):
+        # returns true if all steps are present for the give number
+        # of removed variables
+
+        # if we remove zero variables, we must have exactly one step
+        # if we remove one variable, we must have (totNumVars) steps
+        # if we remove two variables, we must have (totNumVars-1) steps
+        if numVarsRemoved == 0:
+            return self.getOverallAUC() != None
+
+        return self.getNumResultsAtStep(numVarsRemoved) == len(self.allVars) - numVarsRemoved + 1
+
+    #----------------------------------------
+
+    def worstVar(self, numVarsRemoved):
+        # return the variable with the highest AUC when removed
+
+        stepAUCs = self.getStepAUCs(numVarsRemoved)
+
+        if stepAUCs:
+            maxEl = max(stepAUCs, key = lambda item: item['testAUC']) 
+            return maxEl
+        else:
+            return None
+
+    #----------------------------------------
+        
+
+
+#----------------------------------------------------------------------
+
 def getAUCs(outputDir, sample = "test"):
     # returns a dict of epoch number to AUC
     
