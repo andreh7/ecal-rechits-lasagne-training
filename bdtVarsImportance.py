@@ -3,6 +3,8 @@
 import re, glob, os, time, tempfile, sys
 import numpy as np
 
+import bdtvarsimportanceutils
+
 
 maxJobsPerGPU = {
     0: 3,
@@ -114,7 +116,7 @@ class TrainingRunner(threading.Thread):
         #----------
         # get the results (testAUCs)
         #----------
-        testAUC = getMeanTestAUC(self.outputDir)
+        testAUC = bdtvarsimportanceutils.getMeanTestAUC(self.outputDir)
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames)
