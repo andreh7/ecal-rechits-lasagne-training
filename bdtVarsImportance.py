@@ -29,11 +29,12 @@ class TrainingRunner(threading.Thread):
 
     #----------------------------------------
 
-    def __init__(self, outputDir, varnames):
+    def __init__(self, outputDir, varnames, excludedVar):
 
         threading.Thread.__init__(self)
 
         self.outputDir = outputDir
+        self.excludedVar = excludedVar
 
         # make a copy to be safe
         self.varnames = list(varnames)
