@@ -48,6 +48,11 @@ class TrainingRunner(threading.Thread):
 
     #----------------------------------------
 
+    def setGPUmemFraction(self, memFraction):
+        self.memFraction = memFraction
+
+    #----------------------------------------
+
     def setCompletionQueue(self, completionQueue):
         self.completionQueue = completionQueue
 
@@ -88,6 +93,9 @@ class TrainingRunner(threading.Thread):
 
         cmdParts.append("./run-gpu.py")
         cmdParts.append("--gpu " + str(self.gpuindex))
+
+        if self.memFraction != None:
+            cmdParts.append("--memfrac %f" % self.memFraction)
 
         cmdParts.append("--")
 
@@ -166,6 +174,16 @@ def runTasks(threads):
                 assert numThreadsRunning[maxUnusedGpu] < maxJobsPerGPU[maxUnusedGpu]
                 task = threads.pop(0)
                 task.setGPU(maxUnusedGpu)
+
+                # set fraction of GPU memory to use
+                # reduce by some margin, otherwise jobs will not start
+                memMargin = 0.9
+                if task.excludedVar == None:
+                    # this is the first (sole) run, use all possible memory 
+                    # of one GPU
+                    task.setGPUmemFraction(1.0 * memMargin)
+                else:
+                    task.setGPUmemFraction(1.0 / float(maxJobsPerGPU[maxUnusedGpu]) * memMargin)
 
                 task.setIndex(taskIndex)
                 taskIndex += 1
