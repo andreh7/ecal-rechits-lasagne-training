@@ -86,10 +86,10 @@ class TrainingRunner(threading.Thread):
 
         cmdParts = []
 
-        if self.gpuindex == 0:
-            cmdParts.append("./run-gpu0.sh")
-        else:
-            cmdParts.append("./run-gpu.sh")
+        cmdParts.append("./run-gpu.py")
+        cmdParts.append("--gpu " + str(self.gpuindex))
+
+        cmdParts.append("--")
 
         cmdParts.extend([
             "train01.py",
