@@ -136,6 +136,8 @@ if __name__ == '__main__':
     # stepData = readFromLogFiles(ARGV)
     aucData = bdtvarsimportanceutils.readFromTrainingDir(ARGV[0])
 
+    aucData.removeVarnamePrefix('phoIdInput/')
+
     fullNetworkAUC = aucData.getOverallAUC()
 
     # from pprint import pprint
