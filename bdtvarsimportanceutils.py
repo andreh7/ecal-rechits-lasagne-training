@@ -223,13 +223,13 @@ def findComplete(trainDir, expectedNumEpochs = 200):
 
 #----------------------------------------------------------------------
 
-def readFromTrainingDir(trainDir):
+def readFromTrainingDir(trainDir, expectedNumEpochs = 200):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
 
     retval = VarImportanceResults()
 
-    completeDirs, incompleteDirs = findComplete(trainDir)
+    completeDirs, incompleteDirs = findComplete(trainDir, expectedNumEpochs)
 
     for theDir in completeDirs.values():
         auc = getMeanTestAUC(theDir)
