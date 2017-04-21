@@ -219,6 +219,25 @@ def runTasks(threads):
 
 if __name__ == '__main__':
 
+    import argparse
+
+    parser = argparse.ArgumentParser(prog='bdtVarsImportance.py',
+                                     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+                                     )
+
+    parser.add_argument('--resume',
+                        dest = "resumeDir",
+                        metavar = "dir",
+                        type = str,
+                        default = None,
+                        help='resume scan found in the given directory'
+                        )
+
+    options = parser.parse_args()
+
+    #----------
+
+
     allVars = [
         "s4",
         "scRawE",
@@ -244,13 +263,55 @@ if __name__ == '__main__':
 
     #----------
 
-    outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
-
-    if not os.path.exists(outputDir):
-        os.makedirs(outputDir)
-
     results = []
 
+    if options.resumeDir == None:
+        # start a new scan
+        outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
+
+        if not os.path.exists(outputDir):
+            os.makedirs(outputDir)
+            
+        aucData = bdtvarsimportanceutils.VarImportanceResults()
+
+    else:
+        # read results from existing directory
+        # assume the set of variables is the same
+
+        outputDir = options.resumeDir
+        
+        # first find steps which are incomplete and rename these
+        # directories
+        completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(options.resumeDir, maxEpochs)
+
+        for theDir in incompleteDirs.values():
+            import shutil
+
+            newName = theDir + "-deleteme"
+            index = 1
+            while os.path.exists(newName):
+                newName = theDir + "-deleteme%d" % index
+                index += 1
+
+            print "renaming incomplete directory",theDir,"to",newName
+            import shutil
+            shutil.move(theDir, newName)
+
+        #----------
+        # read the existing results
+        #----------
+
+        aucData = bdtvarsimportanceutils.readFromTrainingDir(options.resumeDir, expectedNumEpochs = maxEpochs)
+
+        # fill into the traditional data structure
+        for varnames, testAUC in aucData.data.items():
+            results.append(dict(testAUC = testAUC,
+                                varnames = varnames))
+
+
+    # the first number is the round of variable removal
+    # the second number is the index corresponding to the variable
+    # removed in this round
     jobIndex = [ 0, 0 ]
 
     #----------
@@ -260,8 +321,16 @@ if __name__ == '__main__':
 
     thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
 
-    # run the training
-    thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars)])
+    # run the training if we don't have the result yet
+    if aucData.getOverallAUC() == None:
+        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None)])
+    else:
+        # take from the existing directory
+        thisResults = [ dict(testAUC = aucData.getOverallAUC(),
+                             varnames = allVars,
+                             excludedVar = None)
+                        ]
+
 
     results.extend(thisResults)
 
@@ -288,15 +357,31 @@ if __name__ == '__main__':
 
             thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
 
-            tasks.append(TrainingRunner(thisOutputDir, thisVars))
+            if aucData.getAUC(thisVars) == None:
+                # we need to run this
+                tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded]))
+            else:
+                thisResults.append(dict(testAUC = aucData.getAUC(thisVars),
+                                        varnames = thisVars,
+                                        excludedVar = remainingVars[excluded]))
 
         # end of loop over variable to be excluded
 
-        # run the trainings
-        thisResults = runTasks(tasks)
+        # run the remaining trainings
+        if tasks:
+            newResults =  runTasks(tasks)                                 
+        else:
+            newResults = [] 
+
+        thisResults += newResults
+        
+
+        for result in newResults:
+            aucData.add(result['varnames'], result['testAUC'])
+                              
 
         for index, line in enumerate(thisResults):
-            print "test AUC when removing",remainingVars[index],"(%d variables remaining)" % (len(remainingVars) - 1),":",line['testAUC']
+            print "test AUC when removing",line['excludedVar'],"(%d variables remaining)" % (len(remainingVars) - 1),":",line['testAUC']
 
         sys.stdout.flush()
 
@@ -304,13 +389,13 @@ if __name__ == '__main__':
 
         # find highest AUC of test data
         # (and variable when removed giving the highest AUC)
-        highestAUC, highestAUCvarIndex = max([ (line['testAUC'], index) for index, line in enumerate(thisResults) ])
+        highestAUC, highestAUCvar = max([ (line['testAUC'], line['excludedVar']) for index, line in enumerate(thisResults) ])
 
         # remove the variable leading to the highest AUC when removed
-        print "removing variable",remainingVars[highestAUCvarIndex]
+        print "removing variable",highestAUCvar
         sys.stdout.flush()
 
-        del remainingVars[highestAUCvarIndex]
+        remainingVars.remove(highestAUCvar)
 
     # end while variables remaining
 
