@@ -70,6 +70,9 @@ class TrainingRunner(threading.Thread):
 
         dataSetFile.flush()
 
+        if not os.path.exists(self.outputDir):
+            os.makedirs(self.outputDir)
+
         #----------
         # write the variable names to the output directory
         #----------
