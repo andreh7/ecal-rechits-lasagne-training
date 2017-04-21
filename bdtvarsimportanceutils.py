@@ -125,6 +125,31 @@ class VarImportanceResults:
             return None
 
     #----------------------------------------
+
+    def removeVarnamePrefix(self, prefix):
+        # removes the given prefix from all
+        # variable names which have it
+        #
+        # only call this when no filling of variables
+        # is done afterwards
+
+        def fixVar(varname):
+            if varname.startswith(prefix):        
+                return varname[len(prefix):]
+            else:
+                return varname
+
+        newData = {}
+        for variables, value in self.data.items():
+
+            newVariables = [ fixVar(varname) for varname in variables]
+            newData[tuple(newVariables)] = value
+
+        self.allVars = set( [ fixVar(varname) for varname in self.allVars] )
+
+        self.data = newData
+
+    #----------------------------------------
         
 
 
