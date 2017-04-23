@@ -390,7 +390,11 @@ if __name__ == '__main__':
 
         # find highest AUC of test data
         # (and variable when removed giving the highest AUC)
-        highestAUC, highestAUCvar = max([ (line['testAUC'], line['excludedVar']) for index, line in enumerate(thisResults) ])
+        highestAUC, highestAUCvar = max([ (line['testAUC'], line['excludedVar']) for index, line in enumerate(thisResults) 
+                                          # avoid removing no variable (because the full
+                                          # set of BDT variables typically has the highest AUC)
+                                          if line['excludedVar'] != None
+                                          ])
 
         # remove the variable leading to the highest AUC when removed
         print "removing variable",highestAUCvar
