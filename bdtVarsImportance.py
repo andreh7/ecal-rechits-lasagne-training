@@ -127,7 +127,8 @@ class TrainingRunner(threading.Thread):
         testAUC = bdtvarsimportanceutils.getMeanTestAUC(self.outputDir)
 
         result = dict(testAUC = testAUC,
-                      varnames = self.varnames)
+                      varnames = self.varnames,
+                      excludedVar = self.excludedVar)
         self.completionQueue.put((self,result))
 
 #----------------------------------------------------------------------
