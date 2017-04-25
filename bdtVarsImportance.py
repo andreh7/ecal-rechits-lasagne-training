@@ -348,6 +348,8 @@ if __name__ == '__main__':
         jobIndex[0] += 1
         jobIndex[1] = 0
 
+        thisResults = []
+
         tasks = []
 
         for excluded in range(len(remainingVars)):
