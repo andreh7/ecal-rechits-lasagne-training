@@ -202,19 +202,26 @@ print "loading data"
 doPtEtaReweighting = globals().get("doPtEtaReweighting", False)
 
 cuda = True
+
+# data e.g. to be shared between train and test dataset
+datasetAuxData = {}
+
 with Timer("loading training dataset...") as t:
     trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], 
                                             cuda = cuda, 
                                             isTraining = True,
                                             reweightPtEta = doPtEtaReweighting,
                                             logStreams = fouts,
-                                            returnEventIds = False)
+                                            returnEventIds = False,
+                                            auxData = datasetAuxData)
 with Timer("loading test dataset...") as t:
     testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
                                             isTraining = False,
                                             reweightPtEta = False,
                                             logStreams = fouts,
-                                            returnEventIds = False)
+                                            returnEventIds = False,
+                                            auxData = datasetAuxData
+                                            )
 
 
 #----------
