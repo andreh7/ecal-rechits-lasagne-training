@@ -31,12 +31,13 @@ class TrainingRunner(threading.Thread):
 
     #----------------------------------------
 
-    def __init__(self, outputDir, varnames, excludedVar):
+    def __init__(self, outputDir, varnames, excludedVar, useCPU):
 
         threading.Thread.__init__(self)
 
         self.outputDir = outputDir
         self.excludedVar = excludedVar
+        self.useCPU = useCPU
 
         # make a copy to be safe
         self.varnames = list(varnames)
@@ -92,10 +93,14 @@ class TrainingRunner(threading.Thread):
         cmdParts = []
 
         cmdParts.append("./run-gpu.py")
-        cmdParts.append("--gpu " + str(self.gpuindex))
 
-        if self.memFraction != None:
-            cmdParts.append("--memfrac %f" % self.memFraction)
+        if self.useCPU:
+            cmdParts.append("--gpu cpu")
+        else:
+            cmdParts.append("--gpu " + str(self.gpuindex))
+
+            if self.memFraction != None:
+                cmdParts.append("--memfrac %f" % self.memFraction)
 
         cmdParts.append("--")
 
@@ -133,7 +138,7 @@ class TrainingRunner(threading.Thread):
 
 #----------------------------------------------------------------------
 
-def runTasks(threads):
+def runTasks(threads, useCPU):
     # runs the given list of tasks on the GPUs and returns
     # when all have finished
 
@@ -164,35 +169,50 @@ def runTasks(threads):
         # distribute jobs equally over GPUs
 
         # find how many jobs could be started for each GPU
+        # do not limit threads when running on CPUs
         while threads:
-            unusedSlots = [ 
-                (maxJobsPerGPU[gpu] - numThreadsRunning[gpu], gpu)
-                for gpu in sorted(numThreadsRunning.keys()) ]
 
-            maxUnusedSlots, maxUnusedGpu = max(unusedSlots)
+            # the task to start
+            task = None
 
-            if maxUnusedSlots > 0:
-                assert numThreadsRunning[maxUnusedGpu] < maxJobsPerGPU[maxUnusedGpu]
+            if useCPU:
+                # we consider to have unlimited amount of CPU cores
                 task = threads.pop(0)
-                task.setGPU(maxUnusedGpu)
+            else:
+                # running on GPU, check if we have a slot free
+                unusedSlots = [ 
+                    (maxJobsPerGPU[gpu] - numThreadsRunning[gpu], gpu)
+                    for gpu in sorted(numThreadsRunning.keys()) ]
 
-                # set fraction of GPU memory to use
-                # reduce by some margin, otherwise jobs will not start
-                memMargin = 0.9
-                if task.excludedVar == None:
-                    # this is the first (sole) run, use all possible memory 
-                    # of one GPU
-                    task.setGPUmemFraction(1.0 * memMargin)
-                else:
-                    task.setGPUmemFraction(1.0 / float(maxJobsPerGPU[maxUnusedGpu]) * memMargin)
+                maxUnusedSlots, maxUnusedGpu = max(unusedSlots)
 
+                if maxUnusedSlots > 0:
+                    assert numThreadsRunning[maxUnusedGpu] < maxJobsPerGPU[maxUnusedGpu]
+                    task = threads.pop(0)
+                    task.setGPU(maxUnusedGpu)
+
+                    # set fraction of GPU memory to use
+                    # reduce by some margin, otherwise jobs will not start
+                    memMargin = 0.9
+                    if task.excludedVar == None:
+                        # this is the first (sole) run, use all possible memory 
+                        # of one GPU
+                        task.setGPUmemFraction(1.0 * memMargin)
+                    else:
+                        task.setGPUmemFraction(1.0 / float(maxJobsPerGPU[maxUnusedGpu]) * memMargin)
+
+            if task != None:
                 task.setIndex(taskIndex)
                 taskIndex += 1
 
                 task.setCompletionQueue(completionQueue)
 
-                numThreadsRunning[maxUnusedGpu] += 1
-                print "STARTING ON GPU",maxUnusedGpu
+                if useCPU:
+                    print "STARTING ON CPU"
+                else:
+                    numThreadsRunning[maxUnusedGpu] += 1
+                    print "STARTING ON GPU",maxUnusedGpu
+
                 task.start()
             else:
                 # wait until a task completes
@@ -202,7 +222,8 @@ def runTasks(threads):
         thread, thisResult = completionQueue.get()
 
         # 'free' a slot on this gpu
-        numThreadsRunning[thread.gpuindex] -= 1
+        if not useCPU:
+            numThreadsRunning[thread.gpuindex] -= 1
 
         results[thread.taskIndex] = thisResult
 
@@ -232,6 +253,13 @@ if __name__ == '__main__':
                         type = str,
                         default = None,
                         help='resume scan found in the given directory'
+                        )
+
+    parser.add_argument('--cpu',
+                        dest = "useCPU",
+                        default = False,
+                        action = 'store_true',
+                        help='run on CPU instead of GPUs'
                         )
 
     options = parser.parse_args()
@@ -324,7 +352,7 @@ if __name__ == '__main__':
 
     # run the training if we don't have the result yet
     if aucData.getOverallAUC() == None:
-        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None)])
+        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU)], options.useCPU)
     else:
         # take from the existing directory
         thisResults = [ dict(testAUC = aucData.getOverallAUC(),
@@ -362,7 +390,7 @@ if __name__ == '__main__':
 
             if aucData.getAUC(thisVars) == None:
                 # we need to run this
-                tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded]))
+                tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded], options.useCPU))
             else:
                 thisResults.append(dict(testAUC = aucData.getAUC(thisVars),
                                         varnames = thisVars,
@@ -372,7 +400,7 @@ if __name__ == '__main__':
 
         # run the remaining trainings
         if tasks:
-            newResults =  runTasks(tasks)                                 
+            newResults =  runTasks(tasks, options.useCPU)
         else:
             newResults = [] 
 
