@@ -20,9 +20,9 @@ parser = argparse.ArgumentParser(prog='run-gpu.py',
 
 
 parser.add_argument('--gpu',
-                    default = 1,
-                    type = int,
-                    help='gpu to run on',
+                    default = "1",
+                    type = str,
+                    help='gpu to run on or the string cpu',
                     )
 
 parser.add_argument('--memfrac',
@@ -41,24 +41,37 @@ options = parser.parse_args()
 
 cmdParts = []
 
-#----------
-# theano flags
-#----------
-# old style, does NOT require pygpu (which I can't get to work)
-deviceName = "gpu%d"  % options.gpu
+if options.gpu == 'cpu':
+    
+    flags = [
+        "mode=FAST_RUN",
+        "device=cpu",
+        "floatX=float32",
+        "exception_verbosity=high",
+        "optimizer=None",
+        ]
 
-# new style, requires pygpu which I can't get to work
-# deviceName = "cuda%d" % options.gpu
+else:
+    # assume a gpu number
+    options.gpu = int(options.gpu)
+    #----------
+    # theano flags
+    #----------
+    # old style, does NOT require pygpu (which I can't get to work)
+    deviceName = "gpu%d"  % options.gpu
 
-flags = [
-    "mode=FAST_RUN",
-    "device=%s" % deviceName,
-    "floatX=float32",
-    "dnn.enabled=True",
-    ]
+    # new style, requires pygpu which I can't get to work
+    # deviceName = "cuda%d" % options.gpu
 
-if options.memfrac != None:
-    flags.append("lib.cnmem=%f"  % options.memfrac)
+    flags = [
+        "mode=FAST_RUN",
+        "device=%s" % deviceName,
+        "floatX=float32",
+        "dnn.enabled=True",
+        ]
+
+    if options.memfrac != None:
+        flags.append("lib.cnmem=%f"  % options.memfrac)
 
 cmdParts.append("THEANO_FLAGS=" + ",".join(flags))
 #----------
