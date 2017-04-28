@@ -5,6 +5,9 @@
 import sys, re, os
 from pprint import pprint
 
+#----------------------------------------------------------------------
+
+expectedNumEpochs = 200
 
 #----------------------------------------------------------------------
 
@@ -114,14 +117,55 @@ def printStepDataToCSV(stepData, os = sys.stdout):
 
 if __name__ == '__main__':
 
+    #----------
+    # parse command line arguments
+    #----------
+    import argparse
+
+    parser = argparse.ArgumentParser(prog='printBdtVarsImportance.py',
+                                     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+                                     )
+
+    parser.add_argument('--fom',
+                        dest = "fomFunction",
+                        type = str,
+                        choices = [ 'auc', 
+                                    'sigeff005bg',
+                                    ],
+                        default = 'auc',
+                        help='figure of merit to use (default: %(default)s)'
+                        )
+
+    parser.add_argument('inputDir',
+                        metavar = "inputDir",
+                        type = str,
+                        nargs = 1,
+                        help='input directory with result files to read from',
+                        )
+
+    options = parser.parse_args()
+
+
+    options.inputDir = options.inputDir[0]
+
     import bdtvarsimportanceutils
 
-    ARGV = sys.argv[1:]
+    if options.fomFunction == 'auc':
+        options.fomFunction = bdtvarsimportanceutils.getMeanTestAUC
+    elif options.fomFunction == 'sigeff005bg':
+        # signal efficiency at 5% fraction of background
+        # we specify the epochs explicitly so that we do not 
+        # have to read all of them (calculaing the fraction takes some time)
 
-    assert len(ARGV) >= 1
+        # note the +1 because our epoch numbering starts at one
+        options.fomFunction = lambda outputDir, windowSize: bdtvarsimportanceutils.getSigEffAtBgFraction(outputDir, range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1), 0.05)
+    else:
+        raise Exception("internal error")
+
+    #----------
 
     # find complete directories
-    completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(ARGV[0])
+    completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(options.inputDir, expectedNumEpochs = expectedNumEpochs)
 
     print "complete directories:"
     for theDir in sorted(completeDirs.values()):
@@ -134,7 +178,7 @@ if __name__ == '__main__':
 
 
     # stepData = readFromLogFiles(ARGV)
-    aucData = bdtvarsimportanceutils.readFromTrainingDir(ARGV[0])
+    aucData = bdtvarsimportanceutils.readFromTrainingDir(options.inputDir, fomFunction = options.fomFunction)
 
     aucData.removeVarnamePrefix('phoIdInput/')
 
