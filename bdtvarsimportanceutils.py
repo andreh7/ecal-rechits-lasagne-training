@@ -301,3 +301,34 @@ def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10,
     return retval
 
 #----------------------------------------------------------------------
+
+def fomAddOptions(parser):
+    # adds command line option for known figures of merit
+
+    parser.add_argument('--fom',
+                        dest = "fomFunction",
+                        type = str,
+                        choices = [ 'auc', 
+                                    'sigeff005bg',
+                                    ],
+                        default = 'auc',
+                        help='figure of merit to use (default: %(default)s)'
+                        )
+
+#----------------------------------------------------------------------
+
+def fomGetSelectedFunction(options, expectedNumEpochs):
+
+    if options.fomFunction == 'auc':
+        options.fomFunction = getMeanTestAUC
+    elif options.fomFunction == 'sigeff005bg':
+        # signal efficiency at 5% fraction of background
+        # we specify the epochs explicitly so that we do not 
+        # have to read all of them (calculaing the fraction takes some time)
+
+        # note the +1 because our epoch numbering starts at one
+        options.fomFunction = lambda outputDir, windowSize: getSigEffAtBgFraction(outputDir, range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1), 0.05)
+    else:
+        raise Exception("internal error")
+
+    

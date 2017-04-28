@@ -117,6 +117,8 @@ def printStepDataToCSV(stepData, os = sys.stdout):
 
 if __name__ == '__main__':
 
+    import bdtvarsimportanceutils
+
     #----------
     # parse command line arguments
     #----------
@@ -126,15 +128,7 @@ if __name__ == '__main__':
                                      formatter_class = argparse.ArgumentDefaultsHelpFormatter,
                                      )
 
-    parser.add_argument('--fom',
-                        dest = "fomFunction",
-                        type = str,
-                        choices = [ 'auc', 
-                                    'sigeff005bg',
-                                    ],
-                        default = 'auc',
-                        help='figure of merit to use (default: %(default)s)'
-                        )
+    bdtvarsimportanceutils.fomAddOptions(parser)
 
     parser.add_argument('inputDir',
                         metavar = "inputDir",
@@ -148,19 +142,7 @@ if __name__ == '__main__':
 
     options.inputDir = options.inputDir[0]
 
-    import bdtvarsimportanceutils
-
-    if options.fomFunction == 'auc':
-        options.fomFunction = bdtvarsimportanceutils.getMeanTestAUC
-    elif options.fomFunction == 'sigeff005bg':
-        # signal efficiency at 5% fraction of background
-        # we specify the epochs explicitly so that we do not 
-        # have to read all of them (calculaing the fraction takes some time)
-
-        # note the +1 because our epoch numbering starts at one
-        options.fomFunction = lambda outputDir, windowSize: bdtvarsimportanceutils.getSigEffAtBgFraction(outputDir, range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1), 0.05)
-    else:
-        raise Exception("internal error")
+    bdtvarsimportanceutils.fomGetSelectedFunction(options, expectedNumEpochs)
 
     #----------
 
