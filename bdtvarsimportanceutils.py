@@ -248,16 +248,20 @@ def findComplete(trainDir, expectedNumEpochs = 200):
 
 #----------------------------------------------------------------------
 
-def readFromTrainingDir(trainDir, expectedNumEpochs = 200):
+def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10, expectedNumEpochs = 200):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
+    # 
+    # @param fomFunction is a function returning the 'figure of merit' (FOM)
+    # and takes two arguments theDir and windowSize (how many of the
+    # last iterations should be considered)
 
     retval = VarImportanceResults()
 
     completeDirs, incompleteDirs = findComplete(trainDir, expectedNumEpochs)
 
     for theDir in completeDirs.values():
-        auc = getMeanTestAUC(theDir)
+        auc = fomFunction(theDir, windowSize)
         variables = readVars(theDir)
         retval.add(variables, auc)
 
