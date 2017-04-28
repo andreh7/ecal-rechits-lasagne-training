@@ -153,16 +153,32 @@ print "%-30s: %.4f" % ('before', fullNetworkAUC)
 # we only have to up to tot num vars minus two
 for numVarsRemoved in range(aucData.getTotNumVars() - 1):
     print "%2d vars removed:" % numVarsRemoved,
-    
-    if aucData.isStepComplete(numVarsRemoved):
-        print "complete"
 
+    # find the variable leading to the highest AUC
+    # when removed
+    varData = aucData.getStepAUCs(numVarsRemoved)
+
+    if varData:
+        worstVar = max([(step['aucWithVarRemoved'], step['removedVariable']) for step in varData ])[1]
+    else:
+        worstVar = None
+
+    isStepComplete = aucData.isStepComplete(numVarsRemoved)
+
+    if isStepComplete:
+        print "complete"
     else:
         print "incomplete (%d results)" % aucData.getNumResultsAtStep(numVarsRemoved)
 
     for step in aucData.getStepAUCs(numVarsRemoved):
-        print "%-30s: %.4f" % (step['removedVariable'],step['aucWithVarRemoved'])        
+        print "%-30s: %.4f" % (step['removedVariable'],step['aucWithVarRemoved']),
+        if step['removedVariable'] == worstVar:
+            if isStepComplete:
+                print "<<<",
+            else:
+                print "(<<<)",
 
+        print
 
 #----------
 # make plots
