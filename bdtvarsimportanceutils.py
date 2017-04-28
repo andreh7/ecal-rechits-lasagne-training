@@ -207,6 +207,39 @@ def getMeanTestAUC(outputDir, windowSize = 10):
 
 #----------------------------------------------------------------------
 
+def getSigEffAtBgFraction(outputDir, epochs, bgFraction):
+    # returns the (averaged) signal fraction at the given background fraction
+
+    import numpy as np
+
+    sigEffs = np.zeros(len(epochs))
+
+    for epochIndex, epoch in enumerate(epochs):
+
+        import plotROCs
+        resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
+
+        inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz" % epoch)
+        if not os.path.exists(inputFname):
+            # try a bzipped version
+            inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz.bz2" % epoch)
+
+        auc, numEvents, fpr, tpr = plotROCs.readROC(resultDirData, inputFname, isTrain = False, returnFullCurve = True, updateCache = False)
+
+        # get signal efficiency ('true positive rate' tpr) at given
+        # background efficiency ('false positive rate' fpr)
+
+        # assume fpr are sorted so we can use is as 'x value'
+        # with function interpolation
+        import scipy
+        thisSigEff = scipy.interpolate.interp1d(fpr, tpr)(bgFraction)
+        sigEffs[epochIndex] = thisSigEff
+
+    # average over the collected iterations
+    return sigEffs.mean()
+
+#----------------------------------------------------------------------
+
 def readVars(dirname):
     fin = open(os.path.join(dirname,"variables.py"))
     retval = eval(fin.read())
