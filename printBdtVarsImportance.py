@@ -160,7 +160,8 @@ if __name__ == '__main__':
 
 
     # stepData = readFromLogFiles(ARGV)
-    aucData = bdtvarsimportanceutils.readFromTrainingDir(options.inputDir, fomFunction = options.fomFunction)
+    aucData = bdtvarsimportanceutils.readFromTrainingDir(options.inputDir, expectedNumEpochs = expectedNumEpochs, 
+                                                         fomFunction = options.fomFunction)
 
     aucData.removeVarnamePrefix('phoIdInput/')
 
