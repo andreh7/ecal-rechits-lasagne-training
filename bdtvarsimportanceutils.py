@@ -310,6 +310,8 @@ def fomAddOptions(parser):
                         type = str,
                         choices = [ 'auc', 
                                     'sigeff005bg',
+                                    'sigeff003bg',
+                                    'sigeff002bg',
                                     ],
                         default = 'auc',
                         help='figure of merit to use (default: %(default)s)'
@@ -321,14 +323,19 @@ def fomGetSelectedFunction(options, expectedNumEpochs):
 
     if options.fomFunction == 'auc':
         options.fomFunction = getMeanTestAUC
-    elif options.fomFunction == 'sigeff005bg':
-        # signal efficiency at 5% fraction of background
-        # we specify the epochs explicitly so that we do not 
-        # have to read all of them (calculaing the fraction takes some time)
-
-        # note the +1 because our epoch numbering starts at one
-        options.fomFunction = lambda outputDir, windowSize: getSigEffAtBgFraction(outputDir, range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1), 0.05)
     else:
-        raise Exception("internal error")
+        mo = re.match('sigeff(\d\d\d)bg', options.fomFunction)
+
+        if mo:
+            # signal efficiency at x% fraction of background
+            # we specify the epochs explicitly so that we do not 
+            # have to read all of them (calculaing the fraction takes some time)
+
+            bgfrac = int(mo.group(1), 10) / 100.0
+
+            # note the +1 because our epoch numbering starts at one
+            options.fomFunction = lambda outputDir, windowSize: getSigEffAtBgFraction(outputDir, range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1), bgfrac)
+        else:
+            raise Exception("internal error")
 
     
