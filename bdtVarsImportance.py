@@ -14,6 +14,10 @@ maxJobsPerGPU = {
 # maximum number of epochs for each training
 maxEpochs = 200
 
+# how many of the last epochs should be considered
+# for the figure of merit calculation ?
+windowSize = 10
+
 dataSetFname = "dataset14-bdt-inputvars.py"
 
 modelFname   = "model09-bdt-inputs.py"
@@ -31,13 +35,14 @@ class TrainingRunner(threading.Thread):
 
     #----------------------------------------
 
-    def __init__(self, outputDir, varnames, excludedVar, useCPU):
+    def __init__(self, outputDir, varnames, excludedVar, useCPU, fomFunction):
 
         threading.Thread.__init__(self)
 
         self.outputDir = outputDir
         self.excludedVar = excludedVar
         self.useCPU = useCPU
+        self.fomFunction = fomFunction
 
         # make a copy to be safe
         self.varnames = list(varnames)
@@ -129,7 +134,7 @@ class TrainingRunner(threading.Thread):
         #----------
         # get the results (testAUCs)
         #----------
-        testAUC = bdtvarsimportanceutils.getMeanTestAUC(self.outputDir)
+        testAUC = self.fomFunction(self.outputDir, windowSize)
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames,
@@ -262,7 +267,11 @@ if __name__ == '__main__':
                         help='run on CPU instead of GPUs'
                         )
 
+    bdtvarsimportanceutils.fomAddOptions(parser)
+
     options = parser.parse_args()
+
+    bdtvarsimportanceutils.fomGetSelectedFunction(options, maxEpochs)
 
     #----------
 
@@ -330,7 +339,8 @@ if __name__ == '__main__':
         # read the existing results
         #----------
 
-        aucData = bdtvarsimportanceutils.readFromTrainingDir(options.resumeDir, expectedNumEpochs = maxEpochs)
+        aucData = bdtvarsimportanceutils.readFromTrainingDir(options.resumeDir, expectedNumEpochs = maxEpochs,
+                                                             fomFunction = options.fomFunction)
 
         # fill into the traditional data structure
         for varnames, testAUC in aucData.data.items():
@@ -352,7 +362,7 @@ if __name__ == '__main__':
 
     # run the training if we don't have the result yet
     if aucData.getOverallAUC() == None:
-        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU)], options.useCPU)
+        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction)], options.useCPU)
     else:
         # take from the existing directory
         thisResults = [ dict(testAUC = aucData.getOverallAUC(),
@@ -390,7 +400,8 @@ if __name__ == '__main__':
 
             if aucData.getAUC(thisVars) == None:
                 # we need to run this
-                tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded], options.useCPU))
+                tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded], options.useCPU,
+                                            options.fomFunction))
             else:
                 thisResults.append(dict(testAUC = aucData.getAUC(thisVars),
                                         varnames = thisVars,
