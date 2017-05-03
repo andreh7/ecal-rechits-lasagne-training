@@ -137,6 +137,13 @@ if __name__ == '__main__':
                         help='input directory with result files to read from',
                         )
 
+    parser.add_argument("--save-plots",
+                        dest = 'savePlots',
+                        default = False,
+                        action="store_true",
+                        help="save plots in input directory",
+                        )
+
     options = parser.parse_args()
 
 
@@ -287,7 +294,11 @@ pylab.grid()
 pylab.xlabel('number of remaining input variables')
 pylab.ylabel('test auc when removing variable')
 
-pylab.savefig("bdt-vars-importance.png")
-pylab.savefig("bdt-vars-importance.pdf")
+if options.savePlots:
+    for suffix in ("png", "pdf"):
+        fname = os.path.join(options.inputDir, "bdt-vars-importance." + suffix)
+        pylab.savefig(fname)
+        print "wrote plot to",fname
 
-pylab.show()
+else:
+    pylab.show()
