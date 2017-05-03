@@ -294,6 +294,11 @@ pylab.grid()
 pylab.xlabel('number of remaining input variables')
 pylab.ylabel('test auc when removing variable')
 
+from plotROCutils import addDirname
+addDirname(options.inputDir, y = 1.01)
+
+
+
 if options.savePlots:
     for suffix in ("png", "pdf"):
         fname = os.path.join(options.inputDir, "bdt-vars-importance." + suffix)
