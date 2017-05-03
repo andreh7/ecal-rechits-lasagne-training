@@ -281,7 +281,16 @@ def findComplete(trainDir, expectedNumEpochs = 200):
 
 #----------------------------------------------------------------------
 
-def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10, expectedNumEpochs = 200):
+class __ReadFromTrainingDirHelperFunc:
+    def __init__(self, func, windowSize):
+        self.func = func
+        self.windowSize = windowSize
+
+    def __call__(self, theDir):
+        return self.func(theDir, self.windowSize)
+
+def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10, expectedNumEpochs = 200,
+                        numParallelProcesses = None):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
     # 
@@ -293,8 +302,21 @@ def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10,
 
     completeDirs, incompleteDirs = findComplete(trainDir, expectedNumEpochs)
 
-    for theDir in completeDirs.values():
-        auc = fomFunction(theDir, windowSize)
+    if numParallelProcesses == None:
+        aucs = [ fomFunction(theDir, windowSize) for theDir in completeDirs.values() ]
+    else:
+        import multiprocessing
+        if numParallelProcesses >= 1:
+            pool = multiprocessing.Pool(processes = numParallelProcesses)
+        else:
+            pool = multiprocessing.Pool()
+
+        # need a pickleable object
+        helperFunc = __ReadFromTrainingDirHelperFunc(fomFunction, windowSize)
+
+        aucs = pool.map(helperFunc, completeDirs.values())
+
+    for theDir, auc in zip(completeDirs.values(), aucs):
         variables = readVars(theDir)
         retval.add(variables, auc)
 
@@ -319,6 +341,19 @@ def fomAddOptions(parser):
 
 #----------------------------------------------------------------------
 
+class __SigEffAtBgFractionFunc:
+    # pickleable function which we can use with the multiprocessing
+    # module
+    def __init__(self, expectedNumEpochs, bgfrac):
+        self.expectedNumEpochs = expectedNumEpochs
+        self.bgfrac = bgfrac
+
+    def __call__(self, outputDir, windowSize):
+        return getSigEffAtBgFraction(outputDir, 
+                                     range(self.expectedNumEpochs - windowSize + 1, self.expectedNumEpochs + 1), 
+                                     self.bgfrac)
+
+
 def fomGetSelectedFunction(options, expectedNumEpochs):
 
     if options.fomFunction == 'auc':
@@ -334,7 +369,7 @@ def fomGetSelectedFunction(options, expectedNumEpochs):
             bgfrac = int(mo.group(1), 10) / 100.0
 
             # note the +1 because our epoch numbering starts at one
-            options.fomFunction = lambda outputDir, windowSize: getSigEffAtBgFraction(outputDir, range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1), bgfrac)
+            options.fomFunction = __SigEffAtBgFractionFunc(expectedNumEpochs, bgfrac)
         else:
             raise Exception("internal error")
 
