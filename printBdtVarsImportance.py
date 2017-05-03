@@ -178,7 +178,7 @@ print "order of removal:"
 print "%-30s: %.4f" % ('before', fullNetworkAUC)
 
 # we only have to up to tot num vars minus two
-for numVarsRemoved in range(aucData.getTotNumVars() - 1):
+for numVarsRemoved in range(aucData.getTotNumVars()):
     print "%2d vars removed:" % numVarsRemoved,
 
     # find the variable leading to the highest AUC
@@ -224,7 +224,7 @@ labels_ypos = []
 ystart = 0.75
 ylineHeight = 0.01
 
-for numVarsRemoved in range(aucData.getTotNumVars() - 1):
+for numVarsRemoved in range(aucData.getTotNumVars()):
     numRemainingVars = aucData.getTotNumVars() - numVarsRemoved
 
     isCompleteStep = aucData.isStepComplete(numVarsRemoved)
