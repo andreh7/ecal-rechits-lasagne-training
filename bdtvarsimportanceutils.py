@@ -207,6 +207,39 @@ def getMeanTestAUC(outputDir, windowSize = 10):
 
 #----------------------------------------------------------------------
 
+def getSigEffAtBgFraction(outputDir, epochs, bgFraction):
+    # returns the (averaged) signal fraction at the given background fraction
+
+    import numpy as np
+
+    sigEffs = np.zeros(len(epochs))
+
+    for epochIndex, epoch in enumerate(epochs):
+
+        import plotROCs
+        resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
+
+        inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz" % epoch)
+        if not os.path.exists(inputFname):
+            # try a bzipped version
+            inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz.bz2" % epoch)
+
+        auc, numEvents, fpr, tpr = plotROCs.readROC(resultDirData, inputFname, isTrain = False, returnFullCurve = True, updateCache = False)
+
+        # get signal efficiency ('true positive rate' tpr) at given
+        # background efficiency ('false positive rate' fpr)
+
+        # assume fpr are sorted so we can use is as 'x value'
+        # with function interpolation
+        import scipy
+        thisSigEff = scipy.interpolate.interp1d(fpr, tpr)(bgFraction)
+        sigEffs[epochIndex] = thisSigEff
+
+    # average over the collected iterations
+    return sigEffs.mean()
+
+#----------------------------------------------------------------------
+
 def readVars(dirname):
     fin = open(os.path.join(dirname,"variables.py"))
     retval = eval(fin.read())
@@ -248,19 +281,96 @@ def findComplete(trainDir, expectedNumEpochs = 200):
 
 #----------------------------------------------------------------------
 
-def readFromTrainingDir(trainDir, expectedNumEpochs = 200):
+class __ReadFromTrainingDirHelperFunc:
+    def __init__(self, func, windowSize):
+        self.func = func
+        self.windowSize = windowSize
+
+    def __call__(self, theDir):
+        return self.func(theDir, self.windowSize)
+
+def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10, expectedNumEpochs = 200,
+                        numParallelProcesses = None):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
+    # 
+    # @param fomFunction is a function returning the 'figure of merit' (FOM)
+    # and takes two arguments theDir and windowSize (how many of the
+    # last iterations should be considered)
 
     retval = VarImportanceResults()
 
     completeDirs, incompleteDirs = findComplete(trainDir, expectedNumEpochs)
 
-    for theDir in completeDirs.values():
-        auc = getMeanTestAUC(theDir)
+    if numParallelProcesses == None:
+        aucs = [ fomFunction(theDir, windowSize) for theDir in completeDirs.values() ]
+    else:
+        import multiprocessing
+        if numParallelProcesses >= 1:
+            pool = multiprocessing.Pool(processes = numParallelProcesses)
+        else:
+            pool = multiprocessing.Pool()
+
+        # need a pickleable object
+        helperFunc = __ReadFromTrainingDirHelperFunc(fomFunction, windowSize)
+
+        aucs = pool.map(helperFunc, completeDirs.values())
+
+    for theDir, auc in zip(completeDirs.values(), aucs):
         variables = readVars(theDir)
         retval.add(variables, auc)
 
     return retval
 
 #----------------------------------------------------------------------
+
+def fomAddOptions(parser):
+    # adds command line option for known figures of merit
+
+    parser.add_argument('--fom',
+                        dest = "fomFunction",
+                        type = str,
+                        choices = [ 'auc', 
+                                    'sigeff005bg',
+                                    'sigeff003bg',
+                                    'sigeff002bg',
+                                    ],
+                        default = 'auc',
+                        help='figure of merit to use (default: %(default)s)'
+                        )
+
+#----------------------------------------------------------------------
+
+class __SigEffAtBgFractionFunc:
+    # pickleable function which we can use with the multiprocessing
+    # module
+    def __init__(self, expectedNumEpochs, bgfrac):
+        self.expectedNumEpochs = expectedNumEpochs
+        self.bgfrac = bgfrac
+
+    def __call__(self, outputDir, windowSize):
+        return getSigEffAtBgFraction(outputDir, 
+                                     range(self.expectedNumEpochs - windowSize + 1, self.expectedNumEpochs + 1), 
+                                     self.bgfrac)
+
+
+def fomGetSelectedFunction(options, expectedNumEpochs):
+
+    if options.fomFunction == 'auc':
+        options.fomFunction = getMeanTestAUC
+    else:
+        mo = re.match('sigeff(\d\d\d)bg', options.fomFunction)
+
+        if mo:
+            # signal efficiency at x% fraction of background
+            # we specify the epochs explicitly so that we do not 
+            # have to read all of them (calculaing the fraction takes some time)
+
+            bgfrac = int(mo.group(1), 10) / 100.0
+
+            # note the +1 because our epoch numbering starts at one
+            options.fomFunction = __SigEffAtBgFractionFunc(expectedNumEpochs, bgfrac)
+        else:
+            raise Exception("internal error")
+
+    

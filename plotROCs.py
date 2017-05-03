@@ -120,7 +120,7 @@ class ResultDirData:
 
 #----------------------------------------------------------------------
 
-def readROC(resultDirData, fname, isTrain, returnFullCurve = False):
+def readROC(resultDirData, fname, isTrain, returnFullCurve = False, updateCache = True):
     # reads a torch file and calculates the area under the ROC
     # curve for it
     # 
@@ -157,17 +157,22 @@ def readROC(resultDirData, fname, isTrain, returnFullCurve = False):
 
     aucValue = auc(fpr, tpr, reorder = True)
 
-    # write to cache
-    cachedFname = fname + ".cached-auc.py"
-    fout = open(cachedFname,"w")
-    print >> fout,aucValue
-    fout.close()
+    #----------
 
-    # also copy the timestamp so that we can 
-    # use it for estimating the time elapsed
-    # for the plot
-    modTime = os.path.getmtime(fname)
-    os.utime(cachedFname, (modTime, modTime))
+    if updateCache:
+        # write to cache
+        cachedFname = fname + ".cached-auc.py"
+        fout = open(cachedFname,"w")
+        print >> fout,aucValue
+        fout.close()
+
+        # also copy the timestamp so that we can 
+        # use it for estimating the time elapsed
+        # for the plot
+        modTime = os.path.getmtime(fname)
+        os.utime(cachedFname, (modTime, modTime))
+
+    #----------
 
     if returnFullCurve:
         return aucValue, len(weights), fpr, tpr

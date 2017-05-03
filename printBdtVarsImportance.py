@@ -5,6 +5,9 @@
 import sys, re, os
 from pprint import pprint
 
+#----------------------------------------------------------------------
+
+expectedNumEpochs = 200
 
 #----------------------------------------------------------------------
 
@@ -116,12 +119,42 @@ if __name__ == '__main__':
 
     import bdtvarsimportanceutils
 
-    ARGV = sys.argv[1:]
+    #----------
+    # parse command line arguments
+    #----------
+    import argparse
 
-    assert len(ARGV) >= 1
+    parser = argparse.ArgumentParser(prog='printBdtVarsImportance.py',
+                                     formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+                                     )
+
+    bdtvarsimportanceutils.fomAddOptions(parser)
+
+    parser.add_argument('inputDir',
+                        metavar = "inputDir",
+                        type = str,
+                        nargs = 1,
+                        help='input directory with result files to read from',
+                        )
+
+    parser.add_argument("--save-plots",
+                        dest = 'savePlots',
+                        default = False,
+                        action="store_true",
+                        help="save plots in input directory",
+                        )
+
+    options = parser.parse_args()
+
+
+    options.inputDir = options.inputDir[0]
+
+    bdtvarsimportanceutils.fomGetSelectedFunction(options, expectedNumEpochs)
+
+    #----------
 
     # find complete directories
-    completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(ARGV[0])
+    completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(options.inputDir, expectedNumEpochs = expectedNumEpochs)
 
     print "complete directories:"
     for theDir in sorted(completeDirs.values()):
@@ -134,7 +167,9 @@ if __name__ == '__main__':
 
 
     # stepData = readFromLogFiles(ARGV)
-    aucData = bdtvarsimportanceutils.readFromTrainingDir(ARGV[0])
+    aucData = bdtvarsimportanceutils.readFromTrainingDir(options.inputDir, expectedNumEpochs = expectedNumEpochs, 
+                                                         fomFunction = options.fomFunction,
+                                                         numParallelProcesses = 10)
 
     aucData.removeVarnamePrefix('phoIdInput/')
 
@@ -151,18 +186,34 @@ print "order of removal:"
 print "%-30s: %.4f" % ('before', fullNetworkAUC)
 
 # we only have to up to tot num vars minus two
-for numVarsRemoved in range(aucData.getTotNumVars() - 1):
+for numVarsRemoved in range(aucData.getTotNumVars()):
     print "%2d vars removed:" % numVarsRemoved,
-    
-    if aucData.isStepComplete(numVarsRemoved):
-        print "complete"
 
+    # find the variable leading to the highest AUC
+    # when removed
+    varData = aucData.getStepAUCs(numVarsRemoved)
+
+    if varData:
+        worstVar = max([(step['aucWithVarRemoved'], step['removedVariable']) for step in varData ])[1]
+    else:
+        worstVar = None
+
+    isStepComplete = aucData.isStepComplete(numVarsRemoved)
+
+    if isStepComplete:
+        print "complete"
     else:
         print "incomplete (%d results)" % aucData.getNumResultsAtStep(numVarsRemoved)
 
     for step in aucData.getStepAUCs(numVarsRemoved):
-        print "%-30s: %.4f" % (step['removedVariable'],step['aucWithVarRemoved'])        
+        print "%-30s: %.4f" % (step['removedVariable'],step['aucWithVarRemoved']),
+        if step['removedVariable'] == worstVar:
+            if isStepComplete:
+                print "<<<",
+            else:
+                print "(<<<)",
 
+        print
 
 #----------
 # make plots
@@ -181,7 +232,7 @@ labels_ypos = []
 ystart = 0.75
 ylineHeight = 0.01
 
-for numVarsRemoved in range(aucData.getTotNumVars() - 1):
+for numVarsRemoved in range(aucData.getTotNumVars()):
     numRemainingVars = aucData.getTotNumVars() - numVarsRemoved
 
     isCompleteStep = aucData.isStepComplete(numVarsRemoved)
@@ -243,7 +294,16 @@ pylab.grid()
 pylab.xlabel('number of remaining input variables')
 pylab.ylabel('test auc when removing variable')
 
-pylab.savefig("bdt-vars-importance.png")
-pylab.savefig("bdt-vars-importance.pdf")
+from plotROCutils import addDirname
+addDirname(options.inputDir, y = 1.01)
 
-pylab.show()
+
+
+if options.savePlots:
+    for suffix in ("png", "pdf"):
+        fname = os.path.join(options.inputDir, "bdt-vars-importance." + suffix)
+        pylab.savefig(fname)
+        print "wrote plot to",fname
+
+else:
+    pylab.show()
