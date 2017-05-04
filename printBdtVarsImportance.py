@@ -149,6 +149,7 @@ if __name__ == '__main__':
 
     options.inputDir = options.inputDir[0]
 
+    fomFunctionName = options.fomFunction
     bdtvarsimportanceutils.fomGetSelectedFunction(options, expectedNumEpochs)
 
     #----------
@@ -292,7 +293,7 @@ if True:
 
 pylab.grid()
 pylab.xlabel('number of remaining input variables')
-pylab.ylabel('test auc when removing variable')
+pylab.ylabel('test %s when removing variable' % fomFunctionName)
 
 from plotROCutils import addDirname
 addDirname(options.inputDir, y = 1.01)
