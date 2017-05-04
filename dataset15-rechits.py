@@ -53,6 +53,7 @@ additionalVars = []
 #----------------------------------------------------------------------
 
 def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds,
+                                auxData,
                                 additionalVars = []):
     # @param returnEventIds if True, returns also a dict with sample/run/ls/event numbers 
     # @param additionalVars is a list of 'simple' variables such as track isolation variables to be added as
@@ -201,7 +202,8 @@ def __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, l
 #----------------------------------------------------------------------
 
 
-def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds):
+def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds,
+                        auxData):
     return __datasetLoadFunctionHelper(fnames, size, cuda, isTraining, reweightPtEta, logStreams, 
-                                       returnEventIds,
+                                       returnEventIds, auxData,
                                        additionalVars = additionalVars)
