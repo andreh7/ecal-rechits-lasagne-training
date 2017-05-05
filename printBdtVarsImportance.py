@@ -230,8 +230,12 @@ colors  = []
 labels_ypos = []
 
 # for variable name labels
-ystart = 0.75
-ylineHeight = 0.01
+if fomFunctionName == 'auc':
+    ystart = 0.75
+    ylineHeight = 0.01
+else:
+    ystart = -0.15
+    ylineHeight = 0.02
 
 for numVarsRemoved in range(aucData.getTotNumVars()):
     numRemainingVars = aucData.getTotNumVars() - numVarsRemoved
@@ -277,8 +281,10 @@ pylab.plot(xvalues, yvalues, 'o')
 
 # add labels
 if True:
-
-    pylab.ylim((0.6, pylab.ylim()[1]))
+    if fomFunctionName == 'auc':
+        pylab.ylim((0.6, pylab.ylim()[1]))
+    else:
+        pylab.ylim((-0.2, 0.65))
 
     for xpos, ypos, label, color in zip(xvalues, labels_ypos, labels, colors):
 
