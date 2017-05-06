@@ -14,3 +14,6 @@ export CPATH=$CUDNN_DIR/cuda/include:$CPATH
 export LIBRARY_PATH=$CUDNN_DIR/cuda/lib64:$LD_LIBRARY_PATH
 
 export PYTHONPATH=~/torchio:$PYTHONPATH
+
+# to avoid picking up /usr/lib64/R/lib/libopenblas.so.0
+export LD_LIBRARY_PATH=/usr/lib64:$LD_LIBRARY_PATH
