@@ -7,12 +7,18 @@
 source ~/virtualenv/py27-cuda75/bin/activate
 
 CUDA_VERSION=7.5
+#----------
+# cudnn
+#----------
+
 # see http://deeplearning.net/software/theano/library/sandbox/cuda/dnn.html
 CUDNN_DIR=~/cudnn-${CUDA_VERSION}
 
 export LD_LIBRARY_PATH=$CUDNN_DIR/cuda/lib64:$LD_LIBRARY_PATH
 export CPATH=$CUDNN_DIR/cuda/include:$CPATH
+# note the missing LD_
 export LIBRARY_PATH=$CUDNN_DIR/cuda/lib64:$LD_LIBRARY_PATH
+#----------
 
 export PYTHONPATH=~/torchio:$PYTHONPATH
 
