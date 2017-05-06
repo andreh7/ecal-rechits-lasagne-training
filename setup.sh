@@ -7,6 +7,15 @@
 source ~/virtualenv/py27-cuda75/bin/activate
 
 CUDA_VERSION=7.5
+
+#----------
+# cuda
+#----------
+export CUDA_HOME=/usr/local/cuda-${CUDA_VERSION}
+# for nvprof
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
 #----------
 # cudnn
 #----------
