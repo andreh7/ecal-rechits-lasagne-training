@@ -10,14 +10,13 @@ import pylab
 
 #----------------------------------------------------------------------
 
-def doPlot(inputDirData, maxEpoch = None, excludedEpochs = None):
+def doPlot(resultDirRocs):
 
     #----------
     # plot evolution of area under ROC curve vs. epoch
     #----------
 
-    mvaROC, rocValues = plotROCs.readROCfiles(inputDirData, plotROCs.readROC, includeCached = True, maxEpoch = maxEpoch,
-                                              excludedEpochs = excludedEpochs)
+    mvaROC, rocValues = resultDirRocs.getAllROCs()
 
     pylab.figure(facecolor='white')
 
@@ -39,11 +38,14 @@ def doPlot(inputDirData, maxEpoch = None, excludedEpochs = None):
 
     pylab.legend(loc = 'upper left')
 
-    if inputDirData.description != None:
-        pylab.title(inputDirData.description)
+    inputDirDescription = resultDirRocs.getInputDirDescription()
+    if inputDirDescription != None:
+        pylab.title(inputDirDescription)
 
-    plotROCs.addTimestamp(inputDirData.inputDir)
-    plotROCs.addDirname(inputDirData.inputDir)
+    inputDir = resultDirRocs.getInputDir()
+
+    plotROCs.addTimestamp(inputDir)
+    plotROCs.addDirname(inputDir)
 
     #----------
 
@@ -80,8 +82,10 @@ if __name__ == '__main__':
 
     resultDirData = plotROCs.ResultDirData(inputDir)
 
-    doPlot(resultDirData, maxEpoch = options.maxEpoch)
+    from ResultDirRocs import ResultDirRocs
+    resultDirRocs = ResultDirRocs(resultDirData,
+                                  maxEpoch = options.maxEpoch)
+
+    doPlot(resultDirRocs)
 
     pylab.show()
-
-

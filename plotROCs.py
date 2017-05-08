@@ -305,7 +305,7 @@ def drawLast(resultDirRocs, xmax = None, ignoreTrain = False,
 
     if savePlots:
         for suffix in (".png", ".pdf", ".svg"):
-            outputFname = os.path.join(inputDirData.inputDir, "last-auc")
+            outputFname = os.path.join(inputDir, "last-auc")
 
             if xmax != None:
                 outputFname += "-%.2f" % xmax
@@ -477,8 +477,7 @@ if __name__ == '__main__':
 
         import plotAUCcorr
 
-        plotAUCcorr.doPlot(resultDirData, maxEpoch = options.maxEpoch,
-                           excludedEpochs = options.excludedEpochs)
+        plotAUCcorr.doPlot(resultDirRocs)
 
         if options.savePlots:
             for suffix in (".png", ".pdf", ".svg"):
