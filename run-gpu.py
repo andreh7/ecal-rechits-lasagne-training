@@ -31,6 +31,12 @@ parser.add_argument('--memfrac',
                     help = "memory fraction to allocate for theano"
                     )
 
+parser.add_argument('--nvprof',
+                    default = False,
+                    action = 'store_true',
+                    help = "run with the nvprof profiler"
+                    )
+
 parser.add_argument('args',
                     metavar = "args",
                     type = str,
@@ -75,6 +81,11 @@ else:
 
 cmdParts.append("THEANO_FLAGS=" + ",".join(flags))
 #----------
+
+if options.nvprof:
+    cmdParts.append("nvprof")
+    cmdParts.append("-o /tmp/nvprofile-%p")
+    cmdParts.append("-s") # print summary even when generating an output file
 
 cmdParts.append("python")
 
