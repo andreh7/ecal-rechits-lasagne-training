@@ -2,11 +2,11 @@
 
 #----------------------------------------------------------------------
 
-import glob, os, re
+import glob, os, re, sys
 
 #----------------------------------------------------------------------
 
-def _readROCfilesLambda(resultDirData, fname, isTrain):
+def _readROCfilesLambda(fname, isTrain):
     # default transformation function for readROCfiles
     return fname
 
@@ -19,6 +19,13 @@ class Func:
 
     def __call__(self, args):
         return self.func(*args)
+
+class ReadROChelper:
+    def __init__(self, resultDirRocs):
+        self.resultDirRocs = resultDirRocs
+        
+    def __call__(self, *args):
+        return self.resultDirRocs.readROC(*args)
 
 #----------------------------------------------------------------------
 
@@ -39,7 +46,6 @@ class ResultDirRocs:
         self.mvaROCfnames, self.rocFnames = self.readROCfiles()
 
     #----------------------------------------
-
 
     def readROCfiles(self, transformation = None, includeCached = False):
         # returns mvaROC, rocValues
@@ -103,7 +109,7 @@ class ResultDirRocs:
 
                 isTrain = sampleType == 'train'
 
-                mvaROC[sampleType] = transformation(self.resultDirData, inputFname, isTrain)
+                mvaROC[sampleType] = transformation(inputFname, isTrain)
 
                 continue
 
@@ -132,7 +138,7 @@ class ResultDirRocs:
                     tasks.append(dict(
                             sampleType = sampleType,
                             epoch = epoch,
-                            args = (self.resultDirData, inputFname, isTrain),
+                            args = (inputFname, isTrain),
                             ))
                     scheduledTasks[sampleType].add(epoch)
 
@@ -290,5 +296,17 @@ class ResultDirRocs:
 
     def getInputDirDescription(self):
         return self.resultDirData.description
+
+    #----------------------------------------
+
+    def getAllROCs(self):
+        # gets all non-exlucded roc values
+        # calculates them if not in the cache
+
+        # TODO: caching of the results
+
+        mvaROC, rocValues = self.readROCfiles(ReadROChelper(self), 
+                                         includeCached = True)
+        return mvaROC, rocValues
 
 #----------------------------------------------------------------------

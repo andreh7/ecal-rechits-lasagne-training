@@ -423,11 +423,7 @@ if __name__ == '__main__':
         # plot evolution of area under ROC curve vs. epoch
         #----------
 
-        mvaROC, rocValues = readROCfiles(resultDirData, 
-                                         readROC, 
-                                         includeCached = True, 
-                                         maxEpoch = options.maxEpoch,
-                                         excludedEpochs = options.excludedEpochs)
+        mvaROC, rocValues = resultDirRocs.getAllROCs()
 
         print "plotting AUC evolution"
 
