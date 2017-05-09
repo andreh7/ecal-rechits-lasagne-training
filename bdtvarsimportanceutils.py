@@ -214,17 +214,20 @@ def getSigEffAtBgFraction(outputDir, epochs, bgFraction):
 
     sigEffs = np.zeros(len(epochs))
 
+    import plotROCs
+    resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
+    from ResultDirRocs import ResultDirRocs
+    resultDirRocs = ResultDirRocs(resultDirData, maxNumThreads = None)
+
     for epochIndex, epoch in enumerate(epochs):
 
-        import plotROCs
-        resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
 
         inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz" % epoch)
         if not os.path.exists(inputFname):
             # try a bzipped version
             inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz.bz2" % epoch)
 
-        auc, numEvents, fpr, tpr = plotROCs.readROC(resultDirData, inputFname, isTrain = False, returnFullCurve = True, updateCache = False)
+        auc, numEvents, fpr, tpr = resultDirRocs.readROC(inputFname, isTrain = False, returnFullCurve = True, updateCache = False)
 
         # get signal efficiency ('true positive rate' tpr) at given
         # background efficiency ('false positive rate' fpr)
