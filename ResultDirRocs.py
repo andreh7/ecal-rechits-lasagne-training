@@ -149,13 +149,19 @@ class ResultDirRocs:
         # calculate the AUC values
         from multiprocessing import Process, Pool
 
-        procPool = Pool(processes = self.maxNumThreads)
+        if self.maxNumThreads != None:
+            # multiprocessing enabled
+            procPool = Pool(processes = self.maxNumThreads)
 
-        results = procPool.map(Func(transformation), [ task['args'] for task in tasks ])
+            results = procPool.map(Func(transformation), [ task['args'] for task in tasks ])
 
-        # wait for processes to complete
-        procPool.close()
-        procPool.join()
+            # wait for processes to complete
+            procPool.close()
+            procPool.join()
+
+        else:
+            # run in the current thread only
+            results = [ Func(transformation)(task['args']) for task in tasks ]
 
         for task, res in zip(tasks, results):
             rocValues[task['sampleType']][task['epoch']] = res
