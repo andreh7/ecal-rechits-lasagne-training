@@ -9,6 +9,8 @@ from pprint import pprint
 
 expectedNumEpochs = 200
 
+windowSize = 10
+
 #----------------------------------------------------------------------
 
 def readFromLogFiles(logFnames):
@@ -168,7 +170,8 @@ if __name__ == '__main__':
 
 
     # stepData = readFromLogFiles(ARGV)
-    aucData = bdtvarsimportanceutils.readFromTrainingDir(options.inputDir, expectedNumEpochs = expectedNumEpochs, 
+    aucData = bdtvarsimportanceutils.readFromTrainingDir(options.inputDir, windowSize = windowSize,
+                                                         expectedNumEpochs = expectedNumEpochs, 
                                                          fomFunction = options.fomFunction,
                                                          numParallelProcesses = 10)
 
