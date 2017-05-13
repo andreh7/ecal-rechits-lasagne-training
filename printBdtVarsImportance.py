@@ -178,6 +178,9 @@ if __name__ == '__main__':
     aucData.removeVarnamePrefix('phoIdInput/')
 
     fullNetworkAUC = aucData.getOverallAUC()
+    
+    # read official photon ID score
+    bdtAuc = options.fomFunction(os.path.join(options.inputDir,"00-00"), windowSize, useBDT = True) 
 
     # from pprint import pprint
     # print pprint(aucData.data)
@@ -188,6 +191,7 @@ if __name__ == '__main__':
     
 print "order of removal:"
 print "%-30s: %.4f" % ('before', fullNetworkAUC)
+print "%-30s: %.4f" % ('BDT (phoid)', bdtAuc)
 
 # we only have to up to tot num vars minus two
 for numVarsRemoved in range(aucData.getTotNumVars()):
