@@ -190,7 +190,9 @@ def isComplete(outputDir, numEpochs, sample = "test"):
 
 #----------------------------------------------------------------------
 
-def getMeanTestAUC(outputDir, windowSize = 10):
+def getMeanTestAUC(outputDir, windowSize = 10, useBDT = False):
+
+    assert not useBDT
 
     import numpy as np
 
@@ -207,13 +209,22 @@ def getMeanTestAUC(outputDir, windowSize = 10):
 
 #----------------------------------------------------------------------
 
-def getSigEffAtBgFraction(outputDir, epochs, bgFraction):
+def getSigEffAtBgFraction(outputDir, epochs, bgFraction, useBDT):
     # returns the (averaged) signal fraction at the given background fraction
 
     import numpy as np
 
-    sigEffs = np.zeros(len(epochs))
+    if useBDT:
+        # there are no epochs, just reserve one value
+        sigEffs = np.zeros(1)
+        epochs = [ -1 ]
 
+        namingFunc = lambda epoch: "roc-data-test-mva.npz"
+
+    else:
+        sigEffs = np.zeros(len(epochs))
+
+        namingFunc = lambda epoch: "roc-data-test-%04d.npz" % epoch
     import plotROCs
     resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
     from ResultDirRocs import ResultDirRocs
@@ -221,11 +232,10 @@ def getSigEffAtBgFraction(outputDir, epochs, bgFraction):
 
     for epochIndex, epoch in enumerate(epochs):
 
-
-        inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz" % epoch)
+        inputFname = os.path.join(outputDir, namingFunc(epoch))
         if not os.path.exists(inputFname):
             # try a bzipped version
-            inputFname = os.path.join(outputDir, "roc-data-test-%04d.npz.bz2" % epoch)
+            inputFname = os.path.join(outputDir, namingFunc(epoch) + ".bz2")
 
         auc, numEvents, fpr, tpr = resultDirRocs.readROC(inputFname, isTrain = False, returnFullCurve = True, updateCache = False)
 
@@ -290,7 +300,7 @@ class __ReadFromTrainingDirHelperFunc:
         self.windowSize = windowSize
 
     def __call__(self, theDir):
-        return self.func(theDir, self.windowSize)
+        return self.func(theDir, self.windowSize, useBDT = False)
 
 def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10, expectedNumEpochs = 200,
                         numParallelProcesses = None):
@@ -306,7 +316,7 @@ def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10,
     completeDirs, incompleteDirs = findComplete(trainDir, expectedNumEpochs)
 
     if numParallelProcesses == None:
-        aucs = [ fomFunction(theDir, windowSize) for theDir in completeDirs.values() ]
+        aucs = [ fomFunction(theDir, windowSize, useBDT = False) for theDir in completeDirs.values() ]
     else:
         import multiprocessing
         if numParallelProcesses >= 1:
@@ -351,10 +361,15 @@ class __SigEffAtBgFractionFunc:
         self.expectedNumEpochs = expectedNumEpochs
         self.bgfrac = bgfrac
 
-    def __call__(self, outputDir, windowSize):
+    def __call__(self, outputDir, windowSize, useBDT):
+        # @param useBDT if True, returns the figure of merit
+        # of the official photon id values (no averaging 
+        # over epochs since we only have one 
+
         return getSigEffAtBgFraction(outputDir, 
                                      range(self.expectedNumEpochs - windowSize + 1, self.expectedNumEpochs + 1), 
-                                     self.bgfrac)
+                                     self.bgfrac,
+                                     useBDT = useBDT)
 
 
 def fomGetSelectedFunction(options, expectedNumEpochs):
