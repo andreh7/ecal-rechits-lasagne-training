@@ -37,6 +37,12 @@ parser.add_argument('--nvprof',
                     help = "run with the nvprof profiler"
                     )
 
+parser.add_argument('--thprof',
+                    default = False,
+                    action = 'store_true',
+                    help = "run with the theano profiler"
+                    )
+
 parser.add_argument('args',
                     metavar = "args",
                     type = str,
@@ -44,6 +50,11 @@ parser.add_argument('args',
                     )
 
 options = parser.parse_args()
+
+
+if options.thprof and options.nvprof:
+    print >> sys.stderr,"--nvprof and --thprof are mutually exclusive"
+    sys.exit(1)
 
 cmdParts = []
 
@@ -78,6 +89,13 @@ else:
 
     if options.memfrac != None:
         flags.append("lib.cnmem=%f"  % options.memfrac)
+
+
+if options.thprof:
+    flags.append("profile=True")
+
+    # see https://github.com/Lasagne/Lasagne/issues/312
+    cmdParts.append("CUDA_LAUNCH_BLOCKING=1")
 
 cmdParts.append("THEANO_FLAGS=" + ",".join(flags))
 #----------
