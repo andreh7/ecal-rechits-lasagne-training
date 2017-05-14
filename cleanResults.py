@@ -223,7 +223,11 @@ for dirname in ARGV:
     # zip any remaining .npz files
     fnames = glob.glob(dirname + "/*.npz")
     for fname in fnames:
-        print "zipping",fname
-        os.system("bzip2 " + fname)
+        if options.dryRun:
+            if not fname in filesToDelete:
+                print "would zip",fname
+        else:
+            print "zipping",fname
+            os.system("bzip2 " + fname)
 
 # end of loop over directories
