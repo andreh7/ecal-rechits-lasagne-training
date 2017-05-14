@@ -27,9 +27,6 @@ def applyNetwork(modelStructureFile, modelParamsFile, inputsFile):
     # apply parameters to model
     lasagne.layers.set_all_param_values(model, params)
 
-    # load the input data
-    inputData = pickle.load(open(inputsFile))
-
     layers = lasagne.layers.get_all_layers(model)
 
     #----------
@@ -37,14 +34,13 @@ def applyNetwork(modelStructureFile, modelParamsFile, inputsFile):
     #----------
 
     print >> sys.stderr,"loading input variables"
-    inputData = pickle.load(open(inputsFile))
+    inputData = np.load(inputsFile)
 
-    assert isinstance(inputData, list)
-    assert len(inputData) == 1
+    inputFieldNames = sorted([ key for key in inputData.keys() if key.startswith('input/') ])
 
-    inputData = inputData[0]
+    inputData = [ inputData[key] for key in inputFieldNames ]
 
-    numSamples, numVars = inputData.shape
+    numSamples = inputData[0].shape[0]
 
     #----------
     # iterate over layers 
@@ -118,7 +114,7 @@ if __name__ == '__main__':
 
     modelFile  = os.path.join(resultDir, "model-structure.pkl")
     paramsFile = os.path.join(resultDir, "model-%04d.npz" % epoch)
-    inputsFile = os.path.join(resultDir, "input-%s.pkl" % sample)
+    inputsFile = os.path.join(resultDir, "input-%s.npz" % sample)
 
     #----------
     # calculate the network output values
