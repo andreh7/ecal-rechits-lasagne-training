@@ -9,7 +9,7 @@ import numpy as np
 
 #----------------------------------------------------------------------
 
-def applyNetwork(modelStructureFile, modelParamsFile, inputsFile):
+def applyNetwork(modelStructureFile, modelParamsFile, inputsFile, returnIntermediateValues):
 
     #----------
     # load model data
@@ -70,16 +70,18 @@ def applyNetwork(modelStructureFile, modelParamsFile, inputsFile):
 
         print >> sys.stderr, "layer %2d has" % index, np.prod(shape[1:]),"nodes"
 
-        # produce a theano variable to hold 
+        if not returnIntermediateValues and index < len(layers) - 1:
+            continue
 
+        # produce a theano variable to hold 
         thisLayerOutput = lasagne.layers.get_output(layer, deterministic = True)
         thisLayerOutputFunction = theano.function(input_vars, thisLayerOutput)
 
         layerOutputFunctions.append(thisLayerOutputFunction)
 
         shape = tuple([ numSamples ] + list(shape[1:]))
-        layerOutputValues.append(np.zeros(shape))
-
+        layerOutputValues.append(dict(index = index,
+                                      outputVal = np.zeros(shape)))
 
     #----------
     # loop over input samples
@@ -90,10 +92,10 @@ def applyNetwork(modelStructureFile, modelParamsFile, inputsFile):
 
         end = min(start + evalBatchSize,numSamples)
 
-        for outputVal, outputFunc in zip(layerOutputValues, layerOutputFunctions):
+        for item, outputFunc in zip(layerOutputValues, layerOutputFunctions):
 
-            outputVal[start:end] = outputFunc(
-                inputData[start:end]
+            item['outputVal'][start:end] = outputFunc(
+                *[ inp[start:end] for inp in inputData ]
             )
 
 
@@ -120,9 +122,9 @@ if __name__ == '__main__':
     # calculate the network output values
     #----------
     
-    layerOutputValues = applyNetwork(modelFile, paramsFile, inputsFile)
+    layerOutputValues = applyNetwork(modelFile, paramsFile, inputsFile, returnIntermediateValues = False)
 
-    numSamples = len(layerOutputValues[-1])
+    numSamples = len(layerOutputValues[-1]['outputVal'])
 
     #----------
     # load weights and labels
@@ -152,7 +154,7 @@ if __name__ == '__main__':
     # write data out in npz format
     #----------
     # start layer indexing at one because we skipped the input layer
-    outputData = dict( [ ("layer_%02d_out" % index, outputVal) for index, outputVal in enumerate(layerOutputValues) ])
+    outputData = dict( [ ("layer_%02d_out" % item['index'], item['outputVal']) for item in layerOutputValues ])
     outputData['weights'] = weights
     outputData['labels'] = labels
 
@@ -161,7 +163,3 @@ if __name__ == '__main__':
     print "writing output data"
     np.savez_compressed(outputName, **outputData)
     print >> sys.stderr,"wrote output to",outputName
-
-
-
-
