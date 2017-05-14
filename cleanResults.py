@@ -47,6 +47,14 @@ parser.add_option("--keep-epoch",
                   help="comma separated list of epoch numbers to keep anyway",
                   )
 
+parser.add_option("--keep",
+                  dest="numFilesToKeep",
+                  default = 1,
+                  type = int,
+                  help="number of last iterations to keep. default is 1, i.e. keep only the last one",
+                  metavar = "n"
+                  )
+
 (options, ARGV) = parser.parse_args()
 
 if len(ARGV) < 1:
@@ -127,16 +135,16 @@ for dirname in ARGV:
     # end of loop over files
 
     #----------
-    # keep only latest model file
+    # keep only latest few model file
     #----------
 
     if modelFiles:
         modelFiles.sort(key = lambda line: line[0])
 
         # only keep the last one
-        filesToKeep.append(modelFiles[-1][1])
+        filesToKeep.extend([ theFile[1] for theFile in modelFiles[-options.numFilesToKeep:] ])
 
-        for line in modelFiles[:-1]:
+        for line in modelFiles[:-options.numFilesToKeep]:
 
             epoch, fname = line
 
@@ -160,10 +168,10 @@ for dirname in ARGV:
         lines.sort(key = lambda line: line[0])
             
         # keep the latest one
-        filesToKeep.append(lines[-1][1])
+        filesToKeep.extend([ line[1] for line in lines[-options.numFilesToKeep:] ])
 
         # keep previous ones if there is no cached file
-        for line in lines[:-1]:
+        for line in lines[:-options.numFilesToKeep]:
             epoch, fname = line
 
             keep = False
