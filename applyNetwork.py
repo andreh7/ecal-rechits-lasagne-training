@@ -72,9 +72,12 @@ class NetworkApplier:
 
     #----------------------------------------
 
-    def apply(self, returnIntermediateValues):
+    def apply(self, returnIntermediateValues, inputData = None):
 
-        inputData = self.inputData
+        if inputData == None:
+            inputData = self.inputData
+        else:
+            assert len(inputData) == len(self.inputData)
 
         numSamples = inputData[0].shape[0]
 
