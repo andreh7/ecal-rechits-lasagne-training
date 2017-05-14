@@ -129,7 +129,11 @@ if __name__ == '__main__':
     #----------
     weightsLabelsFile = os.path.join(resultDir, "weights-labels-" + sample + ".npz")
 
-    weightsLabels = np.load(weightsLabelsFile)
+    if os.path.exists(weightsLabelsFile):
+        weightsLabels = np.load(weightsLabelsFile)
+    else:
+        import bz2
+        weightsLabels = np.load(bz2.BZ2File(weightsLabelsFile + ".bz2"))
 
     if sample == 'train':
         weightVarName = "trainWeight"
