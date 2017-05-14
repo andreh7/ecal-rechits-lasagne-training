@@ -9,114 +9,127 @@ import numpy as np
 
 #----------------------------------------------------------------------
 
-def applyNetwork(modelStructureFile, modelParamsFile, inputsFile, returnIntermediateValues, verbose = False):
+class NetworkApplier:
+    def __init__(self, modelStructureFile, modelParamsFile, verbose = False):
 
-    #----------
-    # load model data
-    #----------
+        self.verbose = verbose
 
-    modelData = pickle.load(open(modelStructureFile))
-    model = modelData['model']
-    input_vars = modelData['input_vars']
+        #----------
+        # load model data
+        #----------
 
-    paramsRaw = np.load(modelParamsFile)
+        modelData = pickle.load(open(modelStructureFile))
+        self.model = modelData['model']
+        self.input_vars = modelData['input_vars']
 
-    # the keys are of the form arr_<integer>
-    params = [ paramsRaw[key] for key in sorted(paramsRaw.keys(), key = lambda x: int(x[4:]) ) ]
+        paramsRaw = np.load(modelParamsFile)
 
-    # apply parameters to model
-    lasagne.layers.set_all_param_values(model, params)
+        # the keys are of the form arr_<integer>
+        params = [ paramsRaw[key] for key in sorted(paramsRaw.keys(), key = lambda x: int(x[4:]) ) ]
 
-    layers = lasagne.layers.get_all_layers(model)
+        # apply parameters to model
+        lasagne.layers.set_all_param_values(self.model, params)
 
-    #----------
-    # load input variables
-    #----------
+        self.layers = lasagne.layers.get_all_layers(self.model)
 
-    print >> sys.stderr,"loading input variables"
-    inputData = np.load(inputsFile)
+        #----------
+        # iterate over layers 
+        # build a theano function for the outputs of each layer
+        #----------
+        if self.verbose:
 
-    inputFieldNames = sorted([ key for key in inputData.keys() if key.startswith('input/') ])
-
-    inputData = [ inputData[key] for key in inputFieldNames ]
-
-    if verbose:
-        print >> sys.stderr,"input data shapes:"
-        for name, data in zip(inputFieldNames, inputData):
-            print >> sys.stderr, "  %-30s: %s" % (name, str(data.shape))
-
-        # find input layers: assume the input values are given
-        # in the same order as the input layers appear fg
-        inputLayers = [ layer for layer in layers if isinstance(layer, lasagne.layers.input.InputLayer) ]
-
-        print >> sys.stderr,"input layer shapes:"
-        for layer in inputLayers:
-            print >> sys.stderr, "  %-30s: %s" % (layer.name, str(layer.shape))
-
-    numSamples = inputData[0].shape[0]
-
-    #----------
-    # iterate over layers 
-    # build a theano function for the outputs of each layer
-    #----------
-    if verbose:
-
-        print >> sys.stderr,"found",len(layers),"layers"
-        for index, layer in enumerate(layers):
-            print >> sys.stderr,"  layer %2d:" % index,layer
-
-    #----------
-    # iterate over samples and apply them to the network
-    #----------
-
-    layerOutputFunctions = []
-
-    layerOutputValues = []
-
-    import theano
-
-    for index, layer in enumerate(layers):
-        # if isinstance(layer, lasagne.layers.input.InputLayer):
-        #     # skip input layer
-        #     continue
-
-        shape = layer.output_shape
-
-        # the first dimension is the minibatch dimension (typically
-        # set to None), we ignore it
-
-        print >> sys.stderr, "layer %2d has" % index, np.prod(shape[1:]),"nodes"
-
-        if not returnIntermediateValues and index < len(layers) - 1:
-            continue
-
-        # produce a theano variable to hold 
-        thisLayerOutput = lasagne.layers.get_output(layer, deterministic = True)
-        thisLayerOutputFunction = theano.function(input_vars, thisLayerOutput)
-
-        layerOutputFunctions.append(thisLayerOutputFunction)
-
-        shape = tuple([ numSamples ] + list(shape[1:]))
-        layerOutputValues.append(dict(index = index,
-                                      outputVal = np.zeros(shape)))
-
-    #----------
-    # loop over input samples
-    #----------
-    evalBatchSize = 10000
-
-    for start in range(0,numSamples,evalBatchSize):
-
-        end = min(start + evalBatchSize,numSamples)
-
-        for item, outputFunc in zip(layerOutputValues, layerOutputFunctions):
-
-            item['outputVal'][start:end] = outputFunc(
-                *[ inp[start:end] for inp in inputData ]
-            )
+            print >> sys.stderr,"found",len(self.layers),"layers"
+            for index, layer in enumerate(self.layers):
+                print >> sys.stderr,"  layer %2d:" % index,layer
 
 
-    return layerOutputValues
+    #----------------------------------------
+
+    def loadInputs(self, inputsFile):
+        #----------
+        # load input variables
+        #----------
+
+        print >> sys.stderr,"loading input variables"
+        inputData = np.load(inputsFile)
+
+        self.inputFieldNames = sorted([ key for key in inputData.keys() if key.startswith('input/') ])
+
+        self.inputData = [ inputData[key] for key in self.inputFieldNames ]
+
+        if self.verbose:
+            print >> sys.stderr,"input data shapes:"
+            for name, data in zip(self.inputFieldNames, self.inputData):
+                print >> sys.stderr, "  %-30s: %s" % (name, str(data.shape))
+
+            # find input layers: assume the input values are given
+            # in the same order as the input layers appear fg
+            inputLayers = [ layer for layer in self.layers if isinstance(layer, lasagne.layers.input.InputLayer) ]
+
+            print >> sys.stderr,"input layer shapes:"
+            for layer in inputLayers:
+                print >> sys.stderr, "  %-30s: %s" % (layer.name, str(layer.shape))
+
+    #----------------------------------------
+
+    def apply(self, returnIntermediateValues):
+
+        inputData = self.inputData
+
+        numSamples = inputData[0].shape[0]
+
+        #----------
+        # iterate over samples and apply them to the network
+        #----------
+
+        layerOutputFunctions = []
+
+        layerOutputValues = []
+
+        import theano
+
+        for index, layer in enumerate(self.layers):
+            # if isinstance(layer, lasagne.layers.input.InputLayer):
+            #     # skip input layer
+            #     continue
+
+            shape = layer.output_shape
+
+            # the first dimension is the minibatch dimension (typically
+            # set to None), we ignore it
+
+            print >> sys.stderr, "layer %2d has" % index, np.prod(shape[1:]),"nodes"
+
+            if not returnIntermediateValues and index < len(self.layers) - 1:
+                continue
+
+            # produce a theano variable to hold 
+            thisLayerOutput = lasagne.layers.get_output(layer, deterministic = True)
+            thisLayerOutputFunction = theano.function(self.input_vars, thisLayerOutput)
+
+            layerOutputFunctions.append(thisLayerOutputFunction)
+
+            shape = tuple([ numSamples ] + list(shape[1:]))
+            layerOutputValues.append(dict(index = index,
+                                          outputVal = np.zeros(shape)))
+
+        #----------
+        # loop over input samples
+        #----------
+        evalBatchSize = 10000
+
+        for start in range(0,numSamples,evalBatchSize):
+
+            end = min(start + evalBatchSize,numSamples)
+
+            for item, outputFunc in zip(layerOutputValues, layerOutputFunctions):
+
+                item['outputVal'][start:end] = outputFunc(
+                    *[ inp[start:end] for inp in inputData ]
+                )
+
+
+        return layerOutputValues
 
 #----------------------------------------------------------------------
 # main
@@ -139,7 +152,10 @@ if __name__ == '__main__':
     # calculate the network output values
     #----------
     
-    layerOutputValues = applyNetwork(modelFile, paramsFile, inputsFile, returnIntermediateValues = False, verbose = True)
+    networkApplier = NetworkApplier(modelFile, paramsFile, verbose = True)
+    networkApplier.loadInputs(inputsFile)
+
+    layerOutputValues = networkApplier.apply(returnIntermediateValues = False)
 
     numSamples = len(layerOutputValues[-1]['outputVal'])
 
