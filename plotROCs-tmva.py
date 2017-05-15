@@ -114,12 +114,12 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
     tpr = {}
     numEvents = {}
 
-    for key in ('BDT', 'TMVA'):
+    for key in ('official', 'our training'):
         auc[key] = {}
         fpr[key] = {}
         tpr[key] = {}
         numEvents[key] = {}
-        origMVA = key == 'BDT'
+        origMVA = key == 'official'
         for sample in ('train', 'test'):
             auc[key][sample], fpr[key][sample], tpr[key][sample], numEvents[key][sample] = readROC(tmvaOutputFname, sample == 'train', True,
                                                                                                    origMVA = origMVA)
@@ -138,8 +138,8 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
         ):
 
         for key, lineStyle, lineWidth in (
-            ('TMVA', '-', 2),
-            ('BDT',  '--', 1),
+            ('our training', '-', 2),
+            ('official',  '--', 1),
             ):
 
             isTrain = sample == 'train'
