@@ -58,17 +58,18 @@ class NetworkApplier:
 
         self.inputData = [ inputData[key] for key in self.inputFieldNames ]
 
+        # find input layers: assume the input values are given
+        # in the same order as the input layers appear fg
+        self.inputLayers = [ layer for layer in self.layers if isinstance(layer, lasagne.layers.input.InputLayer) ]
+
         if self.verbose:
             print >> sys.stderr,"input data shapes:"
             for name, data in zip(self.inputFieldNames, self.inputData):
                 print >> sys.stderr, "  %-30s: %s" % (name, str(data.shape))
 
-            # find input layers: assume the input values are given
-            # in the same order as the input layers appear fg
-            inputLayers = [ layer for layer in self.layers if isinstance(layer, lasagne.layers.input.InputLayer) ]
 
             print >> sys.stderr,"input layer shapes:"
-            for layer in inputLayers:
+            for layer in self.inputLayers:
                 print >> sys.stderr, "  %-30s: %s" % (layer.name, str(layer.shape))
 
     #----------------------------------------
