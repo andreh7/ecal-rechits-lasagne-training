@@ -49,8 +49,9 @@ class NetworkApplier:
         #----------
         # load input variables
         #----------
+        if self.verbose:
+            print >> sys.stderr,"loading input variables"
 
-        print >> sys.stderr,"loading input variables"
         inputData = np.load(inputsFile)
 
         self.inputFieldNames = sorted([ key for key in inputData.keys() if key.startswith('input/') ])
@@ -101,7 +102,8 @@ class NetworkApplier:
             # the first dimension is the minibatch dimension (typically
             # set to None), we ignore it
 
-            print >> sys.stderr, "layer %2d has" % index, np.prod(shape[1:]),"nodes"
+            if self.verbose:
+                print >> sys.stderr, "layer %2d has" % index, np.prod(shape[1:]),"nodes"
 
             if not returnIntermediateValues and index < len(self.layers) - 1:
                 continue
