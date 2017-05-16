@@ -148,7 +148,7 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
                 continue
 
             drawSingleROCcurve(auc[key][sample], fpr[key][sample], tpr[key][sample], 
-                               key + " " + sample + " (auc {auc:.3f})", color, lineStyle, lineWidth)
+                               key + " (" + sample + " auc {auc:.3f})", color, lineStyle, lineWidth)
             updateHighestTPR(highestTPRs, fpr[key][sample], tpr[key][sample], xmax)
 
     pylab.xlabel('fraction of false positives')
