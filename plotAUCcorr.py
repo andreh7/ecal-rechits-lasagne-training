@@ -10,7 +10,7 @@ import pylab
 
 #----------------------------------------------------------------------
 
-def doPlot(resultDirRocs):
+def doPlot(resultDirRocs, addTimestamp = True):
 
     #----------
     # plot evolution of area under ROC curve vs. epoch
@@ -45,7 +45,10 @@ def doPlot(resultDirRocs):
     inputDir = resultDirRocs.getInputDir()
 
     import plotROCutils
-    plotROCutils.addTimestamp(inputDir)
+
+    if addTimestamp:
+        plotROCutils.addTimestamp(inputDir)
+
     plotROCutils.addDirname(inputDir)
 
     #----------

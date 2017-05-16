@@ -10,7 +10,8 @@ import sys, os
 import glob, re
 import numpy as np
 
-from plotROCutils import addTimestamp, addDirname, addNumEvents, readDescription
+from plotROCutils import addDirname, addNumEvents, readDescription
+import plotROCutils
 
 #----------------------------------------------------------------------
 
@@ -233,7 +234,8 @@ def updateHighestTPR(highestTPRs, fpr, tpr, maxfpr):
 #----------------------------------------------------------------------
 def drawLast(resultDirRocs, xmax = None, ignoreTrain = False,
              savePlots = False,
-             legendLocation = None
+             legendLocation = None,
+             addTimestamp = True
              ):
     # plot ROC curve for last epoch only
     pylab.figure(facecolor='white')
@@ -289,7 +291,9 @@ def drawLast(resultDirRocs, xmax = None, ignoreTrain = False,
 
     inputDir = resultDirRocs.getInputDir()
 
-    addTimestamp(inputDir)
+    if addTimestamp:
+        plotROCutils.addTimestamp(inputDir)
+
     addDirname(inputDir)
     addNumEvents(numEvents.get('train', None), numEvents.get('test', None))
 
@@ -382,6 +386,12 @@ if __name__ == '__main__':
                       )
 
 
+    parser.add_option("--nodate",
+                      default = False,
+                      action = 'store_true',
+                      help="do not add the timestamp to plots",
+                      )
+
     (options, ARGV) = parser.parse_args()
 
     assert len(ARGV) == 1, "usage: plotROCs.py result-directory"
@@ -406,7 +416,8 @@ if __name__ == '__main__':
 
         drawLast(resultDirRocs, ignoreTrain = options.ignoreTrain,
                  savePlots = options.savePlots,
-                 legendLocation = options.legendLocation)
+                 legendLocation = options.legendLocation,
+                 addTimestamp = not options.nodate)
 
         # zoomed version
         # autoscaling in y with x axis range manually
@@ -414,7 +425,8 @@ if __name__ == '__main__':
         # something ourselves..
         drawLast(resultDirRocs, xmax = 0.05, ignoreTrain = options.ignoreTrain,
                  savePlots = options.savePlots,
-                 legendLocation = options.legendLocation
+                 legendLocation = options.legendLocation,
+                 addTimestamp = not options.nodate
                  )
 
 
@@ -458,7 +470,9 @@ if __name__ == '__main__':
         if resultDirData.description != None:
             pylab.title(resultDirData.description)
 
-        addTimestamp(inputDir)
+        if not options.nodate:
+            plotROCutils.addTimestamp(inputDir)
+
         addDirname(inputDir)
 
         if options.savePlots:
@@ -477,7 +491,7 @@ if __name__ == '__main__':
 
         import plotAUCcorr
 
-        plotAUCcorr.doPlot(resultDirRocs)
+        plotAUCcorr.doPlot(resultDirRocs, addTimestamp = not options.nodate)
 
         if options.savePlots:
             for suffix in (".png", ".pdf", ".svg"):
