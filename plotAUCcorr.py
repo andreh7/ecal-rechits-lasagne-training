@@ -44,8 +44,9 @@ def doPlot(resultDirRocs):
 
     inputDir = resultDirRocs.getInputDir()
 
-    plotROCs.addTimestamp(inputDir)
-    plotROCs.addDirname(inputDir)
+    import plotROCutils
+    plotROCutils.addTimestamp(inputDir)
+    plotROCutils.addDirname(inputDir)
 
     #----------
 
