@@ -34,6 +34,12 @@ parser.add_argument('--tmva',
                     help='make plots for TMVA trainings',
                     )
 
+parser.add_argument("--max-epoch",
+                    dest = 'maxEpoch',
+                    type = int,
+                    default = None,
+                    help="last epoch to plot (useful e.g. if the training diverges at some point)",
+                    )
 
 parser.add_argument('dirs',
                     metavar = "dir",
@@ -45,10 +51,15 @@ parser.add_argument('dirs',
 options = parser.parse_args()
 #----------------------------------------
 
-if options.legendLoc != None and options.tmva:
-    print >> sys.stderr,"--legend-loc is not supported with --tmva"
-    sys.exit(1)
+if options.tmva:
+    if not options.legendLoc is None:
+        print >> sys.stderr,"--legend-loc is not supported with --tmva"
+        sys.exit(1)
     
+    if not options.maxEpoch is None:
+        print >> sys.stderr,"--max-epoch is not supported with --tmva"
+        sys.exit(1)
+        
 
 for theDir in options.dirs:
 
@@ -59,6 +70,9 @@ for theDir in options.dirs:
     else:
         cmdParts.append("./plotROCs.py")
         cmdParts.append("--both")
+
+    if not options.maxEpoch is None:
+        cmdParts.append("--max-epoch " + str(options.maxEpoch))
 
     cmdParts.extend([
             "--save-plots",
@@ -101,8 +115,14 @@ for theDir in options.dirs:
                 "--save-plots",
                 "--sample train",
                 theDir,
-                "0",
-                "&"])
+                ])
+
+        if options.maxEpoch is None:
+            cmdParts.append("0")
+        else:
+            cmdParts.append(str(options.maxEpoch))
+
+        cmdParts.append("&")
 
     # wait for the two previous processes to finish
     cmdParts.extend([ "wait",
