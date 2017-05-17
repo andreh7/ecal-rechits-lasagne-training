@@ -13,6 +13,8 @@ import numpy as np
 from plotROCutils import addDirname, addNumEvents, readDescription
 import plotROCutils
 
+officialPhotonIdLabel = 'official photon id'
+
 #----------------------------------------------------------------------
 
 class ResultDirData:
@@ -265,13 +267,13 @@ def drawLast(resultDirRocs, xmax = None, ignoreTrain = False,
         
         # take the last epoch
         if epochNumber != None:
-            fpr, tpr, numEvents[sample] = drawSingleROCcurve(resultDirRocs, epochNumber, isTrain, "NN " + sample + " (auc {auc:.3f})", color, '-', 2)
+            fpr, tpr, numEvents[sample] = drawSingleROCcurve(resultDirRocs, epochNumber, isTrain, "NN (" + sample + " auc {auc:.3f})", color, '-', 2)
             updateHighestTPR(highestTPRs, fpr, tpr, xmax)
             
 
         # draw the ROC curve for the MVA id if available
         if resultDirRocs.hasBDTroc(isTrain):
-            fpr, tpr, dummy = drawSingleROCcurve(resultDirRocs, 'BDT', isTrain, "BDT " + sample + " (auc {auc:.3f})", color, '--', 1)
+            fpr, tpr, dummy = drawSingleROCcurve(resultDirRocs, 'BDT', isTrain, officialPhotonIdLabel + " (" + sample + " auc {auc:.3f})", color, '--', 1)
             updateHighestTPR(highestTPRs, fpr, tpr, xmax)            
 
         # draw another reference curve if specified
@@ -459,7 +461,7 @@ if __name__ == '__main__':
             auc = mvaROC[sample]
             if auc != None:
                 pylab.plot( pylab.gca().get_xlim(), [ auc, auc ], '--', color = color, 
-                            label = "BDT %s (auc=%.3f)" % (sample, auc))
+                            label = "%s (%s auc=%.3f)" % (officialPhotonIdLabel, sample, auc))
 
         pylab.grid()
         pylab.xlabel('training epoch (last: %d)' % max(epochs))

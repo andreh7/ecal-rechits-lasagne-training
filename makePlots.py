@@ -22,6 +22,25 @@ parser.add_argument('--legend-loc',
                     )
 
 
+parser.add_argument('--nodate',
+                    default = False,
+                    action = 'store_true',
+                    help='suppress date label',
+                    )
+
+parser.add_argument('--tmva',
+                    default = False,
+                    action = 'store_true',
+                    help='make plots for TMVA trainings',
+                    )
+
+parser.add_argument("--max-epoch",
+                    dest = 'maxEpoch',
+                    type = int,
+                    default = None,
+                    help="last epoch to plot (useful e.g. if the training diverges at some point)",
+                    )
+
 parser.add_argument('dirs',
                     metavar = "dir",
                     type = str,
@@ -32,14 +51,36 @@ parser.add_argument('dirs',
 options = parser.parse_args()
 #----------------------------------------
 
+if options.tmva:
+    if not options.legendLoc is None:
+        print >> sys.stderr,"--legend-loc is not supported with --tmva"
+        sys.exit(1)
+    
+    if not options.maxEpoch is None:
+        print >> sys.stderr,"--max-epoch is not supported with --tmva"
+        sys.exit(1)
+        
+
 for theDir in options.dirs:
 
-    cmdParts = [
-            "./plotROCs.py",
+    cmdParts = []
+
+    if options.tmva:
+        cmdParts.append("./plotROCs-tmva.py")
+    else:
+        cmdParts.append("./plotROCs.py")
+        cmdParts.append("--both")
+
+    if not options.maxEpoch is None:
+        cmdParts.append("--max-epoch " + str(options.maxEpoch))
+
+    cmdParts.extend([
             "--save-plots",
-            "--both",
             theDir
-            ]
+            ])
+
+    if options.nodate:
+        cmdParts.append("--nodate")
 
     if options.legendLoc != None:
 
@@ -67,14 +108,21 @@ for theDir in options.dirs:
         cmdParts.append("--legend-loc '" + options.legendLoc + "'")
 
     cmdParts.append("&")
-    
-    cmdParts.extend([
-            "./plotNNoutput.py",
-            "--save-plots",
-            "--sample train",
-            theDir,
-            "0",
-            "&"])
+
+    if not options.tmva:
+        cmdParts.extend([
+                "./plotNNoutput.py",
+                "--save-plots",
+                "--sample train",
+                theDir,
+                ])
+
+        if options.maxEpoch is None:
+            cmdParts.append("0")
+        else:
+            cmdParts.append(str(options.maxEpoch))
+
+        cmdParts.append("&")
 
     # wait for the two previous processes to finish
     cmdParts.extend([ "wait",

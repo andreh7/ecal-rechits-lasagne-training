@@ -7,8 +7,10 @@ import sys, os
 import glob, re
 import numpy as np
 
-from plotROCutils import addTimestamp, addDirname, addNumEvents, readDescription
+from plotROCutils import addDirname, addNumEvents, readDescription
+import plotROCutils
 
+officialPhotonIdLabel = 'official photon id'
 
 #----------------------------------------------------------------------
 
@@ -98,7 +100,8 @@ def updateHighestTPR(highestTPRs, fpr, tpr, maxfpr):
 #----------------------------------------------------------------------
 def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,  
              savePlots = False,
-             legendLocation = None
+             legendLocation = None,
+             addTimestamp = True
              ):
     # plot ROC curve 
 
@@ -114,12 +117,12 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
     tpr = {}
     numEvents = {}
 
-    for key in ('official', 'our training'):
+    for key in (officialPhotonIdLabel, 'our training'):
         auc[key] = {}
         fpr[key] = {}
         tpr[key] = {}
         numEvents[key] = {}
-        origMVA = key == 'official'
+        origMVA = key == officialPhotonIdLabel
         for sample in ('train', 'test'):
             auc[key][sample], fpr[key][sample], tpr[key][sample], numEvents[key][sample] = readROC(tmvaOutputFname, sample == 'train', True,
                                                                                                    origMVA = origMVA)
@@ -139,7 +142,7 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
 
         for key, lineStyle, lineWidth in (
             ('our training', '-', 2),
-            ('official',  '--', 1),
+            (officialPhotonIdLabel,  '--', 1),
             ):
 
             isTrain = sample == 'train'
@@ -162,7 +165,9 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
     pylab.grid()
     pylab.legend(loc = legendLocation)
 
-    addTimestamp(inputDir)
+    if addTimestamp:
+        plotROCutils.addTimestamp(inputDir)
+
     addDirname(inputDir)
     addNumEvents(numEvents.get('train', None), numEvents.get('test', None))
 
@@ -219,6 +224,12 @@ if __name__ == '__main__':
                       help="location of legend in plots",
                       )
 
+    parser.add_option("--nodate",
+                      default = False,
+                      action = 'store_true',
+                      help="do not add the timestamp to plots",
+                      )
+
     (options, ARGV) = parser.parse_args()
 
     assert len(ARGV) == 1, "usage: plotROCs-tmva.py result-directory"
@@ -236,7 +247,8 @@ if __name__ == '__main__':
 
     drawROCcurves(tmvaOutputFname, ignoreTrain = options.ignoreTrain,
                   savePlots = options.savePlots,
-                  legendLocation = options.legendLocation)
+                  legendLocation = options.legendLocation,
+                  addTimestamp = not options.nodate)
 
     # zoomed version
     # autoscaling in y with x axis range manually
@@ -244,8 +256,8 @@ if __name__ == '__main__':
     # something ourselves..
     drawROCcurves(tmvaOutputFname, xmax = 0.05, ignoreTrain = options.ignoreTrain,  
                   savePlots = options.savePlots,
-                  legendLocation = options.legendLocation
-                  )
+                  legendLocation = options.legendLocation,
+                  addTimestamp = not options.nodate)
 
     if not options.savePlots:
         pylab.show()
