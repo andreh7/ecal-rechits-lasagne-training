@@ -22,6 +22,13 @@ parser.add_argument('--legend-loc',
                     )
 
 
+parser.add_argument('--nodate',
+                    default = False,
+                    action = 'store_true',
+                    help='suppress date label',
+                    )
+
+
 parser.add_argument('dirs',
                     metavar = "dir",
                     type = str,
@@ -40,6 +47,9 @@ for theDir in options.dirs:
             "--both",
             theDir
             ]
+
+    if options.nodate:
+        cmdParts.append("--nodate")
 
     if options.legendLoc != None:
 
