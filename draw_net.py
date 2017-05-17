@@ -80,7 +80,7 @@ def get_pydot_graph(layers, output_shape=True, verbose=False):
         color = get_hex_color(layer_type)
         if verbose:
             for attr in ['name', 'num_filters', 'num_units', 'ds',
-                         'filter_shape', 'stride', 'strides', 'p']:
+                         'filter_size', 'filter_shape', 'stride', 'strides', 'p']:
                 if hasattr(layer, attr):
                     if attr != 'name' or getattr(layer,attr) != None:
                         label += '\n' + \
