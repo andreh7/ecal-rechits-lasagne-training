@@ -28,6 +28,12 @@ parser.add_argument('--nodate',
                     help='suppress date label',
                     )
 
+parser.add_argument('--tmva',
+                    default = False,
+                    action = 'store_true',
+                    help='make plots for TMVA trainings',
+                    )
+
 
 parser.add_argument('dirs',
                     metavar = "dir",
@@ -39,14 +45,25 @@ parser.add_argument('dirs',
 options = parser.parse_args()
 #----------------------------------------
 
+if options.legendLoc != None and options.tmva:
+    print >> sys.stderr,"--legend-loc is not supported with --tmva"
+    sys.exit(1)
+    
+
 for theDir in options.dirs:
 
-    cmdParts = [
-            "./plotROCs.py",
+    cmdParts = []
+
+    if options.tmva:
+        cmdParts.append("./plotROCs-tmva.py")
+    else:
+        cmdParts.append("./plotROCs.py")
+        cmdParts.append("--both")
+
+    cmdParts.extend([
             "--save-plots",
-            "--both",
             theDir
-            ]
+            ])
 
     if options.nodate:
         cmdParts.append("--nodate")
@@ -77,14 +94,15 @@ for theDir in options.dirs:
         cmdParts.append("--legend-loc '" + options.legendLoc + "'")
 
     cmdParts.append("&")
-    
-    cmdParts.extend([
-            "./plotNNoutput.py",
-            "--save-plots",
-            "--sample train",
-            theDir,
-            "0",
-            "&"])
+
+    if not options.tmva:
+        cmdParts.extend([
+                "./plotNNoutput.py",
+                "--save-plots",
+                "--sample train",
+                theDir,
+                "0",
+                "&"])
 
     # wait for the two previous processes to finish
     cmdParts.extend([ "wait",
