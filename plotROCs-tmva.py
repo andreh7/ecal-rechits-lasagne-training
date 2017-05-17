@@ -9,6 +9,7 @@ import numpy as np
 
 from plotROCutils import addTimestamp, addDirname, addNumEvents, readDescription
 
+officialPhotonIdLabel = 'official photon id'
 
 #----------------------------------------------------------------------
 
@@ -114,12 +115,12 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
     tpr = {}
     numEvents = {}
 
-    for key in ('official', 'our training'):
+    for key in (officialPhotonIdLabel, 'our training'):
         auc[key] = {}
         fpr[key] = {}
         tpr[key] = {}
         numEvents[key] = {}
-        origMVA = key == 'official'
+        origMVA = key == officialPhotonIdLabel
         for sample in ('train', 'test'):
             auc[key][sample], fpr[key][sample], tpr[key][sample], numEvents[key][sample] = readROC(tmvaOutputFname, sample == 'train', True,
                                                                                                    origMVA = origMVA)
@@ -139,7 +140,7 @@ def drawROCcurves(tmvaOutputFname, xmax = None, ignoreTrain = False,
 
         for key, lineStyle, lineWidth in (
             ('our training', '-', 2),
-            ('official',  '--', 1),
+            (officialPhotonIdLabel,  '--', 1),
             ):
 
             isTrain = sample == 'train'
