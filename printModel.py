@@ -19,7 +19,7 @@ if outputFile.lower().endswith(".pdf"):
 elif outputFile.lower().endswith(".png"):
     outputFormat = "png"
 elif outputFile.lower().endswith(".gv"):
-    outptuFormat = "raw"
+    outputFormat = "raw"
 else:
     print >> sys.stderr,"can't infer output format from output file",outputFile
     sys.exit(1)
