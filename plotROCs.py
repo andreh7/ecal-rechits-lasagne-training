@@ -15,6 +15,9 @@ import plotROCutils
 
 officialPhotonIdLabel = 'official photon id'
 
+# benchmark for official photon id cut
+officialPhotonIdCut = 0.23
+
 #----------------------------------------------------------------------
 
 class ResultDirData:
@@ -123,12 +126,56 @@ class ResultDirData:
 
 def drawSingleROCcurve(resultDirRocs, epoch, isTrain, label, color, lineStyle, linewidth):
 
-    auc, numEvents, fpr, tpr = resultDirRocs.getFullROCcurve(epoch, isTrain)
+    auc, numEvents, fpr, tpr, thresholds = resultDirRocs.getFullROCcurve(epoch, isTrain)
 
     # TODO: we could add the area to the legend
     pylab.plot(fpr, tpr, lineStyle, color = color, linewidth = linewidth, label = label.format(auc = auc))
 
     return fpr, tpr, numEvents
+
+#----------------------------------------------------------------------
+
+def drawBenchmarkPoints(resultDirRocs, epoch, isTrain, color, benchmarkPoints):
+    # draw benchmark points on single roc curves
+    # for the reference sample and 
+    # 
+    # @param benchmarkPoints is a list of cuts on the BDT (official)
+    # photon ID
+
+    auc, numEvents, fpr,    tpr,    thresholds    = resultDirRocs.getFullROCcurve(epoch, isTrain)
+
+    auc, numEvents, fprBDT, tprBDT, thresholdsBDT = resultDirRocs.getFullROCcurve("BDT", isTrain)
+
+    for benchmarkPoint in benchmarkPoints:
+
+            import bisect
+
+            # note that we use only thresholdsBDT to find the indices
+            # then we get the BDT fpr (background efficiency)
+            # and find the corresponding index for our training
+            # (we can't reuse the indices from the BDT training)
+
+            # note that thresholds is in decreasing order hence
+            # the left/right crossing
+            wpIndexRight = bisect.bisect_left(thresholdsBDT[::-1], benchmarkPoint)
+            wpIndexLeft  = bisect.bisect_right(thresholdsBDT[::-1], benchmarkPoint)
+
+            # assume the working point is away from the border
+            wpFPRbdt = 0.5 * (fprBDT[::-1][wpIndexRight] + fprBDT[::-1][wpIndexLeft])
+            wpTPRbdt = 0.5 * (tprBDT[::-1][wpIndexRight] + tprBDT[::-1][wpIndexLeft])
+
+            # now get the TPR corresponding to wpFPRbdt for our training
+            import scipy
+            wpTPR    = scipy.interpolate.interp1d(fpr[::-1], tpr[::-1])(wpFPRbdt)
+
+            # print "thresholds at working point: left=",thresholdsBDT[::-1][wpIndexLeft],"right=",thresholdsBDT[::-1][wpIndexRight], "bg eff=",wpFPRbdt, "sig eff bdt=",wpTPRbdt, "sig eff=",wpTPR
+
+            pylab.plot([wpFPRbdt], [wpTPRbdt], 'o', color = color)
+
+            pylab.plot([wpFPRbdt], [wpTPR],    'o', color = color)
+
+
+    
 
 #----------------------------------------------------------------------
 
@@ -275,6 +322,12 @@ def drawLast(resultDirRocs, xmax = None, ignoreTrain = False,
         if resultDirRocs.hasBDTroc(isTrain):
             fpr, tpr, dummy = drawSingleROCcurve(resultDirRocs, 'BDT', isTrain, officialPhotonIdLabel + " (" + sample + " auc {auc:.3f})", color, '--', 1)
             updateHighestTPR(highestTPRs, fpr, tpr, xmax)            
+
+            # draw comparison benchmark points for test sample
+            if not isTrain:
+                drawBenchmarkPoints(resultDirRocs, epochNumber, isTrain, color, benchmarkPoints = [ officialPhotonIdCut ])
+
+            
 
         # draw another reference curve if specified
         # TODO: generalize this to multiple references where the BDT

@@ -225,7 +225,7 @@ class ResultDirRocs:
 
         from sklearn.metrics import roc_curve, auc
 
-        fpr, tpr, dummy = roc_curve(labels, outputs, sample_weight = weights)
+        fpr, tpr, thresholds = roc_curve(labels, outputs, sample_weight = weights)
 
         aucValue = auc(fpr, tpr, reorder = True)
 
@@ -247,7 +247,7 @@ class ResultDirRocs:
         #----------
 
         if returnFullCurve:
-            return aucValue, len(weights), fpr, tpr
+            return aucValue, len(weights), fpr, tpr, thresholds
         else:
             return aucValue
 
@@ -281,9 +281,9 @@ class ResultDirRocs:
 
         inputFname = self.__getInputFname(epoch, isTrain)
 
-        auc, numEvents, fpr, tpr = self.readROC(inputFname, isTrain, returnFullCurve = True)
+        auc, numEvents, fpr, tpr, thresholds = self.readROC(inputFname, isTrain, returnFullCurve = True)
 
-        return auc, numEvents, fpr, tpr
+        return auc, numEvents, fpr, tpr, thresholds
 
     #----------------------------------------
 
