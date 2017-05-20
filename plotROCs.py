@@ -172,8 +172,15 @@ def drawBenchmarkPoints(resultDirRocs, epoch, isTrain, color, benchmarkPoints):
 
             pylab.plot([wpFPRbdt], [wpTPRbdt], 'o', color = color)
 
-            pylab.plot([wpFPRbdt], [wpTPR],    'o', color = color)
+            xlim = pylab.xlim()
+            textOffset = 0.1 * (xlim[1] - xlim[0])
 
+            pylab.text(wpFPRbdt + textOffset, wpTPRbdt, '%.1f %%' % (100*wpTPRbdt), va = 'center')
+
+
+            pylab.plot([wpFPRbdt], [wpTPR],    'o', color = color)
+            # pylab.gca().annotate('%.1f%%' % (100*wpTPR),    (wpFPRbdt, wpTPR))
+            pylab.text(wpFPRbdt + textOffset, wpTPR, '%.1f%%' % (100*wpTPR), va = 'center')
 
     
 
