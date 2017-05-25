@@ -85,7 +85,7 @@ normalizeBDTvars = True
 
 #----------------------------------------------------------------------
 
-def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds):
+def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds, auxData):
     # @param returnEventIds if True, returns also a dict with sample/run/ls/event numbers 
 
     # only apply pt/eta reweighting for training dataset
