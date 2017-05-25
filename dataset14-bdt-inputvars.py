@@ -152,10 +152,10 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStream
             sortedVarnames = [ varname for varname in sortedVarnames if varname != groupVarName + '/esEffSigmaRR' ]
 
             # filter on selected variables if specified
-            if selectedVariables != None:
-                sortedVarnames = [ varname for varname in sortedVarnames if varname in selectedVariables ]
-
-                assert sortedVarnames, "no variables left after applying selectedVariables"
+            from datasetutilsnpy import selectVariables
+            
+            sortedVarnames = selectVariables(sortedVarnames, selectedVariables)
+            assert sortedVarnames, "no variables left after applying selectedVariables"
 
             bdtVars = SimpleVariableConcatenatorToMatrix(groupVarName, sortedVarnames)
 

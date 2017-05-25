@@ -505,4 +505,25 @@ class PtEtaReweighter:
 
 
 #----------------------------------------------------------------------
+
+def selectVariables(allVarnames, selectedVariables):
+    if selectedVariables == None:
+        return allVarnames
+
+    # keep track of which selected variables were not used
+    retval = []
+
+    unusedSelectedVariables = set(selectedVariables)
+
+    for varname in allVarnames:
+        if varname in selectedVariables:
+            retval.append(varname)
+            unusedSelectedVariables.remove(varname)
+            
+    if unusedSelectedVariables:
+        raise Exception("could not find the following selected variables:" + str(sorted(unusedSelectedVariables)))
+    return retval
+
+
+#----------------------------------------------------------------------
                               
