@@ -97,7 +97,9 @@ if options.thprof:
     # see https://github.com/Lasagne/Lasagne/issues/312
     cmdParts.append("CUDA_LAUNCH_BLOCKING=1")
 
-cmdParts.append("THEANO_FLAGS=" + ",".join(flags))
+environ = os.environ.copy()
+if flags:
+    environ['THEANO_FLAGS'] = ",".join(flags)
 #----------
 
 if options.nvprof:
@@ -110,5 +112,8 @@ cmdParts.append("python")
 cmdParts.extend(options.args)
 
 # print "cmd="," ".join(cmdParts)
-res = os.system(" ".join(cmdParts))
+import subprocess
+pipe = subprocess.Popen(cmdParts, env = environ)
+pipe.communicate()
+res = pipe.returncode
 sys.exit(res)
