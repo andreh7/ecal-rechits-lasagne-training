@@ -185,12 +185,12 @@ if True:
 
         thisFirstIndex = firstIndex[photonIndex]
 
-        ind = slice(thisFirstIndex, thisFirstIndex + numTracks[photonIndex])
+        trackInd = slice(thisFirstIndex, thisFirstIndex + numTracks[photonIndex])
 
-        thisTrackpt = trackpt[ind]
-        thisVtxDz = vtxDz[ind]
+        thisTrackpt = trackpt[trackInd]
+        thisVtxDz = vtxDz[trackInd]
 
-        thisDr    = dR[ind]
+        thisDr    = dR[trackInd]
         
         indices = thisTrackpt >= 0.1                    # minimum trackpt
         indices = indices & (np.abs(thisVtxDz) < 0.01)  # from selected vertex
@@ -200,7 +200,7 @@ if True:
         indices = indices & (thisDr >= 0.02)  # inner (veto) cone size
 
         # TODO: reject electrons and muons
-        # indices = indices & (charge[ind] != 0)
+        # indices = indices & (charge[trackInd] != 0)
 
         mySelectedVertexIso[photonIndex] = thisTrackpt[indices].sum()
 
