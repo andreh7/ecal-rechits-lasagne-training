@@ -181,11 +181,11 @@ if True:
 
     charge = data['tracks/charge']
 
-    for i in range(numEvents):
+    for photonIndex in range(numEvents):
 
-        thisFirstIndex = firstIndex[i]
+        thisFirstIndex = firstIndex[photonIndex]
 
-        ind = slice(thisFirstIndex, thisFirstIndex + numTracks[i])
+        ind = slice(thisFirstIndex, thisFirstIndex + numTracks[photonIndex])
 
         thisTrackpt = trackpt[ind]
         thisVtxDz = vtxDz[ind]
@@ -202,7 +202,7 @@ if True:
         # TODO: reject electrons and muons
         # indices = indices & (charge[ind] != 0)
 
-        mySelectedVertexIso[i] = thisTrackpt[indices].sum()
+        mySelectedVertexIso[photonIndex] = thisTrackpt[indices].sum()
 
 
     import pylab
