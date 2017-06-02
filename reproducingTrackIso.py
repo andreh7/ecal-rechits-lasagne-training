@@ -61,13 +61,7 @@ fnames = glob.glob(datasetDir + "/*-barrel*.npz")
 data['fileIndex'] = []
 data['fileOffsetPhotons'] = []
 
-fnames = fnames[::-1]
-
 for fileIndex, fname in enumerate(fnames):
-
-    # DEBUG
-    if fname != '/tmp/aholz/deleteme/GJet40toInf_rechits-barrel_173.npz':
-        continue
 
     print "opening file %d/%d" % (fileIndex + 1, len(fnames))
     
