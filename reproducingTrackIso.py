@@ -213,21 +213,40 @@ if True:
         trackInd = makeTrackIndices(data, photonIndex)
 
         thisTrackpt = trackpt[trackInd]
-        thisVtxDz = vtxDz[trackInd]
+        thisVtxDz   = trackVtxZ[trackInd] - photonVtxZ[photonIndex]
 
-        thisDr    = dR[trackInd]
-        
+        # track selection criteria
         indices = thisTrackpt >= 0.1                    # minimum trackpt
         indices = indices & (np.abs(thisVtxDz) < 0.01)  # from selected vertex
-        
-        indices = indices & (thisDr <= 0.3)   # outer cone size
-
-        indices = indices & (thisDr >= 0.02)  # inner (veto) cone size
 
         # TODO: reject electrons and muons
-        # indices = indices & (charge[trackInd] != 0)
+        indices = indices & (charge[trackInd] != 0)
 
-        mySelectedVertexIso[photonIndex] = thisTrackpt[indices].sum()
+
+        # calculate supercluster eta and phi with respect to
+        # vertices of surviving tracks
+        # (TODO: speed up by calculating this only once for the selected
+        #        track (not photon) vertex, needs storing indices
+        #        to track vertices instead of storing the vertex
+        #        for each track)
+
+        scdx = scX[photonIndex] - trackVtxX[trackInd][indices]
+        scdy = scY[photonIndex] - trackVtxY[trackInd][indices]
+        scdz = scZ[photonIndex] - trackVtxZ[trackInd][indices]
+
+        scPhi = np.arctan2(scdy, scdx)
+        scEta = np.arctanh(scdz / np.sqrt(scdx**2 + scdy **2 + scdz ** 2))
+
+        thisDr = np.sqrt(deltaPhi(scPhi, trackPhi[trackInd][indices]) ** 2 +
+                         (scEta - trackEta[trackInd][indices]) ** 2)
+
+        # new set of indices
+        indices2 = (thisDr <= 0.3)   # outer cone size
+
+        indices2 = indices2 & (thisDr >= 0.02)  # inner (veto) cone size
+
+
+        mySelectedVertexIso[photonIndex] = thisTrackpt[indices][indices2].sum()
 
 
     import pylab
