@@ -210,9 +210,7 @@ if True:
 
     for photonIndex in range(numEvents):
 
-        thisFirstIndex = firstIndex[photonIndex]
-
-        trackInd = slice(thisFirstIndex, thisFirstIndex + numTracks[photonIndex])
+        trackInd = makeTrackIndices(data, photonIndex)
 
         thisTrackpt = trackpt[trackInd]
         thisVtxDz = vtxDz[trackInd]
