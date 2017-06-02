@@ -163,6 +163,7 @@ numEvents = len(data['tracks/firstIndex'])
 # calculate sum of pts of tracks per event from the vertex with dz = 0
 #----------
 if True:
+    # values from flashgg
     mySelectedVertexIso = np.zeros(numEvents, dtype = 'float32')
 
     # note that relpt is the pt of the track divided by the photon Et
@@ -172,12 +173,19 @@ if True:
     numTracks = data['tracks/numTracks']
 
     trackpt = data['tracks/pt']
-    vtxDz = data['tracks/vtxDz']
+    trackVtxX = data['tracks/vtxX']
+    trackVtxY = data['tracks/vtxY']
+    trackVtxZ = data['tracks/vtxZ']
 
-    deta = data['tracks/detaAtVertex']
-    dphi = data['tracks/dphiAtVertex']
+    trackEta = data['tracks/etaAtVertex']
+    trackPhi = data['tracks/phiAtVertex']
 
-    dR   = np.sqrt(deta * deta + dphi * dphi)
+    # supercluster cartesian coordinates
+    scX      = data['phoVars/scX']
+    scY      = data['phoVars/scY']
+    scZ      = data['phoVars/scZ']
+
+    photonVtxZ = data['phoVars/phoVertexZ']
 
     charge = data['tracks/charge']
 
