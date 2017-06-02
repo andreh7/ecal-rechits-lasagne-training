@@ -14,7 +14,7 @@ import glob
 #----------------------------------------------------------------------
 
 def makeTrackIndices(data, photonIndex):
-    return slice(data['tracks/firstIndex'][index], data['tracks/firstIndex'][index] + data['tracks/numTracks'][index])
+    return slice(data['tracks/firstIndex'][photonIndex], data['tracks/firstIndex'][photonIndex] + data['tracks/numTracks'][photonIndex])
 
 
 #----------------------------------------------------------------------
