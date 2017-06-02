@@ -16,6 +16,31 @@ import glob
 def makeTrackIndices(data, photonIndex):
     return slice(data['tracks/firstIndex'][photonIndex], data['tracks/firstIndex'][photonIndex] + data['tracks/numTracks'][photonIndex])
 
+def deltaPhi(phi1, phi2):
+    dphi = phi1 - phi2
+
+    import math
+
+    # will also bring negative values to 0..2pi
+    dphi = np.mod(dphi, 2 * math.pi)
+
+    # if dphi > math.pi:
+    #    dphi = 2 * math.pi - dphi
+    dphi = np.min([dphi, 2 * math.pi - dphi], axis = 0)
+
+    return dphi
+
+#----------------------------------------------------------------------
+
+def deltaR(obj1, obj2):
+
+    dphi = deltaPhi(obj1.phi(), obj2.phi())
+
+    deta = math.fabs(obj1.eta() - obj2.eta())
+
+    dr = math.sqrt(deta * deta + dphi * dphi)
+
+    return dr
 
 #----------------------------------------------------------------------
 # main
