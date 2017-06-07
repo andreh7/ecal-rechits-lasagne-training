@@ -253,8 +253,11 @@ if True:
         scPhi = np.arctan2(scdy, scdx)
         scEta = np.arctanh(scdz / np.sqrt(scdx**2 + scdy **2 + scdz ** 2))
 
-        thisDr = np.sqrt(deltaPhi(scPhi, trackPhi[trackInd][indices]) ** 2 +
-                         (scEta - trackEta[trackInd][indices]) ** 2)
+        thisDphi = deltaPhi(trackPhi[trackInd][indices], scPhi)
+        thisDeta = trackEta[trackInd][indices] - scEta
+
+        thisDr = np.sqrt(thisDphi ** 2 + thisDeta ** 2)
+
 
         # new set of indices
         indices2 = (thisDr <= 0.3)   # outer cone size
