@@ -319,7 +319,7 @@ if True:
     print "track dr:",dR[trkInd]
     print "track charge:",charge[trkInd]
 
-    print "photon:","et=",data['phoVars/phoEt'][index],"sceta=",data['phoIdInput/scEta'][index]
+    print "photon:","et=",data['phoVars/phoEt'][index],"sceta=",data['phoIdInput/scEta'][index],"vtxZ=",photonVtxZ[index]
     
     pylab.figure(); pylab.hist(diff, bins = 100); pylab.title('recalculation minus flashgg')
     pylab.figure(); pylab.hist(diff[np.abs(diff) < 0.1], bins = 100); pylab.title('recalculation minus flashgg')
