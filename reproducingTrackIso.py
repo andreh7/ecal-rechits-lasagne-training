@@ -209,6 +209,9 @@ if True:
     charge = data['tracks/charge']
     pdgId  = data['tracks/pdgId']
 
+    # for debugging
+    accepted = np.zeros(numTracks.sum(), dtype = 'int32')
+
     # from https://github.com/cms-analysis/flashgg/blob/e2fac35487f23fe05b20160d7b51f34bd06b0660/MicroAOD/python/flashggTkVtxMap_cfi.py#L10
     maxVtxDz = 0.2
 
@@ -260,6 +263,9 @@ if True:
 
 
         mySelectedVertexIso[photonIndex] = thisTrackpt[indices][indices2].sum()
+
+        # note that accepted[trackInd][indices][indices2] = 1 does not work
+        accepted[trackInd][indices] = 1 * indices2
 
 
     import pylab
