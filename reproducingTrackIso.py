@@ -207,6 +207,8 @@ if True:
     photonVtxZ = data['phoVars/phoVertexZ']
 
     charge = data['tracks/charge']
+    pdgId  = data['tracks/pdgId']
+
 
     for photonIndex in range(numEvents):
 
@@ -219,9 +221,11 @@ if True:
         indices = thisTrackpt >= 0.1                    # minimum trackpt
         indices = indices & (np.abs(thisVtxDz) < 0.01)  # from selected vertex
 
-        # TODO: reject electrons and muons
+        # candidates must be charged
         indices = indices & (charge[trackInd] != 0)
 
+        # reject electrons and muons
+        indices = indices & (np.abs(pdgId[trackInd]) != 11) & (np.abs(pdgId[trackInd]) != 13)
 
         # calculate supercluster eta and phi with respect to
         # vertices of surviving tracks
