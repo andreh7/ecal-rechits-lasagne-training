@@ -236,9 +236,16 @@ if True:
         #        to track vertices instead of storing the vertex
         #        for each track)
 
-        scdx = scX[photonIndex] - trackVtxX[trackInd][indices]
-        scdy = scY[photonIndex] - trackVtxY[trackInd][indices]
-        scdz = scZ[photonIndex] - trackVtxZ[trackInd][indices]
+
+        refVertex = [
+            trackVtxX[trackInd][indices],
+            trackVtxY[trackInd][indices],
+            trackVtxZ[trackInd][indices],
+            ]
+
+        scdx = scX[photonIndex] - refVertex[0]
+        scdy = scY[photonIndex] - refVertex[1]
+        scdz = scZ[photonIndex] - refVertex[2]
 
         scPhi = np.arctan2(scdy, scdx)
         scEta = np.arctanh(scdz / np.sqrt(scdx**2 + scdy **2 + scdz ** 2))
