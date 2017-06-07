@@ -209,6 +209,8 @@ if True:
     charge = data['tracks/charge']
     pdgId  = data['tracks/pdgId']
 
+    # from https://github.com/cms-analysis/flashgg/blob/e2fac35487f23fe05b20160d7b51f34bd06b0660/MicroAOD/python/flashggTkVtxMap_cfi.py#L10
+    maxVtxDz = 0.2
 
     for photonIndex in range(numEvents):
 
@@ -219,7 +221,7 @@ if True:
 
         # track selection criteria
         indices = thisTrackpt >= 0.1                    # minimum trackpt
-        indices = indices & (np.abs(thisVtxDz) < 0.01)  # from selected vertex
+        indices = indices & (np.abs(thisVtxDz) < maxVtxDz)  # from selected vertex
 
         # candidates must be charged
         indices = indices & (charge[trackInd] != 0)
