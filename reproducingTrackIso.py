@@ -314,10 +314,21 @@ if True:
 
     trkInd = makeTrackIndices(data, index)
 
-    print "track pts:",trackpt[trkInd]
-    print "track vtxdz:",vtxDz[trkInd]
-    print "track dr:",dR[trkInd]
-    print "track charge:",charge[trkInd]
+    print "tracks:"
+
+    for ind in range(trkInd.start, trkInd.stop):
+        print "track pt=",trackpt[ind],
+        print "accepted=",accepted[ind],
+        print "vtxdz:",vtxDz[ind],
+        print "vtxZ:",trackVtxZ[ind],
+        print "eta:",trackEta[ind],
+        print "phi:",trackPhi[ind],
+        print "dr:",dR[ind],
+        print "dphi:",dPhi[ind],
+        print "deta:",dEta[ind],
+        print "charge:",charge[ind],
+        print "pdgId:",pdgId[ind],
+        print
 
     print "photon:","et=",data['phoVars/phoEt'][index],"sceta=",data['phoIdInput/scEta'][index],"vtxZ=",photonVtxZ[index]
     
