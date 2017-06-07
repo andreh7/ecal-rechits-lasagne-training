@@ -210,6 +210,10 @@ if True:
     pdgId  = data['tracks/pdgId']
 
     # for debugging
+    vtxDz    = np.ones(numTracks.sum(), dtype = 'float32') * -10000
+    dR       = np.ones(numTracks.sum(), dtype = 'float32') * -10000
+    dEta     = np.ones(numTracks.sum(), dtype = 'float32') * -10000
+    dPhi     = np.ones(numTracks.sum(), dtype = 'float32') * -10000
     accepted = np.zeros(numTracks.sum(), dtype = 'int32')
 
     # from https://github.com/cms-analysis/flashgg/blob/e2fac35487f23fe05b20160d7b51f34bd06b0660/MicroAOD/python/flashggTkVtxMap_cfi.py#L10
@@ -221,6 +225,8 @@ if True:
 
         thisTrackpt = trackpt[trackInd]
         thisVtxDz   = trackVtxZ[trackInd] - photonVtxZ[photonIndex]
+
+        vtxDz[trackInd] = thisVtxDz
 
         # track selection criteria
         indices = thisTrackpt >= 0.1                    # minimum trackpt
@@ -258,6 +264,10 @@ if True:
 
         thisDr = np.sqrt(thisDphi ** 2 + thisDeta ** 2)
 
+        dR[trackInd][indices] = thisDr
+
+        dPhi[trackInd][indices] = thisDphi
+        dEta[trackInd][indices] = thisDeta
 
         # new set of indices
         indices2 = (thisDr <= 0.3)   # outer cone size
