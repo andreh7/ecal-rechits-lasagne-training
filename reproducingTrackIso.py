@@ -161,8 +161,11 @@ def checkSelectedVertex(data, numPhotons):
 
     # maximum absolute difference in sum pt
     for maxAbsDiff in (0.1, 1):
-        print "fraction of events within %.1f GeV: %.1f%%" % (maxAbsDiff,
-                                                              len(diff[np.abs(diff) < maxAbsDiff]) / float(len(diff)) * 100.)
+        numDiffering = len(diff[np.abs(diff) < maxAbsDiff])
+        print "fraction of events within %.1f GeV: %.1f%% (%d out of %d, %d outside)" % (maxAbsDiff,
+                                                                 numDiffering / float(len(diff)) * 100.,
+                                                                 numDiffering, len(diff), len(diff) - numDiffering
+                                                                 )
 
 
     # print events with worst agreement
