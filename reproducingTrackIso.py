@@ -205,6 +205,8 @@ if True:
     scY      = data['phoVars/scY']
     scZ      = data['phoVars/scZ']
 
+    photonVtxX = data['phoVars/phoVertexX']
+    photonVtxY = data['phoVars/phoVertexY']
     photonVtxZ = data['phoVars/phoVertexZ']
     photonVtxIndex = data['phoVars/phoVertexIndex']
 
