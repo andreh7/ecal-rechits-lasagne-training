@@ -195,6 +195,7 @@ if True:
     trackVtxX = data['tracks/vtxX']
     trackVtxY = data['tracks/vtxY']
     trackVtxZ = data['tracks/vtxZ']
+    trackVtxIndex = data['tracks/vtxIndex']
 
     trackEta = data['tracks/etaAtVertex']
     trackPhi = data['tracks/phiAtVertex']
@@ -205,6 +206,7 @@ if True:
     scZ      = data['phoVars/scZ']
 
     photonVtxZ = data['phoVars/phoVertexZ']
+    photonVtxIndex = data['phoVars/phoVertexIndex']
 
     charge = data['tracks/charge']
     pdgId  = data['tracks/pdgId']
@@ -230,7 +232,8 @@ if True:
 
         # track selection criteria
         indices = thisTrackpt >= 0.1                    # minimum trackpt
-        indices = indices & (np.abs(thisVtxDz) < maxVtxDz)  # from selected vertex
+        # indices = indices & (np.abs(thisVtxDz) < maxVtxDz)  # from selected vertex
+        indices = indices & (trackVtxIndex[trackInd] == photonVtxIndex[photonIndex]) # from selected vertex
 
         # candidates must be charged
         indices = indices & (charge[trackInd] != 0)
@@ -321,6 +324,7 @@ if True:
         print "accepted=",accepted[ind],
         print "vtxdz:",vtxDz[ind],
         print "vtxZ:",trackVtxZ[ind],
+        print "vtxIndex:",trackVtxIndex[ind],
         print "eta:",trackEta[ind],
         print "phi:",trackPhi[ind],
         print "dr:",dR[ind],
