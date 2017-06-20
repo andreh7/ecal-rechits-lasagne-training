@@ -100,7 +100,7 @@ def checkSelectedVertex(data, numPhotons):
 
         # track selection criteria
         indices = thisTrackpt >= 0.1                    # minimum trackpt
-        # indices = indices & (np.abs(thisVtxDz) < maxVtxDz)  # from selected vertex
+
         indices = indices & (trackVtxIndex[trackInd] == photonVtxIndex[photonIndex]) # from selected vertex
 
         # candidates must be charged
