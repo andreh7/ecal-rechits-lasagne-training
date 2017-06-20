@@ -243,18 +243,19 @@ def checkSelectedVertex(data, numPhotons):
     print "tracks:"
 
     for ind in range(trkInd.start, trkInd.stop):
-        print "track pt=",trackUtil.trackpt[ind],
-        print "accepted=",accepted[ind],
-        print "vtxdz:",vtxDz[ind],
-        print "vtxZ:",trackVtxZ[ind],
-        print "vtxIndex:",trackUtil.trackVtxIndex[ind],
-        print "eta:",trackEta[ind],
-        print "phi:",trackPhi[ind],
-        print "dr:",dR[ind],
-        print "dphi:",dPhi[ind],
-        print "deta:",dEta[ind],
-        print "charge:",trackUtil.charge[ind],
-        print "pdgId:",trackUtil.pdgId[ind],
+
+        print "track pt=", trackUtil.trackpt[ind],
+        print "accepted=", accepted[ind],
+        print "vtxdz:",    vtxDz[ind],
+        print "vtxZ:",     trackVtxZ[ind],
+        print "vtxIndex:", trackUtil.trackVtxIndex[ind],
+        print "eta:",      trackEta[ind],
+        print "phi:",      trackPhi[ind],
+        print "dr:",       dR[ind],
+        print "dphi:",     dPhi[ind],
+        print "deta:",     dEta[ind],
+        print "charge:",   trackUtil.charge[ind],
+        print "pdgId:",    trackUtil.pdgId[ind],
         print
 
     print "photon:","et=",data['phoVars/phoEt'][index],"sceta=",data['phoIdInput/scEta'][index],"vtxZ=",photonVtxZ[index]
