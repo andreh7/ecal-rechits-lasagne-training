@@ -46,6 +46,63 @@ def deltaR(obj1, obj2):
 
 #----------------------------------------------------------------------
 
+
+class TrackUtil:
+    # keeps information about the tracks of all photons and has some helper methods
+
+    def __init__(self, data):
+
+        self.firstIndex = data['tracks/firstIndex']
+        self.numTracks  = data['tracks/numTracks']
+
+        self.trackpt = data['tracks/pt']
+
+        self.charge = data['tracks/charge']
+        self.pdgId  = data['tracks/pdgId']
+        self.trackVtxIndex = data['tracks/vtxIndex']
+
+#----------------------------------------------------------------------
+
+class SinglePhotonTrackUtil:
+    # utility class for tracks of a single photon
+
+    #----------------------------------------
+
+    def __init__(self, trackUtil, photonIndex):
+
+        self.numTracks = trackUtil.numTracks[photonIndex]
+
+        self.trackUtil = trackUtil
+        self.photonIndex = photonIndex
+
+        self.trackInd = slice(trackUtil.firstIndex[photonIndex],
+                              trackUtil.firstIndex[photonIndex] + self.numTracks)
+
+        # quantities of the tracks of this photon
+        self.trackpt       = trackUtil.trackpt[self.trackInd]
+        self.trackVtxIndex = trackUtil.trackVtxIndex[self.trackInd]
+        self.charge        = trackUtil.charge[self.trackInd]
+        self.pdgId         = trackUtil.pdgId[self.trackInd]
+
+    #----------------------------------------
+
+    def getSelectedTrackIndices(self, vertexIndex):
+
+        # track selection criteria
+        indices = self.trackpt >= 0.1                    # minimum trackpt
+
+        indices = indices & (self.trackVtxIndex == vertexIndex)
+
+        # candidates must be charged
+        indices = indices & (self.charge != 0)
+
+        # reject electrons and muons
+        indices = indices & (np.abs(self.pdgId) != 11) & (np.abs(self.pdgId) != 13)
+
+        return indices
+
+#----------------------------------------------------------------------
+
 def checkSelectedVertex(data, numPhotons):
     # checks whether we can reproduce the values of the selected
     # photon vertex
@@ -58,11 +115,9 @@ def checkSelectedVertex(data, numPhotons):
     firstIndex = data['tracks/firstIndex']
     numTracks = data['tracks/numTracks']
 
-    trackpt = data['tracks/pt']
     trackVtxX = data['tracks/vtxX']
     trackVtxY = data['tracks/vtxY']
     trackVtxZ = data['tracks/vtxZ']
-    trackVtxIndex = data['tracks/vtxIndex']
 
     trackEta = data['tracks/etaAtVertex']
     trackPhi = data['tracks/phiAtVertex']
@@ -77,8 +132,6 @@ def checkSelectedVertex(data, numPhotons):
     photonVtxZ = data['phoVars/phoVertexZ']
     photonVtxIndex = data['phoVars/phoVertexIndex']
 
-    charge = data['tracks/charge']
-    pdgId  = data['tracks/pdgId']
 
     # for debugging
     vtxDz    = np.ones(numTracks.sum(), dtype = 'float32') * -10000
@@ -90,25 +143,23 @@ def checkSelectedVertex(data, numPhotons):
     # from https://github.com/cms-analysis/flashgg/blob/e2fac35487f23fe05b20160d7b51f34bd06b0660/MicroAOD/python/flashggTkVtxMap_cfi.py#L10
     maxVtxDz = 0.2
 
+    trackUtil = TrackUtil(data)
+
     for photonIndex in range(numPhotons):
 
-        trackInd = makeTrackIndices(data, photonIndex)
+        sptu = SinglePhotonTrackUtil(trackUtil, photonIndex)
 
-        thisTrackpt = trackpt[trackInd]
+        trackInd = sptu.trackInd
+
+        thisTrackpt = sptu.trackpt
         thisVtxDz   = trackVtxZ[trackInd] - photonVtxZ[photonIndex]
 
         vtxDz[trackInd] = thisVtxDz
 
-        # track selection criteria
-        indices = thisTrackpt >= 0.1                    # minimum trackpt
+        indices = sptu.getSelectedTrackIndices(
+            photonVtxIndex[photonIndex], # vertex selected for photon
+            )
 
-        indices = indices & (trackVtxIndex[trackInd] == photonVtxIndex[photonIndex]) # from selected vertex
-
-        # candidates must be charged
-        indices = indices & (charge[trackInd] != 0)
-
-        # reject electrons and muons
-        indices = indices & (np.abs(pdgId[trackInd]) != 11) & (np.abs(pdgId[trackInd]) != 13)
 
         # calculate supercluster eta and phi with respect to
         # vertices of surviving tracks
@@ -192,18 +243,18 @@ def checkSelectedVertex(data, numPhotons):
     print "tracks:"
 
     for ind in range(trkInd.start, trkInd.stop):
-        print "track pt=",trackpt[ind],
+        print "track pt=",trackUtil.trackpt[ind],
         print "accepted=",accepted[ind],
         print "vtxdz:",vtxDz[ind],
         print "vtxZ:",trackVtxZ[ind],
-        print "vtxIndex:",trackVtxIndex[ind],
+        print "vtxIndex:",trackUtil.trackVtxIndex[ind],
         print "eta:",trackEta[ind],
         print "phi:",trackPhi[ind],
         print "dr:",dR[ind],
         print "dphi:",dPhi[ind],
         print "deta:",dEta[ind],
-        print "charge:",charge[ind],
-        print "pdgId:",pdgId[ind],
+        print "charge:",trackUtil.charge[ind],
+        print "pdgId:",trackUtil.pdgId[ind],
         print
 
     print "photon:","et=",data['phoVars/phoEt'][index],"sceta=",data['phoIdInput/scEta'][index],"vtxZ=",photonVtxZ[index]
