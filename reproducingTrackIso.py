@@ -42,148 +42,14 @@ def deltaR(obj1, obj2):
 
     return dr
 
+
 #----------------------------------------------------------------------
-# main
-#----------------------------------------------------------------------
 
-# load and combine files: note that the 'firstIndices'
-# array must be modified
-
-data = {}
-
-tracksOffset = 0
-photonsOffset = 0
-
-# for fname in glob.glob(datasetDir + "/*-barrel-train.npz"):
-
-fnames = glob.glob(datasetDir + "/*-barrel*.npz")
-
-data['fileIndex'] = []
-data['fileOffsetPhotons'] = []
-
-for fileIndex, fname in enumerate(fnames):
-
-    print "opening file %d/%d" % (fileIndex + 1, len(fnames))
-    
-    thisData = np.load(fname)
-    thisNumTracks = None
-
-    thisNumPhotons = len(thisData['event'])
-
-    data['fileIndex'].append(np.ones(thisNumPhotons, dtype='int32') * fileIndex)
-    data['fileOffsetPhotons'].append(np.ones(thisNumPhotons, dtype='int32') * photonsOffset)
-
-    for key, values in thisData.items():
-        
-        if key == 'tracks/firstIndex':
-            # go from torch 1-based indexing to python 0-based indexing
-            assert values[0] == 1
-            values = values - 1
-
-            values += tracksOffset
-
-        data.setdefault(key, []).append(values)
-
-    # end of loop over keys in the current file
-
-    # prepare next iteration
-
-    thisNumTracks = thisData['tracks/numTracks'].sum()
-
-    tracksOffset += thisNumTracks
-    photonsOffset += thisNumPhotons
-
-    # DEBUG
-    # break
-    
-# end of loop over files
-        
-# now concatenate data from individual files
-for key in data.keys():
-
-    data[key] = np.concatenate(data[key])
-
-#----------
-# check track indices
-#----------
-if True:
-    prevSum = 0
-
-    firstIndex = data['tracks/firstIndex']
-    numTracks = data['tracks/numTracks']
-
-    for index in range(len(firstIndex)):
-        assert prevSum == firstIndex[index],"index=" + str(index) + " prevSum=" + str(prevSum) + " firstIndex=" + str(firstIndex[index])
-        prevSum += numTracks[index]
-        
-
-    
-#----------
-
-if False:
-    # photon indices
-    index = np.where((data['run'] == 1) & (data['ls'] == 18977) & (data['event'] == 55774237))[0][0]
-
-    print "index=",index
-
-    trackpt = data['tracks/pt']
-
-    trkInd = makeTrackIndices(data, index)
-    print "trkInd=",trkInd
-
-    print "ZZZ",trackpt[trkInd]
-
-
-# typical keys:
-#   ['X/firstIndex',
-#    'X/numRecHits',
-#    'X/energy',
-#    'X/x',
-#    'X/y',
-#    'run',
-#    'ls',
-#    'event',
-#    'y',
-#    'weight',
-#    'mvaid',
-#    'genDR',
-#    'chgIsoWrtChosenVtx',
-#    'chgIsoWrtWorstVtx',
-#    'phoIdInput/scRawE',
-#    'phoIdInput/r9',
-#    'phoIdInput/covIEtaIEta',
-#    'phoIdInput/phiWidth',
-#    'phoIdInput/etaWidth',
-#    'phoIdInput/covIEtaIPhi',
-#    'phoIdInput/s4',
-#    'phoIdInput/pfPhoIso03',
-#    'phoIdInput/pfChgIso03',
-#    'phoIdInput/pfChgIso03worst',
-#    'phoIdInput/scEta',
-#    'phoIdInput/rho',
-#    'phoIdInput/esEffSigmaRR',
-#    'phoVars/phoEt',
-#    'phoVars/phoPhi',
-#    'phoVars/diphoMass',
-#    'tracks/firstIndex',
-#    'tracks/numTracks',
-#    'tracks/pt',
-#    'tracks/detaAtVertex',
-#    'tracks/dphiAtVertex',
-#    'tracks/charge',
-#    'tracks/vtxDz']
-
-
-#----------
-
-numEvents = len(data['tracks/firstIndex'])
-
-#----------
-# calculate sum of pts of tracks per event from the vertex with dz = 0
-#----------
-if True:
+def checkSelectedVertex(data, numPhotons):
+    # checks whether we can reproduce the values of the selected
+    # photon vertex
     # values from flashgg
-    mySelectedVertexIso = np.zeros(numEvents, dtype = 'float32')
+    mySelectedVertexIso = np.zeros(numPhotons, dtype = 'float32')
 
     # note that relpt is the pt of the track divided by the photon Et
     # so we have to multiply by the photonEt first
@@ -223,7 +89,7 @@ if True:
     # from https://github.com/cms-analysis/flashgg/blob/e2fac35487f23fe05b20160d7b51f34bd06b0660/MicroAOD/python/flashggTkVtxMap_cfi.py#L10
     maxVtxDz = 0.2
 
-    for photonIndex in range(numEvents):
+    for photonIndex in range(numPhotons):
 
         trackInd = makeTrackIndices(data, photonIndex)
 
@@ -341,5 +207,150 @@ if True:
     pylab.figure(); pylab.hist(diff, bins = 100); pylab.title('recalculation minus flashgg')
     pylab.figure(); pylab.hist(diff[np.abs(diff) < 0.1], bins = 100); pylab.title('recalculation minus flashgg')
 
+
+
+#----------------------------------------------------------------------
+# main
+#----------------------------------------------------------------------
+
+# load and combine files: note that the 'firstIndices'
+# array must be modified
+
+data = {}
+
+tracksOffset = 0
+photonsOffset = 0
+
+# for fname in glob.glob(datasetDir + "/*-barrel-train.npz"):
+
+fnames = glob.glob(datasetDir + "/*-barrel*.npz")
+
+data['fileIndex'] = []
+data['fileOffsetPhotons'] = []
+
+for fileIndex, fname in enumerate(fnames):
+
+    print "opening file %d/%d" % (fileIndex + 1, len(fnames))
+    
+    thisData = np.load(fname)
+    thisNumTracks = None
+
+    thisNumPhotons = len(thisData['event'])
+
+    data['fileIndex'].append(np.ones(thisNumPhotons, dtype='int32') * fileIndex)
+    data['fileOffsetPhotons'].append(np.ones(thisNumPhotons, dtype='int32') * photonsOffset)
+
+    for key, values in thisData.items():
+        
+        if key == 'tracks/firstIndex':
+            # go from torch 1-based indexing to python 0-based indexing
+            assert values[0] == 1
+            values = values - 1
+
+            values += tracksOffset
+
+        data.setdefault(key, []).append(values)
+
+    # end of loop over keys in the current file
+
+    # prepare next iteration
+
+    thisNumTracks = thisData['tracks/numTracks'].sum()
+
+    tracksOffset += thisNumTracks
+    photonsOffset += thisNumPhotons
+
+    # DEBUG
+    break
+    
+# end of loop over files
+        
+# now concatenate data from individual files
+for key in data.keys():
+
+    data[key] = np.concatenate(data[key])
+
+#----------
+# check track indices
+#----------
+if True:
+    prevSum = 0
+
+    firstIndex = data['tracks/firstIndex']
+    numTracks = data['tracks/numTracks']
+
+    for index in range(len(firstIndex)):
+        assert prevSum == firstIndex[index],"index=" + str(index) + " prevSum=" + str(prevSum) + " firstIndex=" + str(firstIndex[index])
+        prevSum += numTracks[index]
+        
+
+    
+#----------
+
+if False:
+    # photon indices
+    index = np.where((data['run'] == 1) & (data['ls'] == 18977) & (data['event'] == 55774237))[0][0]
+
+    print "index=",index
+
+    trackpt = data['tracks/pt']
+
+    trkInd = makeTrackIndices(data, index)
+    print "trkInd=",trkInd
+
+    print "ZZZ",trackpt[trkInd]
+
+
+# typical keys:
+#   ['X/firstIndex',
+#    'X/numRecHits',
+#    'X/energy',
+#    'X/x',
+#    'X/y',
+#    'run',
+#    'ls',
+#    'event',
+#    'y',
+#    'weight',
+#    'mvaid',
+#    'genDR',
+#    'chgIsoWrtChosenVtx',
+#    'chgIsoWrtWorstVtx',
+#    'phoIdInput/scRawE',
+#    'phoIdInput/r9',
+#    'phoIdInput/covIEtaIEta',
+#    'phoIdInput/phiWidth',
+#    'phoIdInput/etaWidth',
+#    'phoIdInput/covIEtaIPhi',
+#    'phoIdInput/s4',
+#    'phoIdInput/pfPhoIso03',
+#    'phoIdInput/pfChgIso03',
+#    'phoIdInput/pfChgIso03worst',
+#    'phoIdInput/scEta',
+#    'phoIdInput/rho',
+#    'phoIdInput/esEffSigmaRR',
+#    'phoVars/phoEt',
+#    'phoVars/phoPhi',
+#    'phoVars/diphoMass',
+#    'tracks/firstIndex',
+#    'tracks/numTracks',
+#    'tracks/pt',
+#    'tracks/detaAtVertex',
+#    'tracks/dphiAtVertex',
+#    'tracks/charge',
+#    'tracks/vtxDz']
+
+import pylab
+
+
+#----------
+
+numPhotons = len(data['tracks/firstIndex'])
+
+#----------
+# calculate sum of pts of tracks per event from the vertex with matching vertex index
+#----------
+if True:
+    checkSelectedVertex(data, numPhotons)
 
 pylab.show()
