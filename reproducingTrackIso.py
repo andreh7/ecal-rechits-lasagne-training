@@ -61,6 +61,19 @@ class TrackUtil:
         self.pdgId  = data['tracks/pdgId']
         self.trackVtxIndex = data['tracks/vtxIndex']
 
+        self.trackVtxX = data['tracks/vtxX']
+        self.trackVtxY = data['tracks/vtxY']
+        self.trackVtxZ = data['tracks/vtxZ']
+
+        self.trackEta = data['tracks/etaAtVertex']
+        self.trackPhi = data['tracks/phiAtVertex']
+
+        # supercluster cartesian coordinates
+        self.scX       = data['phoVars/scX']
+        self.scY       = data['phoVars/scY']
+        self.scZ       = data['phoVars/scZ']
+
+
 #----------------------------------------------------------------------
 
 class SinglePhotonTrackUtil:
@@ -84,6 +97,13 @@ class SinglePhotonTrackUtil:
         self.charge        = trackUtil.charge[self.trackInd]
         self.pdgId         = trackUtil.pdgId[self.trackInd]
 
+        self.trackVtxX     = trackUtil.trackVtxX[self.trackInd]
+        self.trackVtxY     = trackUtil.trackVtxY[self.trackInd]
+        self.trackVtxZ     = trackUtil.trackVtxZ[self.trackInd]
+
+        self.trackEta      = trackUtil.trackEta[self.trackInd]
+        self.trackPhi      = trackUtil.trackPhi[self.trackInd]
+
     #----------------------------------------
 
     def getSelectedTrackIndices(self, vertexIndex):
@@ -101,6 +121,43 @@ class SinglePhotonTrackUtil:
 
         return indices
 
+    #----------------------------------------
+
+    def deltaEtaPhiR(self, indices):
+        # returns dEta, dPhi, dR for the selected tracks
+        #
+        # indices is the list of selected indices
+        # for which the calculations should be done
+
+        # calculate supercluster eta and phi with respect to
+        # vertices of surviving tracks
+        # (TODO: speed up by calculating this only once for the selected
+        #        track (not photon) vertex, needs storing indices
+        #        to track vertices instead of storing the vertex
+        #        for each track)
+
+        refVertex = [
+            self.trackVtxX[indices],
+            self.trackVtxY[indices],
+            self.trackVtxZ[indices],
+            ]
+
+        scdx = self.trackUtil.scX[self.photonIndex] - refVertex[0]
+        scdy = self.trackUtil.scY[self.photonIndex] - refVertex[1]
+        scdz = self.trackUtil.scZ[self.photonIndex] - refVertex[2]
+
+        # recalculate the physics eta and phi of the supercluster
+        # with respect to the track vertices
+        scPhi = np.arctan2(scdy, scdx)
+        scEta = np.arctanh(scdz / np.sqrt(scdx**2 + scdy **2 + scdz ** 2))
+
+        thisDphi = deltaPhi(self.trackPhi[indices], scPhi)
+        thisDeta = self.trackEta[indices] - scEta
+
+        thisDr = np.sqrt(thisDphi ** 2 + thisDeta ** 2)
+
+        return thisDeta, thisDphi, thisDr
+
 #----------------------------------------------------------------------
 
 def checkSelectedVertex(data, numPhotons):
@@ -115,17 +172,6 @@ def checkSelectedVertex(data, numPhotons):
     firstIndex = data['tracks/firstIndex']
     numTracks = data['tracks/numTracks']
 
-    trackVtxX = data['tracks/vtxX']
-    trackVtxY = data['tracks/vtxY']
-    trackVtxZ = data['tracks/vtxZ']
-
-    trackEta = data['tracks/etaAtVertex']
-    trackPhi = data['tracks/phiAtVertex']
-
-    # supercluster cartesian coordinates
-    scX      = data['phoVars/scX']
-    scY      = data['phoVars/scY']
-    scZ      = data['phoVars/scZ']
 
     photonVtxX = data['phoVars/phoVertexX']
     photonVtxY = data['phoVars/phoVertexY']
@@ -152,7 +198,7 @@ def checkSelectedVertex(data, numPhotons):
         trackInd = sptu.trackInd
 
         thisTrackpt = sptu.trackpt
-        thisVtxDz   = trackVtxZ[trackInd] - photonVtxZ[photonIndex]
+        thisVtxDz   = sptu.trackVtxZ - photonVtxZ[photonIndex]
 
         vtxDz[trackInd] = thisVtxDz
 
@@ -161,31 +207,8 @@ def checkSelectedVertex(data, numPhotons):
             )
 
 
-        # calculate supercluster eta and phi with respect to
-        # vertices of surviving tracks
-        # (TODO: speed up by calculating this only once for the selected
-        #        track (not photon) vertex, needs storing indices
-        #        to track vertices instead of storing the vertex
-        #        for each track)
+        thisDeta, thisDphi, thisDr = sptu.deltaEtaPhiR(indices)
 
-
-        refVertex = [
-            trackVtxX[trackInd][indices],
-            trackVtxY[trackInd][indices],
-            trackVtxZ[trackInd][indices],
-            ]
-
-        scdx = scX[photonIndex] - refVertex[0]
-        scdy = scY[photonIndex] - refVertex[1]
-        scdz = scZ[photonIndex] - refVertex[2]
-
-        scPhi = np.arctan2(scdy, scdx)
-        scEta = np.arctanh(scdz / np.sqrt(scdx**2 + scdy **2 + scdz ** 2))
-
-        thisDphi = deltaPhi(trackPhi[trackInd][indices], scPhi)
-        thisDeta = trackEta[trackInd][indices] - scEta
-
-        thisDr = np.sqrt(thisDphi ** 2 + thisDeta ** 2)
 
         dR[trackInd][indices] = thisDr
 
@@ -247,10 +270,10 @@ def checkSelectedVertex(data, numPhotons):
         print "track pt=", trackUtil.trackpt[ind],
         print "accepted=", accepted[ind],
         print "vtxdz:",    vtxDz[ind],
-        print "vtxZ:",     trackVtxZ[ind],
+        print "vtxZ:",     trackUtil.trackVtxZ[ind],
         print "vtxIndex:", trackUtil.trackVtxIndex[ind],
-        print "eta:",      trackEta[ind],
-        print "phi:",      trackPhi[ind],
+        print "eta:",      trackUtil.trackEta[ind],
+        print "phi:",      trackUtil.trackPhi[ind],
         print "dr:",       dR[ind],
         print "dphi:",     dPhi[ind],
         print "deta:",     dEta[ind],
