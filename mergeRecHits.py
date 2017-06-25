@@ -133,25 +133,28 @@ def addTracks(allData, thisData):
         expectedFirstIndex = 1
   
         assert thisData['tracks/firstIndex'][thisNumPhotons - 1] + thisData['tracks/numTracks'][thisNumPhotons - 1] - 1 == len(thisData[trackPtName])
-  
+
+        thisDataTracksFirstIndex = thisData['tracks/firstIndex']
+        thisDataTracksNumTracks  = thisData['tracks/numTracks']
+
         for i in range(thisNumPhotons):
             # sanity check of input data
-            assert thisData['tracks/firstIndex'][i] == expectedFirstIndex
+            assert thisDataTracksFirstIndex[i] == expectedFirstIndex
     
             # note that we may have photons without any track nearby
             # (this is NOT the case for rechits on the other hand)
-            assert thisData['tracks/numTracks'][i] >= 0
+            assert thisDataTracksNumTracks[i] >= 0
     
             if i < thisNumPhotons - 1:
-                assert thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] == thisData['tracks/firstIndex'][i+1]
+                assert thisDataTracksFirstIndex[i] + thisDataTracksNumTracks[i] == thisDataTracksFirstIndex[i+1]
             else:
-                assert thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] - 1 == len(thisData[trackPtName]),  \
-                 str(thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] - 1)  + " " + str(thisData[trackPtName])
+                assert thisDataTracksFirstIndex[i] + thisDataTracksNumTracks[i] - 1 == len(thisData[trackPtName]),  \
+                 str(thisDataTracksFirstIndex[i] + thisDataTracksNumTracks[i] - 1)  + " " + str(thisData[trackPtName])
     
             # add original firstIndex field
-            allData['tracks/firstIndex'][numPhotonsBefore + i] = thisData['tracks/firstIndex'][i] + numTracksBefore
+            allData['tracks/firstIndex'][numPhotonsBefore + i] = thisDataTracksFirstIndex[i] + numTracksBefore
     
-            expectedFirstIndex = expectedFirstIndex + thisData['tracks/numTracks'][i]
+            expectedFirstIndex = expectedFirstIndex + thisDataTracksNumTracks[i]
     
         # end -- loop over photons
   
