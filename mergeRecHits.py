@@ -90,16 +90,24 @@ def addTracks(allData, thisData):
             if key.startswith("tracks/"):                                                                         
                 allData[key] = thisData[key]
     else:
-        assert allData['tracks/numTracks'].sum() == len(allData['tracks/relpt'])
-        assert allData['tracks/firstIndex'][-1] + allData['tracks/numTracks'][-1] - 1 == len(allData['tracks/relpt'])
+
+        if allData.has_key('tracks/relpt'):
+            trackPtName = "tracks/relpt"
+        elif allData.has_key('tracks/pt'):
+            trackPtName = 'tracks/pt'
+        else:
+            raise Exception("dont know the name of the tracks pt variable")
+
+        assert allData['tracks/numTracks'].sum() == len(allData[trackPtName])
+        assert allData['tracks/firstIndex'][-1] + allData['tracks/numTracks'][-1] - 1 == len(allData[trackPtName])
   
         # append the values for relpt, charge etc.
         # we must add an offset to firstIndex
         numPhotonsBefore     = len(allData['tracks/firstIndex'])
-        numTracksBefore      = len(allData['tracks/relpt'])
+        numTracksBefore      = len(allData[trackPtName])
   
         thisNumPhotons       = len(thisData['tracks/firstIndex'])
-        thisNumRecHits       = len(thisData['tracks/relpt'])
+        thisNumRecHits       = len(thisData[trackPtName])
   
         assert thisData['tracks/firstIndex'][thisNumPhotons - 1] + thisData['tracks/numTracks'][thisNumPhotons - 1] - 1 == thisNumRecHits
   
@@ -124,7 +132,7 @@ def addTracks(allData, thisData):
         # for sanity checks
         expectedFirstIndex = 1
   
-        assert thisData['tracks/firstIndex'][thisNumPhotons - 1] + thisData['tracks/numTracks'][thisNumPhotons - 1] - 1 == len(thisData['tracks/relpt'])
+        assert thisData['tracks/firstIndex'][thisNumPhotons - 1] + thisData['tracks/numTracks'][thisNumPhotons - 1] - 1 == len(thisData[trackPtName])
   
         for i in range(thisNumPhotons):
             # sanity check of input data
@@ -137,8 +145,8 @@ def addTracks(allData, thisData):
             if i < thisNumPhotons - 1:
                 assert thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] == thisData['tracks/firstIndex'][i+1]
             else:
-                assert thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] - 1 == len(thisData['tracks/relpt']),  \
-                 str(thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] - 1)  + " " + str(thisData['tracks/relpt'])
+                assert thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] - 1 == len(thisData[trackPtName]),  \
+                 str(thisData['tracks/firstIndex'][i] + thisData['tracks/numTracks'][i] - 1)  + " " + str(thisData[trackPtName])
     
             # add original firstIndex field
             allData['tracks/firstIndex'][numPhotonsBefore + i] = thisData['tracks/firstIndex'][i] + numTracksBefore
