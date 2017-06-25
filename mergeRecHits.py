@@ -189,6 +189,13 @@ parser = OptionParser("""
     """
     )
 
+parser.add_option('--no-tracks',
+                    dest = "mergeTracks",
+                    action = 'store_false',
+                    default = True,
+                    help='do not merge track information'
+                    )
+
 (options, ARGV) = parser.parse_args()
 
 if len(ARGV) != 1:
@@ -273,7 +280,7 @@ for subdet in ("barrel", "endcap"):
                                 recHitsAdded = True
 
                         elif key.startswith('tracks/'): 
-                            if not tracksAdded:
+                            if not tracksAdded and options.mergeTracks:
                                 addTracks(allData, thisData)
                                 tracksAdded = True
                         else:
@@ -300,7 +307,7 @@ for subdet in ("barrel", "endcap"):
                                 addSparseRecHits(allData, thisData)
                                 recHitsAdded = True
                         elif key.startswith('tracks/'):
-                            if not tracksAdded:
+                            if not tracksAdded and options.mergeTracks:
                                 addTracks(allData, thisData)
                                 tracksAdded = True
                         else:
