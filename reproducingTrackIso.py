@@ -158,6 +158,14 @@ class SinglePhotonTrackUtil:
 
         return thisDeta, thisDphi, thisDr
 
+    #----------------------------------------
+
+    def getKnownVertexIndices(self):
+        # returns a list of all known vertex indices for the 
+        # tracks looked at for the given photon
+
+        return set(self.trackVtxIndex)
+
 #----------------------------------------------------------------------
 
 def checkSelectedVertex(data, numPhotons):
