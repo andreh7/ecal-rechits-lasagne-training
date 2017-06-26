@@ -32,7 +32,7 @@ def addSparseRecHits(allData, thisData):
         # we probably can't add to opened .npz file data
         for key in thisData.keys():
             if key.startswith("X/"):
-                allData[key] = thisData[key]
+                allData[key] = [ thisData[key] ]
     else:
         assert allData['X/numRecHits'].sum() == len(allData['X/energy'])
         assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
@@ -47,14 +47,14 @@ def addSparseRecHits(allData, thisData):
         thisNumRecHits       = len(thisData['X/energy'])
   
         assert thisData['X/firstIndex'][-1] + thisData['X/numRecHits'][-1] - 1 == thisNumRecHits
-  
-        allData['X/x']          = np.concatenate([allData['X/x'],          thisData['X/x']])
-        allData['X/y']          = np.concatenate([allData['X/y'],          thisData['X/y']])
-        allData['X/energy']     = np.concatenate([allData['X/energy'],     thisData['X/energy']])
-        allData['X/numRecHits'] = np.concatenate([allData['X/numRecHits'], thisData['X/numRecHits']])
-  
+
+        allData['X/x'].append(thisData['X/x'])
+        allData['X/y'].append(thisData['X/y'])
+        allData['X/energy'].append(thisData['X/energy'])
+        allData['X/numRecHits'].append(thisData['X/numRecHits'])
+
         # expand the firstIndex field
-        allData['X/firstIndex'] = np.concatenate([allData['X/firstIndex'], thisData['X/firstIndex'] + numRecHitsBefore])
+        allData['X/firstIndex'].append(thisData['X/firstIndex'] + numRecHitsBefore)
 
         assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
   
@@ -87,8 +87,8 @@ def addTracks(allData, thisData):
         # copy the vectors over
   
         for key in thisData.keys():
-            if key.startswith("tracks/"):                                                                         
-                allData[key] = thisData[key]
+            if key.startswith("tracks/"):
+                allData[key] = [ thisData[key] ]
     else:
 
         if allData.has_key('tracks/relpt'):
@@ -118,17 +118,17 @@ def addTracks(allData, thisData):
                 continue
 
             if varname != 'tracks/numTracks' and varname != 'tracks/firstIndex':
-                allData[varname] = np.concatenate([ allData[varname], thisData[varname] ])
+                allData[varname].append(thisData[varname])
 
         # end of loop over variables
-  
-        allData['tracks/numTracks'] = np.concatenate([allData['tracks/numTracks'], thisData['tracks/numTracks']])
-  
+
+        allData['tracks/numTracks'].append(thisData['tracks/numTracks'])
+
         #----------
         # expand the firstIndex field
         #----------
-        allData['tracks/firstIndex'] = np.concatenate([allData['tracks/firstIndex'], np.zeros(thisNumPhotons, dtype='int32')])
-  
+        allData['tracks/firstIndex'].append(np.zeros(thisNumPhotons, dtype='int32'))
+
         # for sanity checks
         expectedFirstIndex = 1
   
@@ -269,8 +269,8 @@ for subdet in ("barrel", "endcap"):
 
                 allData = {}
 
-                allData['sample'] = makeSampleId(fname, len(thisData['y']))
-        
+                allData['sample'] = [ makeSampleId(fname, len(thisData['y'])) ]
+
                 for key in thisData.keys():
 
                     value = thisData[key]
@@ -287,8 +287,8 @@ for subdet in ("barrel", "endcap"):
                                 addTracks(allData, thisData)
                                 tracksAdded = True
                         else:
-                            # just copy the data 
-                            allData[key] = value
+                            # just copy the data
+                            allData[key] = [ value ]
 
                     # if not genDR
         
@@ -296,9 +296,8 @@ for subdet in ("barrel", "endcap"):
         
             else:
                 # append to existing data
-          
-                allData['sample'] = catItem(allData['sample'],
-                                            makeSampleId(fname, len(thisData['y'])))
+
+                allData['sample'].append(makeSampleId(fname, len(thisData['y'])))
 
                 for key in thisData.keys():
                     value = thisData[key]
@@ -315,16 +314,30 @@ for subdet in ("barrel", "endcap"):
                                 tracksAdded = True
                         else:
                             # normal concatenation
-                            allData[key] = catItem(allData[key], thisData[key])
-                        
+                            allData[key].append(thisData[key])
+
                     # end if not genDR
                 
                 # end loop over all items in the dict
             # end if not first
       
         # end of loop over file names for this base name
-      
+
+        #----------
+        # perform np.concatenate only at the end
+        #----------
+
+        for index, (key, value) in enumerate(allData.items()):
+            print "concatenating %d/%d" % (index + 1, len(allData))
+
+            assert isinstance(value,list),"item " + key + " is not of type list but " + str(value.__class__)
+
+            allData[key] = np.concatenate(value)
+
+
+        #----------
         # write out
+        #----------
         print "writing",outputFname,"(",len(allData['y']),"photons )"
 
         # it looks like **kwds is able to deal with slashes in the key names of the dict...
