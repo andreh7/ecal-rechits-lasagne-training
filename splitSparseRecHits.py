@@ -147,14 +147,9 @@ def makeOutputDataTracks(indices, inputData, outputData):
             # make sure we have int type here
             outputData['key'] = -1 * np.ones(numOutputRows, dtype = 'int32')
     
-        elif key == 'tracks/charge':
-            # normal int variables
-            outputData[key] = -1 * np.ones(numOutputTracks, dtype = 'int32')
-            otherVarNames.append(key)
-    
         else:
-          # assume it's a float vector
-          outputData[key] = -1 * np.ones(numOutputTracks, dtype = 'float32')
+          # take the input dtype for the output
+          outputData[key] = -1 * np.ones(numOutputTracks, dtype = inputData[key].dtype)
     
           otherVarNames.append(key)
 
