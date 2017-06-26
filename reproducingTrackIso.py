@@ -177,7 +177,6 @@ def checkSelectedVertex(data, numPhotons):
     # note that relpt is the pt of the track divided by the photon Et
     # so we have to multiply by the photonEt first
 
-    firstIndex = data['tracks/firstIndex']
     numTracks = data['tracks/numTracks']
 
 
@@ -205,7 +204,6 @@ def checkSelectedVertex(data, numPhotons):
 
         trackInd = sptu.trackInd
 
-        thisTrackpt = sptu.trackpt
         thisVtxDz   = sptu.trackVtxZ - photonVtxZ[photonIndex]
 
         vtxDz[trackInd] = thisVtxDz
@@ -229,7 +227,7 @@ def checkSelectedVertex(data, numPhotons):
         indices2 = indices2 & (thisDr >= 0.02)  # inner (veto) cone size
 
 
-        mySelectedVertexIso[photonIndex] = thisTrackpt[indices][indices2].sum()
+        mySelectedVertexIso[photonIndex] = sptu.trackpt[indices][indices2].sum()
 
         # note that accepted[trackInd][indices][indices2] = 1 does not work
         accepted[trackInd][indices] = 1 * indices2
