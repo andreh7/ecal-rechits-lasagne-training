@@ -143,10 +143,12 @@ def makeOutputDataTracks(indices, inputData, outputData):
         if not key.startswith("tracks/"):
             continue
 
-        if key == 'tracks/firstIndex' or key == 'tracks/numTracks':
+        if key == 'tracks/firstIndex':
             # make sure we have int type here
             outputData[key] = -1 * np.ones(numOutputRows, dtype = 'int32')
-    
+        elif key == 'tracks/numTracks':
+            # we can just copy this one, filtering by indices
+            outputData[key] = inputData[key][indices]
         else:
           # take the input dtype for the output
           outputData[key] = -1 * np.ones(numOutputTracks, dtype = inputData[key].dtype)
