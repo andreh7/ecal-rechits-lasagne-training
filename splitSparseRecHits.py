@@ -139,7 +139,7 @@ def makeOutputDataTracks(indices, inputData, outputData):
     # and 'numTracks'
     otherVarNames = []
   
-    for key, value in inputData.keys():
+    for key in inputData.keys():
         if not key.startswith("tracks/"):
             continue
 
