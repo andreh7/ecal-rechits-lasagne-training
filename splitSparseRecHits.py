@@ -218,14 +218,26 @@ def makeOutputDataTracks(indices, inputData, outputData):
 
 #----------------------------------------------------------------------
 
-def makeOutputData(indices, inputData):
+def makeOutputData(indices, inputData, checkFirstIndex = True):
 
     # copy everything except the rechits
     outputData = makeOutputVar(inputData, indices, [ 'X/*', 'tracks/*' ])
   
     makeOutputDataRecHits(indices, inputData, outputData)
-    # makeOutputDataTracks(indices, inputData, outputData)
-  
+
+    import mergeRecHits
+    
+    if checkFirstIndex:
+        isOk = mergeRecHits.checkFirstIndex(outputData['X/firstIndex'], outputData['X/numRecHits'])
+        assert isOk, "internal error with rechits firstIndex"
+
+    if 'tracks/numTracks' in inputData:
+        makeOutputDataTracks(indices, inputData, outputData)
+
+        if checkFirstIndex:
+            isOk = mergeRecHits.checkFirstIndex(outputData['tracks/firstIndex'], outputData['tracks/numTracks'])
+            assert isOk, "internal error with tracks firstIndex"
+
     return outputData
 
 #----------------------------------------------------------------------
