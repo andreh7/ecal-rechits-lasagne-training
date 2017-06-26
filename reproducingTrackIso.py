@@ -293,6 +293,142 @@ def checkSelectedVertex(data, numPhotons):
     pylab.figure(); pylab.hist(diff[np.abs(diff) < 0.1], bins = 100); pylab.title('recalculation minus flashgg')
 
 
+#----------------------------------------------------------------------
+
+
+def checkWorstVertexRecalculating(data, numPhotons):
+    # checks whether we can reproduce the values of the worst
+    # photon vertex by recalculating the worst vertex,
+    # i.e. by looping over all seen vertices 
+    # and calculating the isolation with respect to them
+    # (quite slow to do this in python)
+
+    myWorstVertexIso = np.zeros(numPhotons, dtype = 'float32')
+
+    # note that relpt is the pt of the track divided by the photon Et
+    # so we have to multiply by the photonEt first
+
+    numTracks = data['tracks/numTracks']
+
+    photonVtxX = data['phoVars/phoVertexX']
+    photonVtxY = data['phoVars/phoVertexY']
+    photonVtxZ = data['phoVars/phoVertexZ']
+    photonVtxIndex = data['phoVars/phoVertexIndex']
+
+
+    # for debugging
+    vtxDz    = np.ones(numTracks.sum(), dtype = 'float32') * -10000
+    # dR       = np.ones(numTracks.sum(), dtype = 'float32') * -10000
+    # dEta     = np.ones(numTracks.sum(), dtype = 'float32') * -10000
+    # dPhi     = np.ones(numTracks.sum(), dtype = 'float32') * -10000
+    # accepted = np.zeros(numTracks.sum(), dtype = 'int32')
+
+    # from https://github.com/cms-analysis/flashgg/blob/e2fac35487f23fe05b20160d7b51f34bd06b0660/MicroAOD/python/flashggTkVtxMap_cfi.py#L10
+    maxVtxDz = 0.2
+
+    trackUtil = TrackUtil(data)
+
+    for photonIndex in range(numPhotons):
+
+        sptu = SinglePhotonTrackUtil(trackUtil, photonIndex)
+
+        trackInd = sptu.trackInd
+
+        thisVtxDz   = sptu.trackVtxZ - photonVtxZ[photonIndex]
+
+        vtxDz[trackInd] = thisVtxDz
+
+        worstIso = -1000
+
+        # see also https://github.com/cms-analysis/flashgg/blob/50f5699dd8e57c6aad4272c3603c13bd04336506/MicroAOD/src/PhotonIdUtils.cc#L105
+
+        for vtxIndex in sptu.getKnownVertexIndices():
+            # calculate the isolation with respect to this
+            # vertex
+
+            indices = sptu.getSelectedTrackIndices(vtxIndex)
+
+            thisDeta, thisDphi, thisDr = sptu.deltaEtaPhiR(indices)
+
+
+            # dR[trackInd][indices] = thisDr
+
+            # dPhi[trackInd][indices] = thisDphi
+            # dEta[trackInd][indices] = thisDeta
+
+            # new set of indices
+            indices2 = (thisDr <= 0.3)   # outer cone size
+
+            indices2 = indices2 & (thisDr >= 0.02)  # inner (veto) cone size
+
+            thisIso = sptu.trackpt[indices][indices2].sum()
+
+            worstIso = max(thisIso, worstIso)
+
+        myWorstVertexIso[photonIndex] = worstIso
+
+        # note that accepted[trackInd][indices][indices2] = 1 does not work
+        # accepted[trackInd][indices] = 1 * indices2
+
+
+    import pylab
+    print "plotting"
+
+    diff = myWorstVertexIso - data['phoIdInput/pfChgIso03worst']
+
+    reldiff = diff[data['phoIdInput/pfChgIso03'] != 0] / data['phoIdInput/pfChgIso03'][data['phoIdInput/pfChgIso03'] != 0] - 1
+
+    # maximum absolute difference in sum pt
+    for maxAbsDiff in (0.1, 1):
+        numDiffering = len(diff[np.abs(diff) < maxAbsDiff])
+        print "fraction of events within %.1f GeV: %.1f%% (%d out of %d, %d outside)" % (maxAbsDiff,
+                                                                 numDiffering / float(len(diff)) * 100.,
+                                                                 numDiffering, len(diff), len(diff) - numDiffering
+                                                                 )
+
+
+    # print events with worst agreement
+    print "worst agreement:", diff[np.argmax(np.abs(diff))]
+    print "worst agreement photons"
+    agreementIndices = np.argsort(np.abs(diff))
+    index = agreementIndices[-1]
+
+    # DEBUG
+    # index = (data['run'] == 1) & ( data['ls'] == 18977) & (data['event'] == 55774237)
+
+    # DEBUG
+    # largest flashgg charged isolation
+    # index = 575249
+    # index = 10559
+
+
+
+    print "  diff=",diff[index],"ours=",myWorstVertexIso[index], "flashgg=", data['phoIdInput/pfChgIso03'][index], "run:ls:event=%d:%d:%d" % (data['run'][index], data['ls'][index], data['event'][index]),"file=",fnames[data['fileIndex'][index]],"index=",index,"relPhotonsOffset=",index - data['fileOffsetPhotons'][index]
+
+    trkInd = makeTrackIndices(data, index)
+
+    print "tracks:"
+
+    for ind in range(trkInd.start, trkInd.stop):
+
+        print "track pt=", trackUtil.trackpt[ind],
+        print "accepted=", accepted[ind],
+        print "vtxdz:",    vtxDz[ind],
+        print "vtxZ:",     trackUtil.trackVtxZ[ind],
+        print "vtxIndex:", trackUtil.trackVtxIndex[ind],
+        print "eta:",      trackUtil.trackEta[ind],
+        print "phi:",      trackUtil.trackPhi[ind],
+        print "dr:",       dR[ind],
+        print "dphi:",     dPhi[ind],
+        print "deta:",     dEta[ind],
+        print "charge:",   trackUtil.charge[ind],
+        print "pdgId:",    trackUtil.pdgId[ind],
+        print
+
+    print "photon:","et=",data['phoVars/phoEt'][index],"sceta=",data['phoIdInput/scEta'][index],"vtxZ=",photonVtxZ[index]
+    
+    pylab.figure(); pylab.hist(diff, bins = 100); pylab.title('recalculation minus flashgg')
+    pylab.figure(); pylab.hist(diff[np.abs(diff) < 0.1], bins = 100); pylab.title('recalculation minus flashgg')
 
 #----------------------------------------------------------------------
 # main
