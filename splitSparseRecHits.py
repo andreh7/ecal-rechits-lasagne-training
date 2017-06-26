@@ -144,6 +144,7 @@ def makeOutputDataTracks(indices, inputData, outputData):
             continue
 
         if key == 'tracks/firstIndex' or key == 'tracks/numTracks':
+            # make sure we have int type here
             outputData['key'] = -1 * np.ones(numOutputRows, dtype = 'int32')
     
         elif key == 'tracks/charge':
