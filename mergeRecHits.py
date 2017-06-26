@@ -40,8 +40,8 @@ def addSparseRecHits(allData, thisData):
         # assert allData['X/firstIndex'][-1] + allData['X/numRecHits'][-1] - 1 == len(allData['X/energy'])
 
         # we must add an offset to firstIndex
-        numPhotonsBefore     = len(allData['X/firstIndex'])
-        numRecHitsBefore     = len(allData['X/energy'])
+        numPhotonsBefore     = sum([ len(item) for item in allData['X/firstIndex'] ])
+        numRecHitsBefore     = sum([ len(item) for item in allData['X/energy'] ] )
   
         thisNumPhotons       = len(thisData['X/firstIndex'])
         thisNumRecHits       = len(thisData['X/energy'])
@@ -103,8 +103,8 @@ def addTracks(allData, thisData):
 
         # append the values for relpt, charge etc.
         # we must add an offset to firstIndex
-        numPhotonsBefore     = len(allData['tracks/firstIndex'])
-        numTracksBefore      = len(allData[trackPtName])
+        numPhotonsBefore     = sum([ len(item) for item in allData['tracks/firstIndex'] ])
+        numTracksBefore      = sum([ len(item) for item in allData[trackPtName] ])
   
         thisNumPhotons       = len(thisData['tracks/firstIndex'])
         thisNumRecHits       = len(thisData[trackPtName])
