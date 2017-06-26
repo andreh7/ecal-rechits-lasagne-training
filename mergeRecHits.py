@@ -34,11 +34,11 @@ def addSparseRecHits(allData, thisData):
             if key.startswith("X/"):
                 allData[key] = [ thisData[key] ]
     else:
-        assert allData['X/numRecHits'].sum() == len(allData['X/energy'])
-        assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
-        assert allData['X/firstIndex'][-1] + allData['X/numRecHits'][-1] - 1 == len(allData['X/energy'])
-  
         # append the values for x, y, energy and numRecHits 
+        # assert allData['X/numRecHits'].sum() == len(allData['X/energy'])
+        # assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
+        # assert allData['X/firstIndex'][-1] + allData['X/numRecHits'][-1] - 1 == len(allData['X/energy'])
+
         # we must add an offset to firstIndex
         numPhotonsBefore     = len(allData['X/firstIndex'])
         numRecHitsBefore     = len(allData['X/energy'])
@@ -56,8 +56,8 @@ def addSparseRecHits(allData, thisData):
         # expand the firstIndex field
         allData['X/firstIndex'].append(thisData['X/firstIndex'] + numRecHitsBefore)
 
-        assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
-  
+        # assert len(allData['X/firstIndex']) == len(allData['X/numRecHits'])
+
         assert thisData['X/firstIndex'][-1] + thisData['X/numRecHits'][-1] - 1 == len(thisData['X/energy'])
 
         assert np.all(thisData['X/numRecHits'] >= 1)
@@ -98,9 +98,9 @@ def addTracks(allData, thisData):
         else:
             raise Exception("dont know the name of the tracks pt variable")
 
-        assert allData['tracks/numTracks'].sum() == len(allData[trackPtName])
-        assert allData['tracks/firstIndex'][-1] + allData['tracks/numTracks'][-1] - 1 == len(allData[trackPtName])
-  
+        # assert allData['tracks/numTracks'].sum() == len(allData[trackPtName])
+        # assert allData['tracks/firstIndex'][-1] + allData['tracks/numTracks'][-1] - 1 == len(allData[trackPtName])
+
         # append the values for relpt, charge etc.
         # we must add an offset to firstIndex
         numPhotonsBefore     = len(allData['tracks/firstIndex'])
