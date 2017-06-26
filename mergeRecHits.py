@@ -76,6 +76,27 @@ def catItem(item1, item2):
 
 #----------------------------------------------------------------------
 
+def checkFirstIndex(firstIndexArray, numEntriesArray):
+    # checks that firstIndex is the cumulative of the numEntriesArray
+    
+    # assume there is at least one entry
+
+    fromNumEntries = np.cumsum(np.concatenate([ np.array([1]),
+                                                numEntriesArray ]))[:-1]
+
+    result = np.all(firstIndexArray == fromNumEntries)
+
+    if not result:
+
+        diffLocs = np.where(firstIndexArray != fromNumEntries)
+        print "diffLocs=",diffLocs
+    
+        print "first:",firstIndexArray[diffLocs[0]], fromNumEntries[diffLocs[0]]
+
+    return result
+
+#----------------------------------------------------------------------
+
 def addTracks(allData, thisData):
     # convert some tensors (to avoid roundoff errors with indices)
   
@@ -197,6 +218,13 @@ parser.add_option('--no-tracks',
                     action = 'store_false',
                     default = True,
                     help='do not merge track information'
+                    )
+
+parser.add_option('--check-first-index',
+                  dest = "checkFirstIndex",
+                  default = False,
+                  action = 'store_true',
+                  help='checks the merging of the firstIndex arrays'
                     )
 
 (options, ARGV) = parser.parse_args()
@@ -334,6 +362,25 @@ for subdet in ("barrel", "endcap"):
 
             allData[key] = np.concatenate(value)
 
+        #----------
+        # check firstIndex values after merging if requested
+        #----------
+        if options.checkFirstIndex:
+            if allData.has_key('X/firstIndex'):
+                recHitsOk = checkFirstIndex(allData['X/firstIndex'], allData['X/numRecHits'])
+                print "recHitsOk:",recHitsOk
+            else:
+                recHitsOk = True
+
+            if allData.has_key('tracks/firstIndex'):
+                tracksOk = checkFirstIndex(allData['tracks/firstIndex'], allData['tracks/numTracks'])
+                print "tracksOk:",tracksOk
+            else:
+                tracksOk = True
+
+            if not (recHitsOk and tracksOk):
+                print >> sys.stderr,"at least one firstIndex varible is incorrect, exiting"
+                sys.exit(1)
 
         #----------
         # write out
