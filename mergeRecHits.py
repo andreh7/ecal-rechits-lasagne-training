@@ -124,18 +124,18 @@ def addTracks(allData, thisData):
 
         allData['tracks/numTracks'].append(thisData['tracks/numTracks'])
 
+        thisDataTracksFirstIndex = thisData['tracks/firstIndex']
+        thisDataTracksNumTracks  = thisData['tracks/numTracks']
+
         #----------
         # expand the firstIndex field
         #----------
-        allData['tracks/firstIndex'].append(np.zeros(thisNumPhotons, dtype='int32'))
+        allData['tracks/firstIndex'].append(thisDataTracksFirstIndex + numTracksBefore)
 
         # for sanity checks
         expectedFirstIndex = 1
   
         assert thisData['tracks/firstIndex'][thisNumPhotons - 1] + thisData['tracks/numTracks'][thisNumPhotons - 1] - 1 == len(thisData[trackPtName])
-
-        thisDataTracksFirstIndex = thisData['tracks/firstIndex']
-        thisDataTracksNumTracks  = thisData['tracks/numTracks']
 
         for i in range(thisNumPhotons):
             # sanity check of input data
@@ -152,8 +152,8 @@ def addTracks(allData, thisData):
                  str(thisDataTracksFirstIndex[i] + thisDataTracksNumTracks[i] - 1)  + " " + str(thisData[trackPtName])
     
             # add original firstIndex field
-            allData['tracks/firstIndex'][numPhotonsBefore + i] = thisDataTracksFirstIndex[i] + numTracksBefore
-    
+            # allData['tracks/firstIndex'][numPhotonsBefore + i] = thisDataTracksFirstIndex[i] + numTracksBefore
+
             expectedFirstIndex = expectedFirstIndex + thisDataTracksNumTracks[i]
     
         # end -- loop over photons
