@@ -168,10 +168,16 @@ class SinglePhotonTrackUtil:
 
 #----------------------------------------------------------------------
 
-def checkSelectedVertex(data, numPhotons):
-    # checks whether we can reproduce the values of the selected
-    # photon vertex
-    # values from flashgg
+def checkVertex(data, numPhotons, 
+                refVertexIsoVarname,
+                vertexIndexVarname):
+    # checks whether we can reproduce the values vertices
+    # given by the vertex indices in the given variable name
+    # 
+    # refVertexIsoVarname is the name of the variable
+    # which contains the isolation value calculated 
+    # in flashgg
+
     mySelectedVertexIso = np.zeros(numPhotons, dtype = 'float32')
 
     # note that relpt is the pt of the track divided by the photon Et
@@ -179,11 +185,10 @@ def checkSelectedVertex(data, numPhotons):
 
     numTracks = data['tracks/numTracks']
 
-
     photonVtxX = data['phoVars/phoVertexX']
     photonVtxY = data['phoVars/phoVertexY']
     photonVtxZ = data['phoVars/phoVertexZ']
-    photonVtxIndex = data['phoVars/phoVertexIndex']
+    photonVtxIndex = data[vertexIndexVarname]
 
 
     # for debugging
@@ -236,9 +241,9 @@ def checkSelectedVertex(data, numPhotons):
     import pylab
     print "plotting"
 
-    diff = mySelectedVertexIso - data['phoIdInput/pfChgIso03']
+    diff = mySelectedVertexIso - data[refVertexIsoVarname]
 
-    reldiff = diff[data['phoIdInput/pfChgIso03'] != 0] / data['phoIdInput/pfChgIso03'][data['phoIdInput/pfChgIso03'] != 0] - 1
+    reldiff = diff[data[refVertexIsoVarname] != 0] / data[refVertexIsoVarname][data[refVertexIsoVarname] != 0] - 1
 
     # maximum absolute difference in sum pt
     for maxAbsDiff in (0.1, 1):
@@ -265,7 +270,7 @@ def checkSelectedVertex(data, numPhotons):
 
 
 
-    print "  diff=",diff[index],"ours=",mySelectedVertexIso[index], "flashgg=", data['phoIdInput/pfChgIso03'][index], "run:ls:event=%d:%d:%d" % (data['run'][index], data['ls'][index], data['event'][index]),"file=",fnames[data['fileIndex'][index]],"index=",index,"relPhotonsOffset=",index - data['fileOffsetPhotons'][index]
+    print "  diff=",diff[index],"ours=",mySelectedVertexIso[index], "flashgg=", data[refVertexIsoVarname][index], "run:ls:event=%d:%d:%d" % (data['run'][index], data['ls'][index], data['event'][index]),"file=",fnames[data['fileIndex'][index]],"index=",index,"relPhotonsOffset=",index - data['fileOffsetPhotons'][index]
 
     trkInd = makeTrackIndices(data, index)
 
@@ -292,6 +297,30 @@ def checkSelectedVertex(data, numPhotons):
     pylab.figure(); pylab.hist(diff, bins = 100); pylab.title('recalculation minus flashgg')
     pylab.figure(); pylab.hist(diff[np.abs(diff) < 0.1], bins = 100); pylab.title('recalculation minus flashgg')
 
+
+#----------------------------------------------------------------------
+
+def checkSelectedVertex(data, numPhotons):
+    # checks whether we can reproduce the values of the selected
+    # photon vertex
+    # values from flashgg
+
+    checkVertex(data, numPhotons, 
+                'phoIdInput/pfChgIso03',
+                'phoVars/phoVertexIndex',
+                )
+
+#----------------------------------------------------------------------
+
+def checkWorstVertex(data, numPhotons):
+    # checks whether we can reproduce the values of the selected
+    # photon vertex
+    # values from flashgg
+
+    checkVertex(data, numPhotons, 
+                'phoIdInput/pfChgIso03worst',
+                'phoVars/phoWorstIsoVertexIndex',
+                )
 
 #----------------------------------------------------------------------
 
