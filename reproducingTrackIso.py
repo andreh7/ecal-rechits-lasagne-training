@@ -203,6 +203,10 @@ def checkVertex(data, numPhotons,
 
     trackUtil = TrackUtil(data)
 
+    import tqdm
+
+    progbar = tqdm.tqdm(total = numPhotons, mininterval = 1.0, unit = 'samples')
+
     for photonIndex in range(numPhotons):
 
         sptu = SinglePhotonTrackUtil(trackUtil, photonIndex)
@@ -236,6 +240,12 @@ def checkVertex(data, numPhotons,
 
         # note that accepted[trackInd][indices][indices2] = 1 does not work
         accepted[trackInd][indices] = 1 * indices2
+
+        progbar.update()
+    
+    # end of loop over photons
+
+    progbar.close()
 
 
     import pylab
