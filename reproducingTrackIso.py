@@ -610,4 +610,11 @@ numPhotons = len(data['tracks/firstIndex'])
 if True:
     checkSelectedVertex(data, numPhotons)
 
+
+if True:
+    # checkWorstVertexRecalculating(data, numPhotons)
+    checkWorstVertex(data, numPhotons)
+
+
+
 pylab.show()
