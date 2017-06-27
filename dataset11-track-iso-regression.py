@@ -66,7 +66,8 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = False):
     from datasetutils import makeTracksConcatenator, CommonDataConcatenator, SimpleVariableConcatenator, getActualSize
 
     commonData = CommonDataConcatenator()
-    trackVars = makeTracksConcatenator([ 'vtxDz' ])
+    trackVars = makeTracksConcatenator([ 'relpt', 'charge', 'dphiAtVertex', 'detaAtVertex' ] + 
+                                       [ 'vtxDz' ])
 
     otherVars = SimpleVariableConcatenator(['chgIsoWrtChosenVtx', 'chgIsoWrtWorstVtx' ])
 

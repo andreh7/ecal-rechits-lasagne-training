@@ -63,7 +63,8 @@ def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta = True):
 
     commonData = CommonDataConcatenator()
     recHits = makeRecHitsConcatenator()
-    trackVars = makeTracksConcatenator([ 'vtxDz' ])
+    trackVars = makeTracksConcatenator([ 'relpt', 'charge', 'dphiAtVertex', 'detaAtVertex' ] + 
+                                       [ 'vtxDz' ])
 
     # only apply pt/eta reweighting for training dataset
     reweightPtEta = reweightPtEta and isTraining

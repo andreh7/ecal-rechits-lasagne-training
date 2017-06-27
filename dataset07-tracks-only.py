@@ -48,7 +48,7 @@ def datasetLoadFunction(fnames, size, cuda):
     from datasetutils import makeTracksConcatenator, CommonDataConcatenator, getActualSize
 
     commonData = CommonDataConcatenator()
-    tracks = makeTracksConcatenator()
+    tracks = makeTracksConcatenator([ 'relpt', 'charge', 'dphiAtVertex', 'detaAtVertex' ])
   
     # load all input files
     for fname in fnames:

@@ -383,10 +383,11 @@ def makeRecHitsConcatenator():
 
 #----------------------------------------------------------------------
 def makeTracksConcatenator(additionalVariables = []):
+
     return SparseConcatenator("tracks", 
                               "firstIndex",
                               "numTracks",
-                              ['relpt', 'charge', 'dphiAtVertex', 'detaAtVertex'] + additionalVariables)
+                              additionalVariables)
 
 
 #----------------------------------------------------------------------
