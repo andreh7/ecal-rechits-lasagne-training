@@ -182,7 +182,7 @@ class TrackHistograms2d:
                 # apply vertex dz filter if given
                 #----------
                 if minVtxDz != None or maxVtxDz != None:
-                    vtxDz = dataset['tracks']['vtxDz'][index]
+                    vtxDz = abs(dataset['tracks']['vtxDz'][index])
                     
                     if minVtxDz != None and vtxDz < minVtxDz:
                         continue
