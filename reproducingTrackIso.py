@@ -5,7 +5,7 @@
 
 # datasetDir = '../data/2016-10-17-vtx-dz'
 # datasetDir = '/tmp/aholz/deleteme'
-datasetDir = '../data//2017-06-08-vertex-info/deleteme'
+datasetDir = '../data//2017-06-23-vertex-info/deleteme2'
 
 #----------------------------------------------------------------------
 
