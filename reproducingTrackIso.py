@@ -520,9 +520,6 @@ for fileIndex, fname in enumerate(fnames):
     tracksOffset += thisNumTracks
     photonsOffset += thisNumPhotons
 
-    # DEBUG
-    break
-    
 # end of loop over files
         
 # now concatenate data from individual files
