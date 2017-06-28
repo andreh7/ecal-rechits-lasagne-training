@@ -95,6 +95,13 @@ parser.add_argument('--param',
                     action = 'append',
                     )
 
+# TODO: do we also need to be able to specify train and test sizes individually ?
+parser.add_argument('--size',
+                    dest = "size",
+                    default = None,
+                    type = float,
+                    help='override train and test sample size (e.g. for faster testing): integer value > 1: absolute number of samples to use, float value in the range 0..1: fraction of sample to use',
+                    )
 
 parser.add_argument('modelFile',
                     metavar = "modelFile.py",
@@ -207,7 +214,7 @@ cuda = True
 datasetAuxData = {}
 
 with Timer("loading training dataset...") as t:
-    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], dataDesc['trsize'], 
+    trainData, trsize = datasetLoadFunction(dataDesc['train_files'], options.size, 
                                             cuda = cuda, 
                                             isTraining = True,
                                             reweightPtEta = doPtEtaReweighting,
@@ -215,7 +222,7 @@ with Timer("loading training dataset...") as t:
                                             returnEventIds = False,
                                             auxData = datasetAuxData)
 with Timer("loading test dataset...") as t:
-    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], dataDesc['tesize'], cuda, 
+    testData,  tesize = datasetLoadFunction(dataDesc['test_files'], options.size, cuda, 
                                             isTraining = False,
                                             reweightPtEta = False,
                                             logStreams = fouts,

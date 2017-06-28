@@ -16,11 +16,14 @@ def getActualSize(sizeSpec, loadedData):
         # None specified, take all loaded data
         return loadedSize
 
+    assert sizeSpec >= 0, "specifications for sample sizes must be non-negative"
+
     if sizeSpec < 1:
         assert sizeSpec >= 0
         return int(sizeSpec * loadedSize + 0.5)
 
-    # absolute number of events given (assume this is an integer...)
+    # absolute number of events given (convert to an integer to be sure)
+    sizeSpec = int(sizeSpec + 0.5)
     return min(sizeSpec, loadedSize)
 
 #----------------------------------------------------------------------
