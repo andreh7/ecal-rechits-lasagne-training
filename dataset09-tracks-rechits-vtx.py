@@ -39,7 +39,11 @@ dataDesc = dict(
 )
 #----------------------------------------
 
-def datasetLoadFunction(fnames, size, cuda):
+def datasetLoadFunction(fnames, size, cuda, isTraining, reweightPtEta, logStreams, returnEventIds,
+                        auxData):
+
+    assert not reweightPtEta, "reweightPtEta not yet implemented"
+    assert not returnEventIds, "returnEventIds not yet implemented"
 
     data = None
 
@@ -55,7 +59,9 @@ def datasetLoadFunction(fnames, size, cuda):
     # load all input files
     for fname in fnames:
   
-        print "reading",fname
+        for log in logStreams:
+            print >> log, "reading",fname
+
         loaded = torchio.read(fname)
 
         #----------
