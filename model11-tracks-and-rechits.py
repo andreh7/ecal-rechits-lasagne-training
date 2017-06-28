@@ -78,7 +78,8 @@ unpacker = rechitmodelutils.RecHitsUnpacker(
 # make a consistent binning for the tracks
 trackHistogramMaker = trackmodelutils.TrackHistograms2d(tracksBinningDeta,
                                                         tracksBinningDphi,
-                                                        relptWeighted = True)
+                                                        trackWeightFunction = lambda dataset, photonIndex, trackIndex: dataset['tracks']['relpt'][trackIndex]
+                                                        )
                                         
 
 

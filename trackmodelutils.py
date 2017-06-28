@@ -133,11 +133,16 @@ class TrackHistograms2d:
     def __init__(self, 
                  trkBinningDeta,
                  trkBinningDphi,
-                 relptWeighted,
+                 trackWeightFunction,
                  ):
+        # @param trackWeightFunction must be a function taking parameters
+        #  (dataset, photonIndex, trackIndex) and return a weight to be
+        #  used in the histogram. If trackWeightFunction is None,
+        #  weights of all tracks are effectively set to one.
+
         self.trkBinningDeta = trkBinningDeta
         self.trkBinningDphi = trkBinningDphi
-        self.relptWeighted = relptWeighted
+        self.trackWeightFunction = trackWeightFunction
 
     #----------------------------------------
 
@@ -173,7 +178,7 @@ class TrackHistograms2d:
 
             detaValues = []
             dphiValues = []
-            if self.relptWeighted:
+            if self.trackWeightFunction != None:
                 weights = []
             else:
                 weights = None
@@ -199,8 +204,8 @@ class TrackHistograms2d:
                 detaValues.append(deta)
                 dphiValues.append(dphi)
 
-                if self.relptWeighted:
-                    weights.append(dataset['tracks']['relpt'][index])
+                if self.trackWeightFunction != None:
+                    weights.append(self.trackWeightFunction(dataset, rowIndex, index))
 
             # end of loop over all tracks of event
 

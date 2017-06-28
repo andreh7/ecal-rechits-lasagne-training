@@ -33,7 +33,8 @@ batchesPerSuperBatch = math.floor(3345197 / batchSize)
 
 trackHistogramMaker = trackmodelutils.TrackHistograms2d(trackmodelutils.trkBinningDeta,
                                         trackmodelutils.trkBinningDphi,
-                                        relptWeighted = True)
+                                        trackWeightFunction = lambda dataset, photonIndex, trackIndex: dataset['tracks']['relpt'][trackIndex]
+                                        )
                                         
 
 def makeInput(dataset, rowIndices, inputDataIsSparse):
