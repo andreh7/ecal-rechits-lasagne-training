@@ -94,10 +94,12 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
         unpacker.unpack(dataset, rowIndices),
 
         # same vertex tracks
-        trackHistogramMaker.make(dataset, rowIndices, maxVtxDz = maxVertexDist),
+        trackHistogramMaker.make(dataset, rowIndices, 
+                                 trackFilter = lambda dataset, index: abs(dataset['tracks']['vtxDz'][index]) < maxVertexDist),
 
         # other vertices tracks
-        trackHistogramMaker.make(dataset, rowIndices, minVtxDz = maxVertexDist)
+        trackHistogramMaker.make(dataset, rowIndices, 
+                                 trackFilter = lambda dataset, index: abs(dataset['tracks']['vtxDz'][index]) >= maxVertexDist),
         ]
 
 

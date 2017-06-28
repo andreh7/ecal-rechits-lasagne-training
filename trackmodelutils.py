@@ -141,12 +141,15 @@ class TrackHistograms2d:
 
     #----------------------------------------
 
-    def make(self, dataset, rowIndices, minVtxDz = None, maxVtxDz = None):
+    def make(self, dataset, rowIndices, trackFilter = None):
         # fills tracks into a histogram
         # for each event
 
         # note that we need to 'unpack' the tracks
         # and we want a histogram for each entry in rowIndices
+
+        # trackFilter must be a function taking (dataset, index) as arguments
+        # and return True if a track should be added to this histogram
 
         batchSize = len(rowIndices)
 
@@ -179,15 +182,10 @@ class TrackHistograms2d:
                 index = indexOffset + trackIndex
 
                 #----------
-                # apply vertex dz filter if given
+                # apply track filter if given
                 #----------
-                if minVtxDz != None or maxVtxDz != None:
-                    vtxDz = abs(dataset['tracks']['vtxDz'][index])
-                    
-                    if minVtxDz != None and vtxDz < minVtxDz:
-                        continue
-
-                    if maxVtxDz != None and vtxDz >= maxVtxDz:
+                if trackFilter != None:
+                    if not trackFilter(dataset, index):
                         continue
 
                 #----------
