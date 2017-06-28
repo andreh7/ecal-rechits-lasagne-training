@@ -141,12 +141,16 @@ class TrackHistograms2d:
 
     #----------------------------------------
 
-    def make(self, dataset, rowIndices, trackFilter = None):
+    def make(self, dataset, rowIndices, detaDphiFunc, trackFilter = None):
         # fills tracks into a histogram
         # for each event
 
         # note that we need to 'unpack' the tracks
         # and we want a histogram for each entry in rowIndices
+
+        # detaDphiFunc is a function taking (dataset, photonIndex, trackIndex)
+        # as an argument and must return a tuple (deta, dphi) of the
+        # track w.r.t the photon
 
         # trackFilter must be a function taking (dataset, index) as arguments
         # and return True if a track should be added to this histogram
@@ -190,8 +194,7 @@ class TrackHistograms2d:
 
                 #----------
 
-                deta = dataset['tracks']['detaAtVertex'][index]
-                dphi = dataset['tracks']['dphiAtVertex'][index]
+                deta, dphi = detaDphiFunc(dataset, rowIndex, index)
 
                 detaValues.append(deta)
                 dphiValues.append(dphi)

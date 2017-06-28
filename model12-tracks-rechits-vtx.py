@@ -95,11 +95,24 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
 
         # same vertex tracks
         trackHistogramMaker.make(dataset, rowIndices, 
-                                 trackFilter = lambda dataset, index: abs(dataset['tracks']['vtxDz'][index]) < maxVertexDist),
+
+                                 detaDphiFunc = lambda dataset, photonIndex, trackIndex: (
+                                       dataset['tracks']['detaAtVertex'][trackIndex], dataset['tracks']['dphiAtVertex'][trackIndex]
+                                       ),
+
+                                 trackFilter = lambda dataset, index: abs(dataset['tracks']['vtxDz'][index]) < maxVertexDist,
+
+                                 ),
 
         # other vertices tracks
         trackHistogramMaker.make(dataset, rowIndices, 
+
+                                 detaDphiFunc = lambda dataset, photonIndex, trackIndex: (
+                                       dataset['tracks']['detaAtVertex'][trackIndex], dataset['tracks']['dphiAtVertex'][trackIndex]
+                                       ),
+
                                  trackFilter = lambda dataset, index: abs(dataset['tracks']['vtxDz'][index]) >= maxVertexDist),
+
         ]
 
 

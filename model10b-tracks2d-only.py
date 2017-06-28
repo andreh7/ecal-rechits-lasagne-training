@@ -40,7 +40,11 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
     assert inputDataIsSparse,"non-sparse input data is not supported"
 
     return [ 
-        trackHistogramMaker.make(dataset, rowIndices)
+        trackHistogramMaker.make(dataset, rowIndices,
+                                 detaDphiFunc = lambda dataset, photonIndex, trackIndex: (
+                                       dataset['tracks']['detaAtVertex'][trackIndex], dataset['tracks']['dphiAtVertex'][trackIndex]
+                                       ),
+                                 )
         ]
 
 

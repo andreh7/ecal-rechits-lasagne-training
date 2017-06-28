@@ -88,7 +88,11 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
     return [ 
         # unpack rechits
         unpacker.unpack(dataset, rowIndices),
-        trackHistogramMaker.make(dataset, rowIndices)
+        trackHistogramMaker.make(dataset, rowIndices,
+                                 detaDphiFunc = lambda dataset, photonIndex, trackIndex: (
+                                        dataset['tracks']['detaAtVertex'][trackIndex], dataset['tracks']['dphiAtVertex'][trackIndex]
+                                        ),
+                                 )
         ]
 
 
