@@ -203,194 +203,197 @@ def makeSampleId(fname, numEntries):
 #----------------------------------------------------------------------
 # main
 #----------------------------------------------------------------------
-from optparse import OptionParser
-parser = OptionParser("""
 
-  usage: %prog [options] data-directory
+if __name__ == '__main__':
 
-          merges npz output files from TorchDumper from multiple jobs into single files
+    from optparse import OptionParser
+    parser = OptionParser("""
 
-    """
-    )
+      usage: %prog [options] data-directory
 
-parser.add_option('--no-tracks',
-                    dest = "mergeTracks",
-                    action = 'store_false',
-                    default = True,
-                    help='do not merge track information'
-                    )
+              merges npz output files from TorchDumper from multiple jobs into single files
 
-parser.add_option('--check-first-index',
-                  dest = "checkFirstIndex",
-                  default = False,
-                  action = 'store_true',
-                  help='checks the merging of the firstIndex arrays'
-                    )
+        """
+        )
 
-(options, ARGV) = parser.parse_args()
+    parser.add_option('--no-tracks',
+                        dest = "mergeTracks",
+                        action = 'store_false',
+                        default = True,
+                        help='do not merge track information'
+                        )
 
-if len(ARGV) != 1:
-    print >> sys.stderr, "must specify exactly one data directory to work on"
-    sys.exit(1)
+    parser.add_option('--check-first-index',
+                      dest = "checkFirstIndex",
+                      default = False,
+                      action = 'store_true',
+                      help='checks the merging of the firstIndex arrays'
+                        )
 
-dataDir = ARGV.pop(0)
+    (options, ARGV) = parser.parse_args()
 
-#----------
+    if len(ARGV) != 1:
+        print >> sys.stderr, "must specify exactly one data directory to work on"
+        sys.exit(1)
 
-for subdet in ("barrel", "endcap"):
+    dataDir = ARGV.pop(0)
 
     #----------
-    # find all .npz files matching a given pattern and group them
-    #----------
-  
-    # maps from basename to list of files
-    fileGroups = {}
-  
-    # example name: output4/GJet40toInf_rechits-endcap_96.t7
-    import glob
-    inputFnames = glob.glob(dataDir + "/*-" + subdet + '_*.npz')
-  
-    if not inputFnames:
-        print "no input files found for " + subdet + " in " + dataDir
-        continue
-  
-    for fname in inputFnames:
-  
-        mo = re.search("/(.*)_rechits-" + subdet + "_(\d+)\.npz$", fname)
-        assert mo, "unexpected filename format " + fname
 
-        baseName = mo.group(1)
-        number = int(mo.group(2))
-    
-        fileGroups.setdefault(baseName, {})
-    
-        assert(not fileGroups[baseName].has_key(number))
-        fileGroups[baseName][number] = fname
-  
-    # end of loop over input file names
-  
-    #----------
-  
-    for baseName, fileNames in fileGroups.items():
-  
-        outputFname = os.path.join(dataDir, baseName + "_rechits-" + subdet + ".npz")
-        print "merging files into",outputFname
-    
-        #----------
-        # traverse the list increasing file index
-        #----------
-        allData = None
-    
-        for fileIndex in sorted(fileNames.keys()):
-    
-            fname = fileNames[fileIndex]
-
-            print "opening",fname, fileIndex,"/",len(fileNames),
-            thisData = np.load(fname)
-        
-            print len(thisData['y']),"photons"
-
-            recHitsAdded = False
-            tracksAdded  = False
-
-            if allData == None:
-
-                allData = {}
-
-                allData['sample'] = [ makeSampleId(fname, len(thisData['y'])) ]
-
-                for key in thisData.keys():
-
-                    value = thisData[key]
-
-                    if key != 'genDR':
-                        if key.startswith('X/'):
-                            if not recHitsAdded:
-                                # we only support sparse format here
-                                addSparseRecHits(allData, thisData)
-                                recHitsAdded = True
-
-                        elif key.startswith('tracks/'): 
-                            if not tracksAdded and options.mergeTracks:
-                                addTracks(allData, thisData)
-                                tracksAdded = True
-                        else:
-                            # just copy the data
-                            allData[key] = [ value ]
-
-                    # if not genDR
-        
-                # end loop over all items in the dict
-        
-            else:
-                # append to existing data
-
-                allData['sample'].append(makeSampleId(fname, len(thisData['y'])))
-
-                for key in thisData.keys():
-                    value = thisData[key]
-
-                    if key != 'genDR':
-                        if key.startswith('X/'):
-                            if not recHitsAdded:
-                                # we only support sparse format here
-                                addSparseRecHits(allData, thisData)
-                                recHitsAdded = True
-                        elif key.startswith('tracks/'):
-                            if not tracksAdded and options.mergeTracks:
-                                addTracks(allData, thisData)
-                                tracksAdded = True
-                        else:
-                            # normal concatenation
-                            allData[key].append(thisData[key])
-
-                    # end if not genDR
-                
-                # end loop over all items in the dict
-            # end if not first
-      
-        # end of loop over file names for this base name
+    for subdet in ("barrel", "endcap"):
 
         #----------
-        # perform np.concatenate only at the end
+        # find all .npz files matching a given pattern and group them
         #----------
 
-        for index, (key, value) in enumerate(allData.items()):
-            print "concatenating %d/%d" % (index + 1, len(allData))
+        # maps from basename to list of files
+        fileGroups = {}
 
-            assert isinstance(value,list),"item " + key + " is not of type list but " + str(value.__class__)
+        # example name: output4/GJet40toInf_rechits-endcap_96.t7
+        import glob
+        inputFnames = glob.glob(dataDir + "/*-" + subdet + '_*.npz')
 
-            allData[key] = np.concatenate(value)
+        if not inputFnames:
+            print "no input files found for " + subdet + " in " + dataDir
+            continue
+
+        for fname in inputFnames:
+
+            mo = re.search("/(.*)_rechits-" + subdet + "_(\d+)\.npz$", fname)
+            assert mo, "unexpected filename format " + fname
+
+            baseName = mo.group(1)
+            number = int(mo.group(2))
+
+            fileGroups.setdefault(baseName, {})
+
+            assert(not fileGroups[baseName].has_key(number))
+            fileGroups[baseName][number] = fname
+
+        # end of loop over input file names
 
         #----------
-        # check firstIndex values after merging if requested
-        #----------
-        if options.checkFirstIndex:
-            if allData.has_key('X/firstIndex'):
-                recHitsOk = checkFirstIndex(allData['X/firstIndex'], allData['X/numRecHits'])
-                print "recHitsOk:",recHitsOk
-            else:
-                recHitsOk = True
 
-            if allData.has_key('tracks/firstIndex'):
-                tracksOk = checkFirstIndex(allData['tracks/firstIndex'], allData['tracks/numTracks'])
-                print "tracksOk:",tracksOk
-            else:
-                tracksOk = True
+        for baseName, fileNames in fileGroups.items():
 
-            if not (recHitsOk and tracksOk):
-                print >> sys.stderr,"at least one firstIndex varible is incorrect, exiting"
-                sys.exit(1)
+            outputFname = os.path.join(dataDir, baseName + "_rechits-" + subdet + ".npz")
+            print "merging files into",outputFname
 
-        #----------
-        # write out
-        #----------
-        print "writing",outputFname,"(",len(allData['y']),"photons )"
+            #----------
+            # traverse the list increasing file index
+            #----------
+            allData = None
 
-        # it looks like **kwds is able to deal with slashes in the key names of the dict...
-        np.savez(outputFname, **allData)
-  
-    # end of looping over base names (processes)
+            for fileIndex in sorted(fileNames.keys()):
 
-# end of loop over barrel/endcap
+                fname = fileNames[fileIndex]
+
+                print "opening",fname, fileIndex,"/",len(fileNames),
+                thisData = np.load(fname)
+
+                print len(thisData['y']),"photons"
+
+                recHitsAdded = False
+                tracksAdded  = False
+
+                if allData == None:
+
+                    allData = {}
+
+                    allData['sample'] = [ makeSampleId(fname, len(thisData['y'])) ]
+
+                    for key in thisData.keys():
+
+                        value = thisData[key]
+
+                        if key != 'genDR':
+                            if key.startswith('X/'):
+                                if not recHitsAdded:
+                                    # we only support sparse format here
+                                    addSparseRecHits(allData, thisData)
+                                    recHitsAdded = True
+
+                            elif key.startswith('tracks/'): 
+                                if not tracksAdded and options.mergeTracks:
+                                    addTracks(allData, thisData)
+                                    tracksAdded = True
+                            else:
+                                # just copy the data
+                                allData[key] = [ value ]
+
+                        # if not genDR
+
+                    # end loop over all items in the dict
+
+                else:
+                    # append to existing data
+
+                    allData['sample'].append(makeSampleId(fname, len(thisData['y'])))
+
+                    for key in thisData.keys():
+                        value = thisData[key]
+
+                        if key != 'genDR':
+                            if key.startswith('X/'):
+                                if not recHitsAdded:
+                                    # we only support sparse format here
+                                    addSparseRecHits(allData, thisData)
+                                    recHitsAdded = True
+                            elif key.startswith('tracks/'):
+                                if not tracksAdded and options.mergeTracks:
+                                    addTracks(allData, thisData)
+                                    tracksAdded = True
+                            else:
+                                # normal concatenation
+                                allData[key].append(thisData[key])
+
+                        # end if not genDR
+
+                    # end loop over all items in the dict
+                # end if not first
+
+            # end of loop over file names for this base name
+
+            #----------
+            # perform np.concatenate only at the end
+            #----------
+
+            for index, (key, value) in enumerate(allData.items()):
+                print "concatenating %d/%d" % (index + 1, len(allData))
+
+                assert isinstance(value,list),"item " + key + " is not of type list but " + str(value.__class__)
+
+                allData[key] = np.concatenate(value)
+
+            #----------
+            # check firstIndex values after merging if requested
+            #----------
+            if options.checkFirstIndex:
+                if allData.has_key('X/firstIndex'):
+                    recHitsOk = checkFirstIndex(allData['X/firstIndex'], allData['X/numRecHits'])
+                    print "recHitsOk:",recHitsOk
+                else:
+                    recHitsOk = True
+
+                if allData.has_key('tracks/firstIndex'):
+                    tracksOk = checkFirstIndex(allData['tracks/firstIndex'], allData['tracks/numTracks'])
+                    print "tracksOk:",tracksOk
+                else:
+                    tracksOk = True
+
+                if not (recHitsOk and tracksOk):
+                    print >> sys.stderr,"at least one firstIndex varible is incorrect, exiting"
+                    sys.exit(1)
+
+            #----------
+            # write out
+            #----------
+            print "writing",outputFname,"(",len(allData['y']),"photons )"
+
+            # it looks like **kwds is able to deal with slashes in the key names of the dict...
+            np.savez(outputFname, **allData)
+
+        # end of looping over base names (processes)
+
+    # end of loop over barrel/endcap
 
