@@ -152,7 +152,7 @@ class TrackHistograms2d:
         # as an argument and must return a tuple (deta, dphi) of the
         # track w.r.t the photon
 
-        # trackFilter must be a function taking (dataset, index) as arguments
+        # trackFilter must be a function taking (dataset, photonIndex, trackIndex) as arguments
         # and return True if a track should be added to this histogram
 
         batchSize = len(rowIndices)
@@ -189,7 +189,7 @@ class TrackHistograms2d:
                 # apply track filter if given
                 #----------
                 if trackFilter != None:
-                    if not trackFilter(dataset, index):
+                    if not trackFilter(dataset, rowIndex, index):
                         continue
 
                 #----------

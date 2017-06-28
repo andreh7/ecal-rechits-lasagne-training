@@ -100,7 +100,7 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
                                        dataset['tracks']['detaAtVertex'][trackIndex], dataset['tracks']['dphiAtVertex'][trackIndex]
                                        ),
 
-                                 trackFilter = lambda dataset, index: abs(dataset['tracks']['vtxDz'][index]) < maxVertexDist,
+                                 trackFilter = lambda dataset, photonIndex, index: abs(dataset['tracks']['vtxDz'][index]) < maxVertexDist,
 
                                  ),
 
@@ -111,7 +111,7 @@ def makeInput(dataset, rowIndices, inputDataIsSparse):
                                        dataset['tracks']['detaAtVertex'][trackIndex], dataset['tracks']['dphiAtVertex'][trackIndex]
                                        ),
 
-                                 trackFilter = lambda dataset, index: abs(dataset['tracks']['vtxDz'][index]) >= maxVertexDist),
+                                 trackFilter = lambda dataset, photonIndex, index: abs(dataset['tracks']['vtxDz'][index]) >= maxVertexDist),
 
         ]
 
