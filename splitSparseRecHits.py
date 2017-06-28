@@ -139,21 +139,19 @@ def makeOutputDataTracks(indices, inputData, outputData):
     # and 'numTracks'
     otherVarNames = []
   
-    for key, value in inputData.keys():
+    for key in inputData.keys():
         if not key.startswith("tracks/"):
             continue
 
-        if key == 'tracks/firstIndex' or key == 'tracks/numTracks':
-            outputData['key'] = -1 * np.ones(numOutputRows, dtype = 'int32')
-    
-        elif key == 'tracks/charge':
-            # normal int variables
-            outputData[key] = -1 * np.ones(numOutputTracks, dtype = 'int32')
-            otherVarNames.append(key)
-    
+        if key == 'tracks/firstIndex':
+            # make sure we have int type here
+            outputData[key] = -1 * np.ones(numOutputRows, dtype = 'int32')
+        elif key == 'tracks/numTracks':
+            # we can just copy this one, filtering by indices
+            outputData[key] = inputData[key][indices]
         else:
-          # assume it's a float vector
-          outputData[key] = -1 * np.ones(numOutputTracks, dtype = 'float32')
+          # take the input dtype for the output
+          outputData[key] = -1 * np.ones(numOutputTracks, dtype = inputData[key].dtype)
     
           otherVarNames.append(key)
 
@@ -166,46 +164,80 @@ def makeOutputDataTracks(indices, inputData, outputData):
     # to avoid dict/npz file lookups within the loop
     inputDataNumTracks   = inputData['tracks/numTracks']
     inputDataFirstIndex  = inputData['tracks/firstIndex']
-    inputDataRelpt       = inputData['tracks/relpt']
 
+    outputDataNumTracks  = outputData['tracks/numTracks']
     outputDataFirstIndex = outputData['tracks/firstIndex']
-    
+
+    #----------
+    # calculate tracks/firstIndex
+    # and mapping from input to output index ranges for other variables
+    #----------
+
+    inputRanges  = [ None ] * numOutputRows
+    outputRanges = [ None ] * numOutputRows
 
     for i in range(numOutputRows):
-  
         index = indices[i]
     
         outputDataFirstIndex[i] = firstIndex
-        outputDataNumTracks[i]  = inputDataNumTracks[index]
-    
-        # sanity check of input data
-        assert inputDataFirstIndex[index] >= 1
-        assert inputDataFirstIndex[index] + inputDataNumTracks[index] - 1 <= len(inputDataRelpt), "failed at index=" + str(index)
-    
-        baseInputIndex = inputDatafirstIndex[index] - 1
-    
-        for j in range(inputDataNumTracks)[index]:
-            # copy per track variables over
-      
-            for varname in otherVarNames:
-                outputData[varname][firstIndex] = inputData.tracks[varname][baseInputIndex + j] 
-      
-            firstIndex += 1
-    
-        # end -- loop over tracks of this photon
+
+        # note we need to subtract one from both output but
+        # also from the input indices 
+        inputRanges[i] = slice(inputDataFirstIndex[index] - 1,
+                               inputDataFirstIndex[index] - 1 + inputDataNumTracks[index])
+                               
+        outputRanges[i] = slice(firstIndex - 1,
+                                firstIndex - 1 + inputDataNumTracks[index])
+
+        # prepare next iteration
+        firstIndex += inputDataNumTracks[index]
+
+    #----------
+    # other variables (which need no adjustment like the firstIndex variable)
+    #
+    # outer loop is on variables so we can avoid repetitive lookups
+    # by variable name
+    #----------
+
+    for key in inputData.keys():
+        if not key.startswith("tracks/"):
+            continue
+
+        if key in ('tracks/firstIndex', 'tracks/numTracks'):
+            continue
+        
+        inputVec  = inputData[key]
+        outputVec = outputData[key]
+
+        for inputRange, outputRange in zip(inputRanges, outputRanges):
+            outputVec[outputRange] = inputVec[inputRange]
+
+        # end of loop over photons
   
-    # end -- loop over photons
+    # end of loop over variables
 
 #----------------------------------------------------------------------
 
-def makeOutputData(indices, inputData):
+def makeOutputData(indices, inputData, checkFirstIndex = True):
 
     # copy everything except the rechits
     outputData = makeOutputVar(inputData, indices, [ 'X/*', 'tracks/*' ])
   
     makeOutputDataRecHits(indices, inputData, outputData)
-    # makeOutputDataTracks(indices, inputData, outputData)
-  
+
+    import mergeRecHits
+    
+    if checkFirstIndex:
+        isOk = mergeRecHits.checkFirstIndex(outputData['X/firstIndex'], outputData['X/numRecHits'])
+        assert isOk, "internal error with rechits firstIndex"
+
+    if 'tracks/numTracks' in inputData:
+        makeOutputDataTracks(indices, inputData, outputData)
+
+        if checkFirstIndex:
+            isOk = mergeRecHits.checkFirstIndex(outputData['tracks/firstIndex'], outputData['tracks/numTracks'])
+            assert isOk, "internal error with tracks firstIndex"
+
     return outputData
 
 #----------------------------------------------------------------------
