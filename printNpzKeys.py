@@ -14,7 +14,9 @@ fname = ARGV.pop(0)
 
 data = np.load(fname)
 
-pprint(sorted(data.keys()))
+
+for key in sorted(data.keys()):
+    print "%-40s:" % key,data[key].shape
 
 
 
