@@ -201,4 +201,8 @@ varImportances = sum(varImportances)
 varImportances = np.sqrt(varImportances)
 varImportances /= varImportances.sum()
 
-print "varImportances=",varImportances
+# print "varImportances=",varImportances
+
+# print by decreasing order of importance
+for index in np.argsort(varImportances)[::-1]:
+    print "%-20s: %.3e" % (varnames[index], varImportances[index])
