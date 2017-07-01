@@ -8,7 +8,7 @@ trainDir = "finished-results/2017-03-20-145015"
 
 # is the variable importance in the log file determined 
 # from the test or training set ?
-treeName = "TestTree"
+treeName = "TrainTree"
 
 outputVarname = "BDT"
 
