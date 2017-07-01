@@ -14,11 +14,16 @@ treeName = "TestTree"
 
 outputVarname = "BDT"
 
+# maximum number of parallel processes
+numProcesses = 24
+
 # maximum background efficiency / false positive rate to allow
 
 #----------------------------------------------------------------------
 
 import numpy as np
+import multiprocessing
+
 
 def readTree(tree, varnames, dtype = 'float32'):
 
@@ -167,31 +172,64 @@ numTrees = int(next(xmlroot.iter("Weights")).attrib['NTrees'])
 # for gradient boosting, all tree weights are the same (one)
 # treeWeights = np.array(numTrees, dtype = 'float32')
 
-varImportances = []
-
 import tqdm
 progbar = tqdm.tqdm(total = numTrees, mininterval = 1.0, unit = 'trees')
 
+#----------
 
-for treeIndex, treeNode in enumerate(xmlroot.iter("BinaryTree")):
+treeRoots = []
 
-    # use individual vectors to reduce roundoff errors during
-    # summing
-    thisVarImportances = np.zeros(numVars, dtype = 'float64')
-
+for treeNode in xmlroot.iter("BinaryTree"):
     treeRoot = [ node for node in treeNode if node.tag == 'Node' ]
     assert len(treeRoot) == 1
     treeRoot = treeRoot[0]
-
-    # update the variable importance
-    # (note that the weights are all equal so we can directly add to the final variable)
-    singleTreeVariableImportances(treeRoot, thisVarImportances, weights, labels, inputValues, giniSeparation)
     
-    varImportances.append(thisVarImportances)
+    treeRoots.append(treeRoot)
 
+completionQueue = multiprocessing.Queue()
+
+#----------
+
+def helper(args):
+    # use individual vectors to reduce roundoff errors during
+    # summing and to allow to run this in parallel
+    
+    treeRoot = args
+
+    thisVarImportances = np.zeros(numVars, dtype = 'float64')
+    
+    singleTreeVariableImportances(treeRoot, thisVarImportances, weights, labels, inputValues, giniSeparation)        
+
+    completionQueue.put(1)
+
+    return thisVarImportances
+
+#----------
+
+workerPool = multiprocessing.Pool(processes = numProcesses) 
+
+
+result = workerPool.map_async(helper,
+                              treeRoots,
+                              )
+
+
+# update progress bar whenever a task finishes
+numRemaining = len(treeRoots)
+while numRemaining > 0:
+    completionQueue.get()
     progbar.update()
 
+    numRemaining -= 1
+
 # end of loop over trees
+workerPool.close()
+workerPool.join()
+
+varImportances = result.get()
+
+
+
 progbar.close()
 
 
