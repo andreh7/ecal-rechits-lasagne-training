@@ -4,9 +4,7 @@
 # of the sample or scan vs. the false positive (background
 # efficiency) rate
 
-weightsFile = "finished-results/2017-03-20-145015/TMVAClassification_BDT.weights.xml"
-
-rootTupleFile = "finished-results/2017-03-20-145015/tmva.root"
+trainDir = "finished-results/2017-03-20-145015"
 
 # is the variable importance in the log file determined 
 # from the test or training set ?
@@ -18,6 +16,13 @@ outputVarname = "BDT"
 numProcesses = 24
 
 # maximum background efficiency / false positive rate to allow
+
+#----------------------------------------------------------------------
+
+import os
+
+weightsFile = os.path.join(trainDir, "TMVAClassification_BDT.weights.xml")
+rootTupleFile = os.path.join(trainDir, "tmva.root")
 
 #----------------------------------------------------------------------
 
