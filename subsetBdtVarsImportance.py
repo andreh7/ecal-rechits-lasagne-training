@@ -178,7 +178,7 @@ numTrees = int(next(xmlroot.iter("Weights")).attrib['NTrees'])
 # treeWeights = np.array(numTrees, dtype = 'float32')
 
 import tqdm
-progbar = tqdm.tqdm(total = numTrees, mininterval = 1.0, unit = 'trees')
+progbar = tqdm.tqdm(total = numTrees, unit = 'trees')
 
 #----------
 
