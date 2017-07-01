@@ -105,14 +105,6 @@ def writeTree(fout, nodeNamePrefix, xmlNode, varnames):
             purity = float(xmlNode.attrib['purity'])
             res = float(xmlNode.attrib['res'])
 
-            # because we have UseYesNoLeaf == True, evaluation of a single tree
-            # is by calling leaf node -> GetNodeType()
-            # see https://github.com/root-project/root/blob/51a90f7caad83c849b2e396adbe63f090b9d4a39/tmva/tmva/src/DecisionTree.cxx#L1720
-            #
-            # however, from empirical tests, it looks like the value which
-            # is returned is basically the value in 'res' (even though
-            # some of the trailing digits are different in the ROOT tree
-            # and in the xml file)
 
             labels.append('purity=%f' % purity)
             labels.append('res=%f' % res)
@@ -122,6 +114,19 @@ def writeTree(fout, nodeNamePrefix, xmlNode, varnames):
             attrs['label'] = '"%s"' % "\\n".join(labels)
         else:
             attrs['label'] = '""'
+            # for gradient boosting, the output is transformed with a tanh 
+            # after calling CheckEvent(..) on each tree (in method TMVA::MethodBDT::GetGradBoostMVA())
+            # see https://github.com/root-project/root/blob/v6-06-00-patches/tmva/tmva/src/MethodBDT.cxx#L1352
+            # 
+            # GetGradBoostMVA() is called from  TMVA::MethodBDT::PrivateGetMvaValue() for gradient boosted classifiers
+            # see https://github.com/root-project/root/blob/4cac5a12f98eebc39e9b9888ab6b11b40cddf09d/tmva/tmva/src/MethodBDT.cxx#L2359
+            # 
+            # which in turn is called from TMVA::MethodBDT::GetMvaValue()
+            # see e.g. https://github.com/root-project/root/blob/3c842ce20edc9bd72dbd40f1e7b071d6f49e4170/tmva/tmva/src/MethodBDT.cxx#L2332
+
+            # note that even though if UseYesNoLeaf is set to True in MethodBDT, MethodBDT::GetGradBoostMVA() calls
+            # DecisionTree::CheckEvent() with UseYesNoLeaf hardwired to kFALSE
+            # see https://github.com/root-project/root/blob/3c842ce20edc9bd72dbd40f1e7b071d6f49e4170/tmva/tmva/src/MethodBDT.cxx#L1416
 
         #----------
         print >> fout, nodeName,"[",
@@ -160,12 +165,6 @@ xmlroot = xmldoc.getroot()
 # TODO: we should check from the XML file
 
 varnames = [ node.attrib['Label'] for node in xmlroot.iter('Variable') ]
-
-#----------
-# this influences how the tree is evaluated
-# see https://github.com/root-project/root/blob/51a90f7caad83c849b2e396adbe63f090b9d4a39/tmva/tmva/src/DecisionTree.cxx#L1720
-trainOptions = getTrainOptions(xmlroot)
-assert trainOptions['UseYesNoLeaf']['value'] == 'True'
 
 #----------
 
