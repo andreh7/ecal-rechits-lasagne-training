@@ -4,8 +4,6 @@
 # of the sample or scan vs. the false positive (background
 # efficiency) rate
 
-trainDir = "finished-results/2017-03-20-145015"
-
 # is the variable importance in the log file determined 
 # from the test or training set ?
 treeName = "TrainTree"
@@ -19,13 +17,7 @@ numProcesses = 24
 
 #----------------------------------------------------------------------
 
-import os
-
-weightsFile = os.path.join(trainDir, "TMVAClassification_BDT.weights.xml")
-rootTupleFile = os.path.join(trainDir, "tmva.root")
-
-#----------------------------------------------------------------------
-
+import os, sys
 import numpy as np
 import multiprocessing
 
@@ -121,6 +113,13 @@ def giniSeparation(sumSig, sumBkg):
 # main
 #----------------------------------------------------------------------
 
+ARGV = sys.argv[1:]
+assert len(ARGV) == 1
+
+trainDir = ARGV.pop(0)
+
+weightsFile = os.path.join(trainDir, "TMVAClassification_BDT.weights.xml")
+rootTupleFile = os.path.join(trainDir, "tmva.root")
 
 #----------------------------------------
 
