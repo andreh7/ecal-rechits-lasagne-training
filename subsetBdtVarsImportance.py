@@ -121,7 +121,6 @@ def giniSeparation(sumSig, sumBkg):
 # main
 #----------------------------------------------------------------------
 
-# TODO: we should check from the XML file
 
 #----------------------------------------
 
@@ -137,6 +136,8 @@ xmlroot = xmldoc.getroot()
 # get the variable names from the BDT file
 #----------
 # assume the variables are ordered by their index
+# TODO: we should check from the XML file
+
 varnames = [ node.attrib['Label'] for node in xmlroot.iter('Variable') ]
 
 numVars = len(varnames)
