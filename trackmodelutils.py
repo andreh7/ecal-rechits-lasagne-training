@@ -2,13 +2,7 @@
 
 import math
 
-from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer, DropoutLayer, ReshapeLayer, ConcatLayer
-from lasagne.init import GlorotUniform
-import lasagne.layers
-
 import numpy as np
-
-from lasagne.nonlinearities import rectify, softmax
 
 #----------------------------------------------------------------------
 
@@ -237,6 +231,9 @@ def makeRadialTracksHistogramModel(input_var):
     # bin is also included
     width = len(trkBinningDr) - 1
 
+    from lasagne.layers import InputLayer, DenseLayer
+    from lasagne.init import GlorotUniform
+
     network = InputLayer(shape=(None, width),
                          input_var = input_var
                          )
@@ -246,6 +243,8 @@ def makeRadialTracksHistogramModel(input_var):
 
     numHiddenLayers = 3
     nodesPerHiddenLayer = width * 2
+
+    from lasagne.nonlinearities import rectify
 
     for i in range(numHiddenLayers):
 
@@ -279,6 +278,9 @@ def make2DTracksHistogramModel(input_var):
     # subtract one because the binning arrays include the last upper edge
     width  = len(trkBinningDeta) - 1
     height = len(trkBinningDphi) - 1
+
+    from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer, DropoutLayer, ReshapeLayer
+    from lasagne.init import GlorotUniform
 
     # 2D convolution layers require a dimension for the input channels
     network = InputLayer(shape=(None, 1, width, height),
@@ -323,6 +325,7 @@ def make2DTracksHistogramModel(input_var):
     # stage 3 : standard 2-layer neural network
     #----------
 
+    import lasagne.layers
     thisShape = lasagne.layers.get_output_shape(network,
                                                            (1, 1, width, height))
     print "output shape=", thisShape
