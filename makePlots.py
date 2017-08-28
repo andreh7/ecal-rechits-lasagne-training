@@ -34,6 +34,13 @@ parser.add_argument('--tmva',
                     help='make plots for TMVA trainings',
                     )
 
+parser.add_argument("--min-epoch",
+                    dest = 'minEpoch',
+                    type = int,
+                    default = None,
+                    help="first epoch to plot (useful e.g. if the training was far off at the beginning)",
+                    )
+
 parser.add_argument("--max-epoch",
                     dest = 'maxEpoch',
                     type = int,
@@ -56,6 +63,10 @@ if options.tmva:
         print >> sys.stderr,"--legend-loc is not supported with --tmva"
         sys.exit(1)
     
+    if not options.minEpoch is None:
+        print >> sys.stderr,"--min-epoch is not supported with --tmva"
+        sys.exit(1)
+
     if not options.maxEpoch is None:
         print >> sys.stderr,"--max-epoch is not supported with --tmva"
         sys.exit(1)
@@ -70,6 +81,9 @@ for theDir in options.dirs:
     else:
         cmdParts.append("./plotROCs.py")
         cmdParts.append("--both")
+
+    if not options.minEpoch is None:
+        cmdParts.append("--min-epoch " + str(options.minEpoch))
 
     if not options.maxEpoch is None:
         cmdParts.append("--max-epoch " + str(options.maxEpoch))

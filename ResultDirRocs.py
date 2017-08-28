@@ -33,10 +33,12 @@ class ResultDirRocs:
     """ caches ROC values from a result directory """
     #----------------------------------------
 
-    def __init__(self, resultDirData, maxEpoch = None, excludedEpochs = None,
+    def __init__(self, resultDirData, minEpoch = None, maxEpoch = None, 
+                 excludedEpochs = None,
                  maxNumThreads = 8):
         # to keep weights
         self.resultDirData = resultDirData
+        self.minEpoch = minEpoch
         self.maxEpoch = maxEpoch
         self.excludedEpochs = excludedEpochs
 
@@ -123,7 +125,7 @@ class ResultDirRocs:
                 epoch = int(mo.group(2), 10)
                 isTrain = sampleType == 'train'
 
-                if self.maxEpoch == None or epoch <= self.maxEpoch:
+                if (self.minEpoch == None or epoch >= self.minEpoch) and (self.maxEpoch == None or epoch <= self.maxEpoch):
                     if self.excludedEpochs == None or not epoch in self.excludedEpochs:
 
                         if rocValues[sampleType].has_key(epoch):

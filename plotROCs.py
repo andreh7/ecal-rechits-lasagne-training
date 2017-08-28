@@ -413,6 +413,13 @@ if __name__ == '__main__':
                       help="do not look at train values",
                       )
 
+    parser.add_option("--min-epoch",
+                      dest = 'minEpoch',
+                      type = int,
+                      default = None,
+                      help="first epoch to plot (useful e.g. if the training was far off at the beginning)",
+                      )
+
     parser.add_option("--max-epoch",
                       dest = 'maxEpoch',
                       type = int,
@@ -471,6 +478,7 @@ if __name__ == '__main__':
 
     from ResultDirRocs import ResultDirRocs
     resultDirRocs = ResultDirRocs(resultDirData,
+                                  minEpoch = options.minEpoch,
                                   maxEpoch = options.maxEpoch,
                                   excludedEpochs = options.excludedEpochs)
 

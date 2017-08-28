@@ -88,6 +88,7 @@ if __name__ == '__main__':
 
     from ResultDirRocs import ResultDirRocs
     resultDirRocs = ResultDirRocs(resultDirData,
+                                  minEpoch = options.minEpoch,
                                   maxEpoch = options.maxEpoch)
 
     doPlot(resultDirRocs)
