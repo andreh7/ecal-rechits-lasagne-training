@@ -10,6 +10,8 @@ from Timer import Timer
 
 sys.path.append(os.path.expanduser("~/torchio")); import torchio
 
+customBDTcodeDir = os.path.expanduser("~/root-bdt")
+
 #----------------------------------------------------------------------
 # main
 #----------------------------------------------------------------------
@@ -39,6 +41,13 @@ parser.add_argument('--param',
                     default = [],
                     help='additional python to be evaluated after reading model and dataset file. Can be used to change some parameters. Option can be specified multiple times.',
                     action = 'append',
+                    )
+
+parser.add_argument('--custom-bdt-code',
+                    dest = "customBDTcode",
+                    default = False,
+                    action = 'store_true',
+                    help='use our own custom BDT code',
                     )
 
 
@@ -299,7 +308,15 @@ factory.PrepareTrainingAndTestTree(ROOT.TCut(""),
 # run training with TMVA
 #----------
 
-method = factory.BookMethod(ROOT.TMVA.Types.kBDT, "BDT",
+if options.customBDTcode:
+    methodId = "BDT2"
+    # if we do this immediately after import ROOT, we'll get a crash
+    # so do it here (as late as possible) for the moment
+    ROOT.gSystem.Load(os.path.join(customBDTcodeDir,"libMethodBDT2.so"));
+else:
+    methodId = ROOT.TMVA.Types.kBDT
+
+method = factory.BookMethod(methodId, "BDT",
                    ":".join([
             "!V",
             "VerbosityLevel=Default",
