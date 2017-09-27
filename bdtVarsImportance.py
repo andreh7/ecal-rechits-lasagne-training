@@ -60,6 +60,30 @@ def commandPartsBuilderNN(useCPU,
 
 #----------------------------------------------------------------------
 
+def commandPartsBuilderBDT(useCPU,
+                           gpuindex,
+                           memFraction,
+                           dataSetFileName,
+                           modelFname,
+                           maxEpochs,
+                           outputDir,
+                           additionalOptions,
+                           ):
+    # returns a list of command parts for running neural network trainings
+    cmdParts = []
+
+    cmdParts.extend([
+        "./train-tmva.py",
+
+        # put the dataset specification file first 
+        # so that we know the selected variables
+        # at the time we build the model
+        dataSetFileName,
+        modelFname,
+        "--output-dir " + outputDir,
+        ])
+
+    return cmdParts
 
 #----------------------------------------------------------------------
 
