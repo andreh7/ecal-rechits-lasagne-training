@@ -29,8 +29,7 @@ for treeName in [ 'TrainTree', 'TestTree' ]:
         fin = ROOT.TFile(fname)
         assert fin.IsOpen()
 
-        # TODO: add train tree
-        tree = fin.Get("TestTree")
+        tree = fin.Get(treeName)
 
         tree.SetEstimate(tree.GetEntries())
 
