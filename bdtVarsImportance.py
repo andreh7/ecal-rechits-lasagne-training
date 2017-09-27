@@ -5,8 +5,12 @@ import numpy as np
 
 import bdtvarsimportanceutils
 
+# use -1 for the CPU
+DEVICE_CPU = -1
 
 maxJobsPerGPU = {
+    DEVICE_CPU: 4,
+
     0: 3,
     1: 3,
     }
