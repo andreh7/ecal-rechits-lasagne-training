@@ -56,7 +56,7 @@ def commandPartsBuilderNN(useCPU,
         "--output-dir " + outputDir,
         ])
 
-    return cmdParts
+    return cmdParts, None
 
 #----------------------------------------------------------------------
 
@@ -83,7 +83,9 @@ def commandPartsBuilderBDT(useCPU,
         "--output-dir " + outputDir,
         ])
 
-    return cmdParts
+    logFile = os.path.join(outputDir, "tmva-training.log")
+    
+    return cmdParts, logFile
 
 #----------------------------------------------------------------------
 
@@ -156,7 +158,7 @@ class TrainingRunner(threading.Thread):
         #----------
 
         # build the command to be run
-        cmdParts = self.commandPartsBuilder(
+        cmdParts, logFileName = self.commandPartsBuilder(
             useCPU          = self.useCPU,
             gpuindex        = self.gpuindex,
             memFraction     = self.memFraction,
@@ -168,9 +170,22 @@ class TrainingRunner(threading.Thread):
 
         cmdParts.extend(additionalOptions)
 
+        #----------
+        # start the subprocess
+        #----------
+        import subprocess
+
         cmd = " ".join(cmdParts)
 
-        res = os.system(cmd)
+        if logFileName != None:
+            fout = open(logFileName, "w")
+        else:
+            fout = None
+
+        res = subprocess.call(cmdParts, stdout = fout, stderr = fout)
+
+        # TODO: is this really needed ?
+        fout.close()
 
         if res != 0:
             print "failed to run",cmd
