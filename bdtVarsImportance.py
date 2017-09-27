@@ -19,13 +19,57 @@ additionalOptions = [
     ]
 
 
+#----------------------------------------------------------------------
+
+def commandPartsBuilderNN(useCPU,
+                          gpuindex,
+                          memFraction,
+                          dataSetFileName,
+                          modelFname,
+                          maxEpochs,
+                          outputDir,
+                          ):
+    # returns a list of command parts for running neural network trainings
+    cmdParts = []
+
+    cmdParts.append("./run-gpu.py")
+
+    if useCPU:
+        cmdParts.append("--gpu cpu")
+    else:
+        cmdParts.append("--gpu " + str(gpuindex))
+
+        if self.memFraction != None:
+            cmdParts.append("--memfrac %f" % memFraction)
+
+    cmdParts.append("--")
+
+    cmdParts.extend([
+        "train01.py",
+
+        # put the dataset specification file first 
+        # so that we know the selected variables
+        # at the time we build the model
+        dataSetFileName,
+        modelFname,
+        "--max-epochs " + str(maxEpochs),
+        "--output-dir " + outputDir,
+        ])
+
+    return cmdParts
+
+#----------------------------------------------------------------------
+
+
+#----------------------------------------------------------------------
+
 import threading
 
 class TrainingRunner(threading.Thread):
 
     #----------------------------------------
 
-    def __init__(self, outputDir, varnames, excludedVar, useCPU, fomFunction):
+    def __init__(self, outputDir, varnames, excludedVar, useCPU, fomFunction, commandPartsBuilder):
 
         threading.Thread.__init__(self)
 
@@ -36,6 +80,8 @@ class TrainingRunner(threading.Thread):
 
         # make a copy to be safe
         self.varnames = list(varnames)
+
+        self.commandPartsBuilder = commandPartsBuilder
 
     #----------------------------------------
 
@@ -85,31 +131,16 @@ class TrainingRunner(threading.Thread):
 
         #----------
 
-        cmdParts = []
-
-        cmdParts.append("./run-gpu.py")
-
-        if self.useCPU:
-            cmdParts.append("--gpu cpu")
-        else:
-            cmdParts.append("--gpu " + str(self.gpuindex))
-
-            if self.memFraction != None:
-                cmdParts.append("--memfrac %f" % self.memFraction)
-
-        cmdParts.append("--")
-
-        cmdParts.extend([
-            "train01.py",
-
-            # put the dataset specification file first 
-            # so that we know the selected variables
-            # at the time we build the model
-            dataSetFile.name,
-            modelFname,
-            "--max-epochs " + str(maxEpochs),
-            "--output-dir " + self.outputDir,
-            ])
+        # build the command to be run
+        cmdParts = self.commandPartsBuilder(
+            useCPU          = self.useCPU,
+            gpuindex        = self.gpuindex,
+            memFraction     = self.memFraction,
+            dataSetFileName = dataSetFile.name,
+            modelFname      = modelFname,
+            maxEpochs       = maxEpochs,
+            outputDir       = self.outputDir,
+            )
 
         cmdParts.extend(additionalOptions)
 
@@ -395,7 +426,7 @@ if __name__ == '__main__':
 
     # run the training if we don't have the result yet
     if aucData.getOverallAUC() == None:
-        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction)], options.useCPU)
+        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction, commandPartsRunner)], options.useCPU)
     else:
         # take from the existing directory
         thisResults = [ dict(testAUC = aucData.getOverallAUC(),
@@ -434,7 +465,7 @@ if __name__ == '__main__':
             if aucData.getAUC(thisVars) == None:
                 # we need to run this
                 tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded], options.useCPU,
-                                            options.fomFunction))
+                                            options.fomFunction, commandPartsRunner))
             else:
                 thisResults.append(dict(testAUC = aucData.getAUC(thisVars),
                                         varnames = thisVars,
