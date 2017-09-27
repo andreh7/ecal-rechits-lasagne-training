@@ -129,102 +129,135 @@ class TrainingRunner(threading.Thread):
 
 #----------------------------------------------------------------------
 
-def runTasks(threads, useCPU):
-    # runs the given list of tasks on the GPUs and returns
-    # when all have finished
+class TasksRunner:
 
-    assert len(threads) > 0
+    #----------------------------------------
 
-    threads = list(threads)
+    def __init__(self, useCPU):
 
-    import Queue as queue
-    completionQueue = queue.Queue()
+        self.useCPU = useCPU
 
-    # maps from GPU number to number of tasks running there
-    numThreadsRunning = {}
+        # maps from GPU number (-1 for CPU) to number of tasks running there
+        self.numThreadsRunning = {}
+        
+        for device in maxJobsPerGPU.keys():
+            # when useCPU is True, do not
+            # count slots for GPUs
+            if not self.useCPU or device >= 0:
+                self.numThreadsRunning[device] = 0
 
-    for gpu in maxJobsPerGPU.keys():
-        numThreadsRunning[gpu] = 0
+    #----------------------------------------
 
-    #----------
-    taskIndex = 0 # for assigning results
+    def findUnusedDevice(self):
+        # @return the device id of the device with the highest
+        # number of unused slots (>=0 is GPU, -1 is CPU)
+        # or None if all slots are busy
 
-    completedTasks = 0
+        unusedSlots = [ 
+            (maxJobsPerGPU[device] - self.numThreadsRunning[device], device)
+            for device in sorted(self.numThreadsRunning.keys()) ]
+        
 
-    results = [ None ] * len(threads)
+        maxUnusedSlots, maxUnusedDevice = max(unusedSlots)
 
-    while completedTasks < len(results):
+        if maxUnusedSlots > 0:
+            return maxUnusedDevice
+        else:
+            return None
 
-        # (re)fill queues if necessary
+    #----------------------------------------
 
-        # distribute jobs equally over GPUs
+    def __setGPUmemFraction(self, task):
+        if self.useCPU:
+            return
 
-        # find how many jobs could be started for each GPU
-        # do not limit threads when running on CPUs
-        while threads:
+        # reduce by some margin, otherwise jobs will not start
+        memMargin = 0.9
+        if task.excludedVar == None:
+            # this is the first (sole) run, use all possible memory 
+            # of one GPU
+            task.setGPUmemFraction(1.0 * memMargin)
+        else:
+            task.setGPUmemFraction(1.0 / float(maxJobsPerGPU[task.gpuindex]) * memMargin)
 
-            # the task to start
-            task = None
+    #----------------------------------------
 
-            if useCPU:
-                # we consider to have unlimited amount of CPU cores
-                task = threads.pop(0)
-            else:
-                # running on GPU, check if we have a slot free
-                unusedSlots = [ 
-                    (maxJobsPerGPU[gpu] - numThreadsRunning[gpu], gpu)
-                    for gpu in sorted(numThreadsRunning.keys()) ]
+    def runTasks(self, threads):
 
-                maxUnusedSlots, maxUnusedGpu = max(unusedSlots)
+        # runs the given list of tasks on the GPUs and returns
+        # when all have finished
 
-                if maxUnusedSlots > 0:
-                    assert numThreadsRunning[maxUnusedGpu] < maxJobsPerGPU[maxUnusedGpu]
-                    task = threads.pop(0)
-                    task.setGPU(maxUnusedGpu)
+        assert len(threads) > 0
+
+        # make a copy
+        self.threads = list(threads)
+
+        import Queue as queue
+        completionQueue = queue.Queue()
+
+
+        #----------
+        taskIndex = 0 # for assigning results
+
+        completedTasks = 0
+
+        results = [ None ] * len(self.threads)
+
+        while completedTasks < len(results):
+
+            # (re)fill queues if necessary
+
+            # distribute jobs equally over GPUs
+
+            # find how many jobs could be started for each GPU
+            # do not limit threads when running on CPUs
+            while self.threads:
+
+                # the task to start
+                task = None
+
+                # check if we have a slot free
+                maxUnusedDevice = self.findUnusedDevice()
+
+                if maxUnusedDevice is not None:
+
+                    assert self.numThreadsRunning[maxUnusedDevice] < maxJobsPerGPU[maxUnusedDevice]
+                    task = self.threads.pop(0)
+                    task.setGPU(maxUnusedDevice)
 
                     # set fraction of GPU memory to use
-                    # reduce by some margin, otherwise jobs will not start
-                    memMargin = 0.9
-                    if task.excludedVar == None:
-                        # this is the first (sole) run, use all possible memory 
-                        # of one GPU
-                        task.setGPUmemFraction(1.0 * memMargin)
+                    self.__setGPUmemFraction(task)
+                    
+                    task.setIndex(taskIndex)
+                    taskIndex += 1
+
+                    task.setCompletionQueue(completionQueue)
+
+                    self.numThreadsRunning[task.gpuindex] += 1
+
+                    if useCPU:
+                        print "STARTING ON CPU"
                     else:
-                        task.setGPUmemFraction(1.0 / float(maxJobsPerGPU[maxUnusedGpu]) * memMargin)
+                        print "STARTING ON GPU",task.gpuindex
 
-            if task != None:
-                task.setIndex(taskIndex)
-                taskIndex += 1
-
-                task.setCompletionQueue(completionQueue)
-
-                if useCPU:
-                    print "STARTING ON CPU"
+                    task.start()
                 else:
-                    numThreadsRunning[maxUnusedGpu] += 1
-                    print "STARTING ON GPU",maxUnusedGpu
+                    # wait until a task completes
+                    break
 
-                task.start()
-            else:
-                # wait until a task completes
-                break
+            # wait for any task to complete
+            thread, thisResult = completionQueue.get()
 
-        # wait for any task to complete
-        thread, thisResult = completionQueue.get()
+            # 'free' a slot on this gpu/cpu
+            self.numThreadsRunning[thread.gpuindex] -= 1
 
-        # 'free' a slot on this gpu
-        if not useCPU:
-            numThreadsRunning[thread.gpuindex] -= 1
+            results[thread.taskIndex] = thisResult
 
-        results[thread.taskIndex] = thisResult
+            completedTasks += 1
 
-        completedTasks += 1
+        # end while non completed tasks
 
-    # end while non completed tasks
-        
-    return results
-
-
+        return results
 
 #----------------------------------------------------------------------
 # main
