@@ -11,21 +11,7 @@ maxJobsPerGPU = {
     1: 3,
     }
 
-# maximum number of epochs for each training
-maxEpochs = 200
-
-# how many of the last epochs should be considered
-# for the figure of merit calculation ?
-windowSize = 10
-
-dataSetFname = "dataset14-bdt-inputvars.py"
-
-modelFname   = "model09-bdt-inputs.py"
-
 additionalOptions = [
-    "--param doPtEtaReweighting=True",
-    "--param sigToBkgFraction=1.0",
-    "--opt sgd",
     ]
 
 
@@ -269,7 +255,17 @@ if __name__ == '__main__':
 
     bdtvarsimportanceutils.fomAddOptions(parser)
 
+    parser.add_argument('configFile',
+                        metavar = "config.py",
+                        nargs = 1,
+                        help='configuration file'
+                        )
+
+
     options = parser.parse_args()
+
+    # read parameters for this particular model from the given configuration file
+    execfile(options.configFile)
 
     bdtvarsimportanceutils.fomGetSelectedFunction(options, maxEpochs)
 
