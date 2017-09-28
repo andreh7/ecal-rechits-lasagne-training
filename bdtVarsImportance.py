@@ -199,7 +199,8 @@ class TrainingRunner(threading.Thread):
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames,
-                      excludedVar = self.excludedVar)
+                      excludedVar = self.excludedVar,
+                      exitStatus = res)
         self.completionQueue.put((self,result))
 
 #----------------------------------------------------------------------
@@ -278,6 +279,11 @@ class TasksRunner:
 
         results = [ None ] * len(self.threads)
 
+        # this will be set to true if there is at least one
+        # failed task
+        drainQueues = False
+        numRunningTasks = 0
+
         while completedTasks < len(results):
 
             # (re)fill queues if necessary
@@ -316,6 +322,7 @@ class TasksRunner:
                         print "STARTING ON GPU",task.gpuindex
 
                     task.start()
+                    numRunningTasks += 1
                 else:
                     # wait until a task completes
                     break
@@ -329,6 +336,14 @@ class TasksRunner:
             results[thread.taskIndex] = thisResult
 
             completedTasks += 1
+            numRunningTasks -= 1
+
+            # check whether the task failed or not
+            if thisResult['exitStatus'] != 0:
+                drainQueues = True
+
+            if drainQueues and numRunningTasks == 0:
+                raise Exception("at least one task had non-zero exit status")
 
         # end while non completed tasks
 
