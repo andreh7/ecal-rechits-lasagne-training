@@ -195,7 +195,7 @@ class TrainingRunner(threading.Thread):
         #----------
         # get the results (testAUCs)
         #----------
-        testAUC = self.fomFunction(self.outputDir, windowSize)
+        testAUC = self.fomFunction(self.outputDir, windowSize, useBDT = False)
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames,
