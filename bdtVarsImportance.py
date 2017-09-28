@@ -67,7 +67,6 @@ def commandPartsBuilderBDT(useCPU,
                            modelFname,
                            maxEpochs,
                            outputDir,
-                           additionalOptions,
                            ):
     # returns a list of command parts for running neural network trainings
     cmdParts = []
