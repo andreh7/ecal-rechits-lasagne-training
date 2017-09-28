@@ -50,6 +50,13 @@ parser.add_argument('--custom-bdt-code',
                     help='use our own custom BDT code',
                     )
 
+parser.add_argument('--num-trees',
+                    dest = "numTrees",
+                    default = 2000,
+                    type = int,
+                    help='number of trees to train',
+                    )
+
 
 parser.add_argument('modelFile',
                     metavar = "modelFile.py",
@@ -324,7 +331,7 @@ method = factory.BookMethod(methodId, "BDT",
             "!H",
             "!CreateMVAPdfs",
             "!IgnoreNegWeightsInTraining",
-            "NTrees=2000",
+            "NTrees=%d" % options.numTrees,
             "MaxDepth=6",
             "MinNodeSize=5%",
             "nCuts=2000",
