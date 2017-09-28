@@ -466,7 +466,8 @@ if __name__ == '__main__':
 
     # run the training if we don't have the result yet
     if aucData.getOverallAUC() == None:
-        thisResults = runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction, commandPartsRunner)], options.useCPU)
+        tasksRunner = TasksRunner(options.useCPU)
+        thisResults = tasksRunner.runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction, commandPartsBuilder)])
     else:
         # take from the existing directory
         thisResults = [ dict(testAUC = aucData.getOverallAUC(),
@@ -505,7 +506,7 @@ if __name__ == '__main__':
             if aucData.getAUC(thisVars) == None:
                 # we need to run this
                 tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded], options.useCPU,
-                                            options.fomFunction, commandPartsRunner))
+                                            options.fomFunction, commandPartsBuilder))
             else:
                 thisResults.append(dict(testAUC = aucData.getAUC(thisVars),
                                         varnames = thisVars,
@@ -515,7 +516,8 @@ if __name__ == '__main__':
 
         # run the remaining trainings
         if tasks:
-            newResults =  runTasks(tasks, options.useCPU)
+            tasksRunner = TasksRunner(options.useCPU)
+            newResults =  tasksRunner.runTasks(tasks)
         else:
             newResults = [] 
 
