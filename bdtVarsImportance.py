@@ -372,7 +372,7 @@ if __name__ == '__main__':
     options = parser.parse_args()
 
     # read parameters for this particular model from the given configuration file
-    execfile(options.configFile)
+    execfile(options.configFile[0])
 
     bdtvarsimportanceutils.fomGetSelectedFunction(options, maxEpochs)
 
