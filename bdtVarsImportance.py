@@ -171,6 +171,18 @@ class TrainingRunner(threading.Thread):
 
         cmdParts.extend(additionalOptions)
 
+        # split command parts with spaces in them
+        # (otherwise the command line option parser
+        # of the called process will not regonize them, 
+        # see https://stackoverflow.com/questions/4091242 )
+
+        tmp = []
+        import shlex
+        for item in cmdParts:
+            tmp.extend(shlex.split(item))
+        
+        cmdParts = tmp
+
         #----------
         # start the subprocess
         #----------
