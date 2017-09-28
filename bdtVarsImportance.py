@@ -39,7 +39,7 @@ def commandPartsBuilderNN(useCPU,
     else:
         cmdParts.append("--gpu " + str(gpuindex))
 
-        if self.memFraction != None:
+        if memFraction != None:
             cmdParts.append("--memfrac %f" % memFraction)
 
     cmdParts.append("--")
@@ -108,6 +108,8 @@ class TrainingRunner(threading.Thread):
         self.varnames = list(varnames)
 
         self.commandPartsBuilder = commandPartsBuilder
+
+        self.memFraction = None
 
     #----------------------------------------
 
