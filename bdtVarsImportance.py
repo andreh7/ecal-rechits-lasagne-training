@@ -215,6 +215,10 @@ class TrainingRunner(threading.Thread):
         except Exception, ex:
             print "got exception when getting figure of merit:", str(ex)
 
+            # signal problem with calculating figure of merit
+            # (in this case we should also stop subsequent jobs)
+            res = 256
+
         result = dict(testAUC = testAUC,
                       varnames = self.varnames,
                       excludedVar = self.excludedVar,
