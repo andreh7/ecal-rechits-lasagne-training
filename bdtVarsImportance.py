@@ -194,8 +194,14 @@ class TrainingRunner(threading.Thread):
             print "successfully ran",cmd
         #----------
         # get the results (testAUCs)
+        # note that this may fail if the external command failed
         #----------
-        testAUC = self.fomFunction(self.outputDir, windowSize, useBDT = False)
+        testAUC = None
+
+        try:
+            testAUC = self.fomFunction(self.outputDir, windowSize, useBDT = False)
+        except Exception, ex:
+            print "got exception when getting figure of merit:", str(ex)
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames,
