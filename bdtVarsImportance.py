@@ -310,7 +310,7 @@ class TasksRunner:
 
                     self.numThreadsRunning[task.gpuindex] += 1
 
-                    if useCPU:
+                    if self.useCPU:
                         print "STARTING ON CPU"
                     else:
                         print "STARTING ON GPU",task.gpuindex
