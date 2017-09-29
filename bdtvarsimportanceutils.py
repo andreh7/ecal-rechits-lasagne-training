@@ -215,25 +215,15 @@ def getMeanTestAUC(outputDir, windowSize, useBDT = False):
 
 class ResultFileReaderNN:
 
-    def __init__(self, outputDir, windowSize, expectedNumEpochs, useBDT):
-        # @param useBDT if True, returns the figure of merit
-        # of the official photon id values (no averaging 
-        # over epochs since we only have one 
-
-        self.useBDT = useBDT
-        self.outputDir = outputDir
+    def __init__(self, windowSize, expectedNumEpochs):
 
         # caculate the epoch numbers
-        if not useBDT:
-            epochs = range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1)
-        else:
-            epochs = None
-
-        self.fnames = self.__getListOfFiles(epochs)
+        # (we will not use them if useBDT is True)
+        self.epochs = range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1)
 
     #----------------------------------------
 
-    def __getListOfFiles(self, epochs):
+    def __getListOfFiles(self, outputDir, useBDT):
 
         if useBDT:
             # there are no epochs
@@ -241,16 +231,24 @@ class ResultFileReaderNN:
             
         else:
             result = [ "roc-data-test-%04d.npz" % epoch 
-                       for epoch in epochs ]
+                       for epoch in self.epochs ]
 
         # add directory name
-        return [ os.path.join(self.outputDir, fname)
+        return [ os.path.join(outputDir, fname)
                  for fname in result ]
 
     #----------------------------------------
 
-    def getROCs(self):
+    def getROCs(self, outputDir, useBDT):
         # @return a list of dicts with auc, numEvents, fpr, tpr
+        #
+        # @param useBDT if True, returns the figure of merit
+        # of the official photon id values (no averaging 
+        # over epochs since we only have one 
+
+        fnames = self.__getListOfFiles(epochs)
+
+
         
         import plotROCs
         resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
@@ -260,7 +258,7 @@ class ResultFileReaderNN:
 
         result = []
 
-        for inputFname in self.fnames:
+        for inputFname in fnames:
             
             if not os.path.exists(inputFname):
                 # try a bzipped version
