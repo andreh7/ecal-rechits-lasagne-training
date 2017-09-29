@@ -152,7 +152,7 @@ if __name__ == '__main__':
     options.inputDir = options.inputDir[0]
 
     fomFunctionName = options.fomFunction
-    bdtvarsimportanceutils.fomGetSelectedFunction(options, expectedNumEpochs)
+    bdtvarsimportanceutils.fomGetSelectedFunction(options, windowSize, expectedNumEpochs)
 
     #----------
 

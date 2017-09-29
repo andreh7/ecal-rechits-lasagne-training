@@ -412,7 +412,7 @@ if __name__ == '__main__':
     # read parameters for this particular model from the given configuration file
     execfile(options.configFile[0])
 
-    bdtvarsimportanceutils.fomGetSelectedFunction(options, maxEpochs)
+    bdtvarsimportanceutils.fomGetSelectedFunction(options, windowSize, maxEpochs)
 
     #----------
 

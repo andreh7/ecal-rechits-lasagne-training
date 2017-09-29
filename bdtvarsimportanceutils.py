@@ -372,7 +372,7 @@ class __SigEffAtBgFractionFunc:
                                      useBDT = useBDT)
 
 
-def fomGetSelectedFunction(options, expectedNumEpochs):
+def fomGetSelectedFunction(options, windowSize, expectedNumEpochs):
 
     if options.fomFunction == 'auc':
         options.fomFunction = getMeanTestAUC
