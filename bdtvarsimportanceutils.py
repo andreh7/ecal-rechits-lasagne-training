@@ -190,7 +190,7 @@ def isComplete(outputDir, numEpochs, sample = "test"):
 
 #----------------------------------------------------------------------
 
-def getMeanTestAUC(outputDir, windowSize = 10, useBDT = False):
+def getMeanTestAUC(outputDir, windowSize, useBDT = False):
 
     assert not useBDT
 
@@ -302,7 +302,7 @@ class __ReadFromTrainingDirHelperFunc:
     def __call__(self, theDir):
         return self.func(theDir, self.windowSize, useBDT = False)
 
-def readFromTrainingDir(trainDir, fomFunction, windowSize = 10, expectedNumEpochs = 200,
+def readFromTrainingDir(trainDir, fomFunction, windowSize, expectedNumEpochs = 200,
                         numParallelProcesses = None):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
