@@ -208,36 +208,85 @@ def getMeanTestAUC(outputDir, windowSize, useBDT = False):
     return float(np.mean(aucs[-windowSize:]))
 
 #----------------------------------------------------------------------
+# classes to return a list of file names to be read 
+# and return the corresponding data (true and false positive
+# rate arrays etc.) on which a figure of merit
+# can be calculated
 
-def getSigEffAtBgFraction(outputDir, epochs, bgFraction, useBDT):
+class ResultFileReaderNN:
+
+    def __init__(self, outputDir, windowSize, expectedNumEpochs, useBDT):
+
+        self.useBDT = useBDT
+        self.outputDir = outputDir
+
+        # caculate the epoch numbers
+        if not useBDT:
+            epochs = range(expectedNumEpochs - windowSize + 1, expectedNumEpochs + 1)
+        else:
+            epochs = None
+
+        self.fnames = self.__getListOfFiles(epochs)
+
+    #----------------------------------------
+
+    def __getListOfFiles(self, epochs):
+
+        if useBDT:
+            # there are no epochs
+            result = [ "roc-data-test-mva.npz" ]
+            
+        else:
+            result = [ "roc-data-test-%04d.npz" % epoch 
+                       for epoch in epochs ]
+
+        # add directory name
+        return [ os.path.join(self.outputDir, fname)
+                 for fname in result ]
+
+    #----------------------------------------
+
+    def getROCs(self):
+        # @return a list of dicts with auc, numEvents, fpr, tpr
+        
+        import plotROCs
+        resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
+
+        from ResultDirRocs import ResultDirRocs
+        resultDirRocs = ResultDirRocs(resultDirData, maxNumThreads = None)
+
+        result = []
+
+        for inputFname in self.fnames:
+            
+            if not os.path.exists(inputFname):
+                # try a bzipped version
+                inputFname = os.path.join(outputDir, namingFunc(epoch) + ".bz2")
+
+            auc, numEvents, fpr, tpr = resultDirRocs.readROC(inputFname, isTrain = False, returnFullCurve = True, updateCache = False)
+
+            result.append(dict(
+                    inputFname = inputFname,
+                    auc = auc,
+                    numEvents = numEvents,
+                    fpr = fpr,
+                    tpr = tpr
+                    ))
+                    
+        return result
+
+
+#----------------------------------------------------------------------
+
+def getSigEffAtBgFraction(outputDir, resultFileReader, bgFraction, useBDT):
     # returns the (averaged) signal fraction at the given background fraction
 
     import numpy as np
 
-    if useBDT:
-        # there are no epochs, just reserve one value
-        sigEffs = np.zeros(1)
-        epochs = [ -1 ]
+    rocDatas = resultFileReader.getROCs()
+    sigEffs = np.zeros(len(rocDatas))
 
-        namingFunc = lambda epoch: "roc-data-test-mva.npz"
-
-    else:
-        sigEffs = np.zeros(len(epochs))
-
-        namingFunc = lambda epoch: "roc-data-test-%04d.npz" % epoch
-    import plotROCs
-    resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
-    from ResultDirRocs import ResultDirRocs
-    resultDirRocs = ResultDirRocs(resultDirData, maxNumThreads = None)
-
-    for epochIndex, epoch in enumerate(epochs):
-
-        inputFname = os.path.join(outputDir, namingFunc(epoch))
-        if not os.path.exists(inputFname):
-            # try a bzipped version
-            inputFname = os.path.join(outputDir, namingFunc(epoch) + ".bz2")
-
-        auc, numEvents, fpr, tpr = resultDirRocs.readROC(inputFname, isTrain = False, returnFullCurve = True, updateCache = False)
+    for index, rocData in enumerate(rocDatas):
 
         # get signal efficiency ('true positive rate' tpr) at given
         # background efficiency ('false positive rate' fpr)
@@ -245,8 +294,8 @@ def getSigEffAtBgFraction(outputDir, epochs, bgFraction, useBDT):
         # assume fpr are sorted so we can use is as 'x value'
         # with function interpolation
         import scipy
-        thisSigEff = scipy.interpolate.interp1d(fpr, tpr)(bgFraction)
-        sigEffs[epochIndex] = thisSigEff
+        thisSigEff = scipy.interpolate.interp1d(rocData['fpr'], rocData['tpr'])(bgFraction)
+        sigEffs[index] = thisSigEff
 
     # average over the collected iterations
     return sigEffs.mean()
