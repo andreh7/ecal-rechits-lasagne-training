@@ -9,7 +9,11 @@ import bdtvarsimportanceutils
 DEVICE_CPU = -1
 
 maxJobsPerGPU = {
-    DEVICE_CPU: 4,
+    # in some test runs with the parallelized
+    # BDT code, we had 300% CPU utilization on 
+    # average, on a 24 core system we can
+    # therefore run ~ 8 trainings in parallel
+    DEVICE_CPU: 8,
 
     0: 3,
     1: 3,
