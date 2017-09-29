@@ -26,3 +26,7 @@ additionalOptions = [
 
 
 commandPartsBuilder = commandPartsBuilderNN
+
+# how to read the result files
+import bdtvarsimportanceutils
+resultFileReader = bdtvarsimportanceutils.ResultFileReaderNN(windowSize, maxEpochs)
