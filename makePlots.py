@@ -77,7 +77,7 @@ for theDir in options.dirs:
     cmdParts = []
 
     if options.tmva:
-        cmdParts.append("./plotROCs-tmva.py")
+        cmdParts.append("./plotROCsTMVA.py")
     else:
         cmdParts.append("./plotROCs.py")
         cmdParts.append("--both")

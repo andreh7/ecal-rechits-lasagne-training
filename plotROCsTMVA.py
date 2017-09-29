@@ -232,7 +232,7 @@ if __name__ == '__main__':
 
     (options, ARGV) = parser.parse_args()
 
-    assert len(ARGV) == 1, "usage: plotROCs-tmva.py result-directory"
+    assert len(ARGV) == 1, "usage: plotROCsTMVA.py result-directory"
 
     inputDir = ARGV.pop(0)
 
