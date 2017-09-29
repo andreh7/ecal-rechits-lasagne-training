@@ -302,7 +302,7 @@ class __ReadFromTrainingDirHelperFunc:
     def __call__(self, theDir):
         return self.func(theDir, self.windowSize, useBDT = False)
 
-def readFromTrainingDir(trainDir, fomFunction = getMeanTestAUC, windowSize = 10, expectedNumEpochs = 200,
+def readFromTrainingDir(trainDir, fomFunction, windowSize = 10, expectedNumEpochs = 200,
                         numParallelProcesses = None):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
