@@ -211,7 +211,7 @@ class TrainingRunner(threading.Thread):
         testAUC = None
 
         try:
-            testAUC = self.fomFunction(self.outputDir, windowSize, useBDT = False)
+            testAUC = self.fomFunction(self.resultFileReader, outputDir, useBDT = False)
         except Exception, ex:
             print "got exception when getting figure of merit:", str(ex)
 

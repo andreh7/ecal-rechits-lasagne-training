@@ -184,7 +184,10 @@ if __name__ == '__main__':
     fullNetworkAUC = aucData.getOverallAUC()
     
     # read official photon ID score
-    bdtAuc = options.fomFunction(os.path.join(options.inputDir,"00-00"), windowSize, useBDT = True) 
+    # TODO: somebody must initialize the resultFileReader, probably
+    #       we should store the task-specific configuration file
+    #       in the master result directory
+    bdtAuc = options.fomFunction(resultFileReader, os.path.join(options.inputDir,"00-00"), useBDT = True) 
 
     # from pprint import pprint
     # print pprint(aucData.data)

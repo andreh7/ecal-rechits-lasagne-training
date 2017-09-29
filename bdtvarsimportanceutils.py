@@ -293,11 +293,14 @@ class SigEffAtBgFractionFunc:
 
     #----------------------------------------
 
-    def __call__(self, outputDir, resultFileReader):
+    def __call__(self, resultFileReader, outputDir, useBDT):
+        # @param useBDT if True, returns the figure of merit
+        # of the official photon id values (no averaging 
+        # over epochs since we only have one 
 
         import numpy as np
 
-        rocDatas = resultFileReader.getROCs()
+        rocDatas = resultFileReader.getROCs(outputDir, useBDT)
         sigEffs = np.zeros(len(rocDatas))
 
         for index, rocData in enumerate(rocDatas):
