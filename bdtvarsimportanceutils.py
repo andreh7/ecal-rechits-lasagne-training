@@ -216,6 +216,9 @@ def getMeanTestAUC(outputDir, windowSize, useBDT = False):
 class ResultFileReaderNN:
 
     def __init__(self, outputDir, windowSize, expectedNumEpochs, useBDT):
+        # @param useBDT if True, returns the figure of merit
+        # of the official photon id values (no averaging 
+        # over epochs since we only have one 
 
         self.useBDT = useBDT
         self.outputDir = outputDir
