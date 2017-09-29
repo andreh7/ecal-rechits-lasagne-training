@@ -27,3 +27,7 @@ additionalOptions = [
 
 
 commandPartsBuilder = commandPartsBuilderBDT
+
+# how to read the result files
+import bdtvarsimportanceutils
+resultFileReader = bdtvarsimportanceutils.ResultFileReaderTMVA()
