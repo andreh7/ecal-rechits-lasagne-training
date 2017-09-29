@@ -278,27 +278,40 @@ class ResultFileReaderNN:
 
 #----------------------------------------------------------------------
 
-def getSigEffAtBgFraction(outputDir, resultFileReader, bgFraction, useBDT):
-    # returns the (averaged) signal fraction at the given background fraction
+class SigEffAtBgFractionFunc:
+    # functor which returns the (averaged) signal fraction at the given background fraction
+    # 
+    # note that we make this a class instead of a function 
+    # so that it can be pickled which we need when
+    # using the multiprocessing module
 
-    import numpy as np
+    #----------------------------------------
 
-    rocDatas = resultFileReader.getROCs()
-    sigEffs = np.zeros(len(rocDatas))
+    def __init__(self, bgFraction):
+        self.bgFraction = bgFraction
 
-    for index, rocData in enumerate(rocDatas):
+    #----------------------------------------
 
-        # get signal efficiency ('true positive rate' tpr) at given
-        # background efficiency ('false positive rate' fpr)
+    def __call__(self, outputDir, resultFileReader):
 
-        # assume fpr are sorted so we can use is as 'x value'
-        # with function interpolation
-        import scipy
-        thisSigEff = scipy.interpolate.interp1d(rocData['fpr'], rocData['tpr'])(bgFraction)
-        sigEffs[index] = thisSigEff
+        import numpy as np
 
-    # average over the collected iterations
-    return sigEffs.mean()
+        rocDatas = resultFileReader.getROCs()
+        sigEffs = np.zeros(len(rocDatas))
+
+        for index, rocData in enumerate(rocDatas):
+
+            # get signal efficiency ('true positive rate' tpr) at given
+            # background efficiency ('false positive rate' fpr)
+
+            # assume fpr are sorted so we can use is as 'x value'
+            # with function interpolation
+            import scipy
+            thisSigEff = scipy.interpolate.interp1d(rocData['fpr'], rocData['tpr'])(self.bgFraction)
+            sigEffs[index] = thisSigEff
+
+        # average over the collected iterations
+        return sigEffs.mean()
 
 #----------------------------------------------------------------------
 
@@ -403,23 +416,6 @@ def fomAddOptions(parser):
 
 #----------------------------------------------------------------------
 
-class __SigEffAtBgFractionFunc:
-    # pickleable function which we can use with the multiprocessing
-    # module
-    def __init__(self, expectedNumEpochs, bgfrac):
-        self.expectedNumEpochs = expectedNumEpochs
-        self.bgfrac = bgfrac
-
-    def __call__(self, outputDir, windowSize, useBDT):
-        # @param useBDT if True, returns the figure of merit
-        # of the official photon id values (no averaging 
-        # over epochs since we only have one 
-
-        return getSigEffAtBgFraction(outputDir, 
-                                     range(self.expectedNumEpochs - windowSize + 1, self.expectedNumEpochs + 1), 
-                                     self.bgfrac,
-                                     useBDT = useBDT)
-
 
 def fomGetSelectedFunction(options, windowSize, expectedNumEpochs):
 
@@ -436,8 +432,6 @@ def fomGetSelectedFunction(options, windowSize, expectedNumEpochs):
             bgfrac = int(mo.group(1), 10) / 100.0
 
             # note the +1 because our epoch numbering starts at one
-            options.fomFunction = __SigEffAtBgFractionFunc(expectedNumEpochs, bgfrac)
+            options.fomFunction = SigEffAtBgFractionFunc(bgfrac)
         else:
             raise Exception("internal error")
-
-    
