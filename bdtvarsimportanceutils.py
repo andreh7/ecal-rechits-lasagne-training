@@ -246,7 +246,7 @@ class ResultFileReaderNN:
         # of the official photon id values (no averaging 
         # over epochs since we only have one 
 
-        fnames = self.__getListOfFiles(epochs)
+        fnames = self.__getListOfFiles(outputDir, epochs)
 
 
         
