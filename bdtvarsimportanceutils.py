@@ -261,7 +261,7 @@ def readVars(dirname):
 
 #----------------------------------------------------------------------
 
-def findComplete(trainDir, expectedNumEpochs = 200):
+def findComplete(trainDir, expectedNumEpochs):
     # returns (map of subdirectories with the complete number of epochs),
     #         (map of subdirectories with good name but not complete)
     #
@@ -302,7 +302,7 @@ class __ReadFromTrainingDirHelperFunc:
     def __call__(self, theDir):
         return self.func(theDir, self.windowSize, useBDT = False)
 
-def readFromTrainingDir(trainDir, fomFunction, windowSize, expectedNumEpochs = 200,
+def readFromTrainingDir(trainDir, fomFunction, windowSize, expectedNumEpochs,
                         numParallelProcesses = None):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
