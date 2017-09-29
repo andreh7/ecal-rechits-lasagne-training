@@ -7,8 +7,12 @@ from pprint import pprint
 
 #----------------------------------------------------------------------
 
+# TODO: store these parameters in the training master directory
+#       and read them back when plotting
+#       (or generate the results in the training program 
+#        and use this script to plot the results only without
+#        recalculating them here)
 expectedNumEpochs = 200
-
 windowSize = 10
 
 #----------------------------------------------------------------------
