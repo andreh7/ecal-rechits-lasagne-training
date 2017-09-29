@@ -247,8 +247,6 @@ class ResultFileReaderNN:
         # over epochs since we only have one 
 
         fnames = self.__getListOfFiles(outputDir, epochs)
-
-
         
         import plotROCs
         resultDirData = plotROCs.ResultDirData(outputDir, useWeightsAfterPtEtaReweighting = False)
@@ -278,6 +276,45 @@ class ResultFileReaderNN:
 
 
 #----------------------------------------------------------------------
+
+class ResultFileReaderTMVA:
+    # reading results from a TMVA .root output file
+
+    def __init__(self):
+        # we do not need to average over epochs here
+        # but we need to know which variable we should look
+        # for in the test tree
+
+        pass
+
+    #----------------------------------------
+
+    def getROCs(self, outputDir, useBDT):
+        # @return a list of dicts with auc, numEvents, fpr, tpr
+        #
+        # @param useBDT if True, returns the figure of merit
+        # of the official photon id values (no averaging 
+        # over epochs since we only have one 
+
+        inputFname = os.path.join(outputDir, "tmva.root")
+
+        import plotROCsTMVA
+
+        result = []
+
+        auc, fpr, tpr = plotROCSTMVA.readROC(inputFname, isTrain = False, returnFullCurve = True, origMVA = useBDT)
+
+        result.append(dict(
+                inputFname = inputFname,
+                auc = auc,
+                fpr = fpr,
+                tpr = tpr
+                ))
+        
+        return result
+
+#----------------------------------------------------------------------
+
 
 class SigEffAtBgFractionFunc:
     # functor which returns the (averaged) signal fraction at the given background fraction
