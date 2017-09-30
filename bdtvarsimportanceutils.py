@@ -350,7 +350,7 @@ class SigEffAtBgFractionFunc:
 
             # assume fpr are sorted so we can use is as 'x value'
             # with function interpolation
-            import scipy
+            import scipy.interpolate
             thisSigEff = scipy.interpolate.interp1d(rocData['fpr'], rocData['tpr'])(self.bgFraction)
             sigEffs[index] = thisSigEff
 
