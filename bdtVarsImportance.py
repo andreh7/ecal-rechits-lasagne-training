@@ -98,7 +98,7 @@ class TrainingRunner(threading.Thread):
 
     #----------------------------------------
 
-    def __init__(self, outputDir, varnames, excludedVar, useCPU, fomFunction, commandPartsBuilder):
+    def __init__(self, outputDir, varnames, excludedVar, useCPU, fomFunction, resultFileReader, commandPartsBuilder):
 
         threading.Thread.__init__(self)
 
@@ -106,6 +106,7 @@ class TrainingRunner(threading.Thread):
         self.excludedVar = excludedVar
         self.useCPU = useCPU
         self.fomFunction = fomFunction
+        self.resultFileReader = resultFileReader
 
         # make a copy to be safe
         self.varnames = list(varnames)
@@ -510,7 +511,7 @@ if __name__ == '__main__':
     # run the training if we don't have the result yet
     if aucData.getOverallAUC() == None:
         tasksRunner = TasksRunner(options.useCPU)
-        thisResults = tasksRunner.runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction, commandPartsBuilder)])
+        thisResults = tasksRunner.runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction, resultFileReader, commandPartsBuilder)])
     else:
         # take from the existing directory
         thisResults = [ dict(testAUC = aucData.getOverallAUC(),
@@ -549,7 +550,7 @@ if __name__ == '__main__':
             if aucData.getAUC(thisVars) == None:
                 # we need to run this
                 tasks.append(TrainingRunner(thisOutputDir, thisVars, remainingVars[excluded], options.useCPU,
-                                            options.fomFunction, commandPartsBuilder))
+                                            options.fomFunction, resultFileReader, commandPartsBuilder))
             else:
                 thisResults.append(dict(testAUC = aucData.getAUC(thisVars),
                                         varnames = thisVars,
