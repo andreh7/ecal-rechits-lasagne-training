@@ -302,11 +302,14 @@ class ResultFileReaderTMVA:
 
         result = []
 
-        auc, fpr, tpr = plotROCSTMVA.readROC(inputFname, isTrain = False, returnFullCurve = True, origMVA = useBDT)
+        # TODO: make order of returned values of this readROC() function the same
+        #       as the one in plotROCs
+        auc, fpr, tpr, numEvents = plotROCsTMVA.readROC(inputFname, isTrain = False, returnFullCurve = True, origMVA = useBDT)
 
         result.append(dict(
                 inputFname = inputFname,
                 auc = auc,
+                numEvents = numEvents,
                 fpr = fpr,
                 tpr = tpr
                 ))
