@@ -23,6 +23,9 @@ additionalOptions = [
     '--param "absVarNames=[]"',
     '--param normalizeBDTvars=False',
     '--custom-bdt-code',
+
+    # DEBUG
+    # '--num-trees 1', 
     ]
 
 
