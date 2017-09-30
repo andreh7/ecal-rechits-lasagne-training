@@ -218,6 +218,8 @@ class TrainingRunner(threading.Thread):
             testAUC = self.fomFunction(self.resultFileReader, self.outputDir, useBDT = False)
         except Exception, ex:
             print "got exception when getting figure of merit:", str(ex)
+            import traceback
+            traceback.print_exc()
 
             # signal problem with calculating figure of merit
             # (in this case we should also stop subsequent jobs)
