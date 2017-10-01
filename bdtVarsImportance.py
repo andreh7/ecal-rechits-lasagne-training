@@ -252,11 +252,20 @@ class TasksRunner:
         # maps from GPU number (-1 for CPU) to number of tasks running there
         self.numThreadsRunning = {}
         
+        # make a copy
+        self.maxJobsPerGPU = {}
+
         for device in maxJobsPerGPU.keys():
             # when useCPU is True, do not
             # count slots for GPUs
-            if not self.useCPU or device >= 0:
-                self.numThreadsRunning[device] = 0
+            if self.useCPU and device != DEVICE_CPU:
+                continue
+
+            if not self.useCPU and device == DEVICE_CPU:
+                continue
+
+            self.maxJobsPerGPU[device] = maxJobsPerGPU[device]
+            self.numThreadsRunning[device] = 0
 
     #----------------------------------------
 
@@ -266,7 +275,7 @@ class TasksRunner:
         # or None if all slots are busy
 
         unusedSlots = [ 
-            (maxJobsPerGPU[device] - self.numThreadsRunning[device], device)
+            (self.maxJobsPerGPU[device] - self.numThreadsRunning[device], device)
             for device in sorted(self.numThreadsRunning.keys()) ]
         
 
@@ -290,7 +299,7 @@ class TasksRunner:
             # of one GPU
             task.setGPUmemFraction(1.0 * memMargin)
         else:
-            task.setGPUmemFraction(1.0 / float(maxJobsPerGPU[task.gpuindex]) * memMargin)
+            task.setGPUmemFraction(1.0 / float(self.maxJobsPerGPU[task.gpuindex]) * memMargin)
 
     #----------------------------------------
 
@@ -338,7 +347,7 @@ class TasksRunner:
 
                 if maxUnusedDevice is not None:
 
-                    assert self.numThreadsRunning[maxUnusedDevice] < maxJobsPerGPU[maxUnusedDevice]
+                    assert self.numThreadsRunning[maxUnusedDevice] < self.maxJobsPerGPU[maxUnusedDevice]
                     task = self.threads.pop(0)
                     task.setGPU(maxUnusedDevice)
 
