@@ -345,6 +345,11 @@ class TasksRunner:
                 # check if we have a slot free
                 maxUnusedDevice = self.findUnusedDevice()
 
+                self.logger.debug("found available device %s", str(maxUnusedDevice))
+                if maxUnusedDevice is None:
+                    self.logger.debug("running tasks: %s", str(self.numThreadsRunning))
+
+
                 if maxUnusedDevice is not None:
 
                     assert self.numThreadsRunning[maxUnusedDevice] < self.maxJobsPerGPU[maxUnusedDevice]
