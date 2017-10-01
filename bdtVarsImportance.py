@@ -535,7 +535,9 @@ if __name__ == '__main__':
         # read the existing results
         #----------
 
-        aucData = bdtvarsimportanceutils.readFromTrainingDir(options.resumeDir, expectedNumEpochs = maxEpochs,
+        aucData = bdtvarsimportanceutils.readFromTrainingDir(options.resumeDir, 
+                                                             windowSize = windowSize,
+                                                             expectedNumEpochs = maxEpochs,
                                                              fomFunction = options.fomFunction)
 
         # fill into the traditional data structure
