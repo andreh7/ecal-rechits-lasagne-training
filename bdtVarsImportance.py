@@ -3,6 +3,8 @@
 import re, glob, os, time, tempfile, sys
 import numpy as np
 
+import logging
+
 import bdtvarsimportanceutils
 
 # use -1 for the CPU
@@ -115,6 +117,8 @@ class TrainingRunner(threading.Thread):
 
         self.memFraction = None
 
+        self.logger = logging.getLogger("TrainingRunner")
+
     #----------------------------------------
 
     def setGPU(self, gpuindex):
@@ -138,7 +142,7 @@ class TrainingRunner(threading.Thread):
     #----------------------------------------
 
     def run(self):
-        print "training with",len(self.varnames),",".join(self.varnames)
+        self.logger.info("training with %d variables (%s)", len(self.varnames),",".join(self.varnames))
 
         # create a temporary dataset file
         text = open(dataSetFname).read()
@@ -200,15 +204,18 @@ class TrainingRunner(threading.Thread):
         else:
             fout = None
 
+        self.logger.info("starting training: %s", cmd)
+        startTime = time.time()
         res = subprocess.call(cmdParts, stdout = fout, stderr = fout)
+        elapsed = time.time() - startTime
 
         # TODO: is this really needed ?
         fout.close()
 
         if res != 0:
-            print "failed to run",cmd
+            self.logger.warn("failed to run %s", cmd)
         else:
-            print "successfully ran",cmd
+            self.logger.info("successfully ran %s (%.1f hours wall time)", cmd, elapsed / 3600.)
         #----------
         # get the results (testAUCs)
         # note that this may fail if the external command failed
@@ -218,9 +225,7 @@ class TrainingRunner(threading.Thread):
         try:
             testAUC = self.fomFunction(self.resultFileReader, self.outputDir, useBDT = False)
         except Exception, ex:
-            print "got exception when getting figure of merit:", str(ex)
-            import traceback
-            traceback.print_exc()
+            self.logger.warn("got exception when getting figure of merit: %s", str(ex), exc_info = True)
 
             # signal problem with calculating figure of merit
             # (in this case we should also stop subsequent jobs)
@@ -239,6 +244,8 @@ class TasksRunner:
     #----------------------------------------
 
     def __init__(self, useCPU):
+
+        self.logger = logging.getLogger("TasksRunner")
 
         self.useCPU = useCPU
 
@@ -346,9 +353,9 @@ class TasksRunner:
                     self.numThreadsRunning[task.gpuindex] += 1
 
                     if self.useCPU:
-                        print "STARTING ON CPU"
+                        self.logger.info("STARTING ON CPU")
                     else:
-                        print "STARTING ON GPU",task.gpuindex
+                        self.logger.info("STARTING ON GPU",task.gpuindex)
 
                     task.start()
                     numRunningTasks += 1
@@ -416,6 +423,40 @@ if __name__ == '__main__':
 
     options = parser.parse_args()
 
+    #----------
+    # setup output directory
+    #----------
+    if options.resumeDir == None:
+        # start a new scan
+        outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
+
+        if not os.path.exists(outputDir):
+            os.makedirs(outputDir)
+    else:
+        # resume existing training
+        outputDir = options.resumeDir
+
+    #----------
+    # setup logging
+    #----------
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s')
+
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    logFname = os.path.join(outputDir, "vars-importance-scan.log")
+
+    ch = logging.FileHandler(logFname)
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter)
+    root.addHandler(ch)
+
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter)
+    root.addHandler(ch)
+    #----------
+
     # read parameters for this particular model from the given configuration file
     execfile(options.configFile[0])
 
@@ -453,18 +494,11 @@ if __name__ == '__main__':
 
     if options.resumeDir == None:
         # start a new scan
-        outputDir = "results/" + time.strftime("%Y-%m-%d-%H%M%S")
-
-        if not os.path.exists(outputDir):
-            os.makedirs(outputDir)
-            
         aucData = bdtvarsimportanceutils.VarImportanceResults()
 
     else:
         # read results from existing directory
         # assume the set of variables is the same
-
-        outputDir = options.resumeDir
         
         # first find steps which are incomplete and rename these
         # directories
