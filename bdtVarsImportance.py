@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import re, glob, os, time, tempfile, sys
+import re, glob, os, time, tempfile, sys, signal
 import numpy as np
 
 import logging
@@ -638,6 +638,11 @@ if __name__ == '__main__':
     #----------
     # create the job scheduler object
     tasksRunner = TasksRunner(options.useCPU)
+
+    # install a signal handler to print the job status 
+    # whenever we receive SIGUSR1
+    signal.signal(signal.SIGUSR1, 
+                  lambda signum, frame: tasksRunner.printTaskStatus())
 
     #----------
 
