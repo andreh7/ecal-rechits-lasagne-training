@@ -122,6 +122,11 @@ class TrainingRunner(threading.Thread):
         self.startTime = None
         self.endTime = None
 
+        self.exitStatus = None
+
+        # the result
+        self.fom = None
+
     #----------------------------------------
 
     def setGPU(self, gpuindex):
@@ -234,6 +239,8 @@ class TrainingRunner(threading.Thread):
             # signal problem with calculating figure of merit
             # (in this case we should also stop subsequent jobs)
             res = 256
+
+        self.exitStatus = res
 
         result = dict(testAUC = testAUC,
                       varnames = self.varnames,
@@ -403,6 +410,9 @@ class TasksRunner:
 
             # wait for any task to complete
             thread, thisResult = completionQueue.get()
+
+            # add the figure of merit
+            thread.fom = thisResult['testAUC']
 
             # 'free' a slot on this gpu/cpu
             self.numThreadsRunning[thread.gpuindex] -= 1
