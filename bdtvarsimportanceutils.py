@@ -325,6 +325,23 @@ class ResultFileReaderTMVA:
         
         return result
 
+    #----------------------------------------
+
+    def isComplete(self, outputDir):
+        # basically insist that there is the .xml weights
+        # file and the .root output file
+        #
+        # in principle we should also ensure that the .root file
+        # has been closed properly..
+
+        for fname in ('tmva.root', 
+                      'TMVAClassification_BDT.weights.xml'):
+            if not os.path.exists(
+                os.path.join(outputDir, fname)):
+                return False
+
+        return True
+
 #----------------------------------------------------------------------
 
 
