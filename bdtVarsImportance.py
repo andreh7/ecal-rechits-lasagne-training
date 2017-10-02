@@ -297,6 +297,46 @@ class TasksRunner:
 
     #----------------------------------------
 
+    def printTaskStatus(self):
+        # prints (using the logging mechanism) the currently
+        # running and completed tasks
+        #
+        # this is typically called on request from the user
+
+        for description, taskList in zip(
+            ("running", self.runningTasks),
+            ("completed", self.completedTasks),
+            ):
+
+            self.logger.info("%d %s tasks", len(taskList), description)
+
+            for index, task in enumerate(taskList):
+                # can be None
+                excludedVar = str(task.excludedVar)
+
+                parts = [ "numVars=%2d" % len(task.varnames),
+                          "excludedVar=" + excludedVar
+                          ]
+
+                if task.startTime is not None:
+                    parts.append("started at " + time.asctime(time.localtime(task.startTime)))
+
+                if task.endTime is not None:
+                    parts.append("finished at " + time.asctime(time.localtime(task.endTime)))
+
+                if task.startTime is not None and task.endTime is not None:
+                    parts.append("wallclock time: %.1f hours" % ((task.endTime - task.startTime) / 3600.))
+
+                if task.exitStatus is not None:
+                    parts.append("exit status %d" % task.exitStatus)
+
+                if task.fom is not None:
+                    parts.append("fom=%f" % task.fom)
+
+                self.logger.info("  index %2d: %s", index, ",".join(parts))
+
+    #----------------------------------------
+
     def findUnusedDevice(self):
         # @return the device id of the device with the highest
         # number of unused slots (>=0 is GPU, -1 is CPU)
