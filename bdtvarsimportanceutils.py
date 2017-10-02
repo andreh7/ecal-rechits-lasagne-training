@@ -177,19 +177,6 @@ def getAUCs(outputDir, sample = "test"):
 
 #----------------------------------------------------------------------
 
-def isComplete(outputDir, numEpochs, sample = "test"):
-
-    epochToAUC = getAUCs(outputDir, sample)
-
-    # check that we have exactly 1..numEpochs as keys
-
-    if len(epochToAUC) != numEpochs:
-        return False
-
-    return all(epochToAUC.has_key(epoch) for epoch in range(1, numEpochs + 1))
-
-#----------------------------------------------------------------------
-
 def getMeanTestAUC(outputDir, windowSize, useBDT = False):
 
     assert not useBDT
@@ -273,6 +260,27 @@ class ResultFileReaderNN:
                     ))
                     
         return result
+
+    #----------------------------------------
+
+    def isComplete(self, outputDir):
+        # @return true if the given output directory is considered to be complete
+        # (this is used for resuming importance scan sessions)
+        
+        sample = "test"
+
+        fnames = glob.glob(os.path.join(outputDir, "auc-" + sample + "-*.txt"))
+
+        epochs = set()
+
+        for fname in fnames:
+            mo = re.search("auc-test-(\d+).txt$", fname)
+            if mo:
+                epoch = int(mo.group(1), 10)
+                epochs.add(epoch)
+
+        # check that we have exactly 1..numEpochs as keys
+        return epochs == set(self.epochs)
 
 
 #----------------------------------------------------------------------
