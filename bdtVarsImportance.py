@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import re, glob, os, time, tempfile, sys
+import re, glob, os, time, tempfile, sys, signal
 import numpy as np
 
 import logging
@@ -122,6 +122,11 @@ class TrainingRunner(threading.Thread):
         self.startTime = None
         self.endTime = None
 
+        self.exitStatus = None
+
+        # the result
+        self.fom = None
+
     #----------------------------------------
 
     def setGPU(self, gpuindex):
@@ -235,6 +240,8 @@ class TrainingRunner(threading.Thread):
             # (in this case we should also stop subsequent jobs)
             res = 256
 
+        self.exitStatus = res
+
         result = dict(testAUC = testAUC,
                       varnames = self.varnames,
                       excludedVar = self.excludedVar,
@@ -287,6 +294,46 @@ class TasksRunner:
                 return
 
         self.logger.warn("could not find task to be moved from running to completed: %s", str(task))
+
+    #----------------------------------------
+
+    def printTaskStatus(self):
+        # prints (using the logging mechanism) the currently
+        # running and completed tasks
+        #
+        # this is typically called on request from the user
+
+        for description, taskList in zip(
+            ("running", self.runningTasks),
+            ("completed", self.completedTasks),
+            ):
+
+            self.logger.info("%d %s tasks", len(taskList), description)
+
+            for index, task in enumerate(taskList):
+                # can be None
+                excludedVar = str(task.excludedVar)
+
+                parts = [ "numVars=%2d" % len(task.varnames),
+                          "excludedVar=" + excludedVar
+                          ]
+
+                if task.startTime is not None:
+                    parts.append("started at " + time.asctime(time.localtime(task.startTime)))
+
+                if task.endTime is not None:
+                    parts.append("finished at " + time.asctime(time.localtime(task.endTime)))
+
+                if task.startTime is not None and task.endTime is not None:
+                    parts.append("wallclock time: %.1f hours" % ((task.endTime - task.startTime) / 3600.))
+
+                if task.exitStatus is not None:
+                    parts.append("exit status %d" % task.exitStatus)
+
+                if task.fom is not None:
+                    parts.append("fom=%f" % task.fom)
+
+                self.logger.info("  index %2d: %s", index, ",".join(parts))
 
     #----------------------------------------
 
@@ -403,6 +450,9 @@ class TasksRunner:
 
             # wait for any task to complete
             thread, thisResult = completionQueue.get()
+
+            # add the figure of merit
+            thread.fom = thisResult['testAUC']
 
             # 'free' a slot on this gpu/cpu
             self.numThreadsRunning[thread.gpuindex] -= 1
@@ -584,10 +634,20 @@ if __name__ == '__main__':
     #----------
 
     thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
+    
+    #----------
+    # create the job scheduler object
+    tasksRunner = TasksRunner(options.useCPU)
+
+    # install a signal handler to print the job status 
+    # whenever we receive SIGUSR1
+    signal.signal(signal.SIGUSR1, 
+                  lambda signum, frame: tasksRunner.printTaskStatus())
+
+    #----------
 
     # run the training if we don't have the result yet
     if aucData.getOverallAUC() == None:
-        tasksRunner = TasksRunner(options.useCPU)
         thisResults = tasksRunner.runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction, resultFileReader, commandPartsBuilder)])
     else:
         # take from the existing directory
@@ -637,7 +697,6 @@ if __name__ == '__main__':
 
         # run the remaining trainings
         if tasks:
-            tasksRunner = TasksRunner(options.useCPU)
             newResults =  tasksRunner.runTasks(tasks)
         else:
             newResults = [] 
