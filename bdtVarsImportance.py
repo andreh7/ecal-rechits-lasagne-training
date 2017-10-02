@@ -119,6 +119,9 @@ class TrainingRunner(threading.Thread):
 
         self.logger = logging.getLogger("TrainingRunner")
 
+        self.startTime = None
+        self.endTime = None
+
     #----------------------------------------
 
     def setGPU(self, gpuindex):
@@ -142,6 +145,7 @@ class TrainingRunner(threading.Thread):
     #----------------------------------------
 
     def run(self):
+        self.startTime = time.time()
         self.logger.info("training with %d variables (%s)", len(self.varnames),",".join(self.varnames))
 
         # create a temporary dataset file
@@ -235,6 +239,8 @@ class TrainingRunner(threading.Thread):
                       varnames = self.varnames,
                       excludedVar = self.excludedVar,
                       exitStatus = res)
+
+        self.endTime = time.time()
         self.completionQueue.put((self,result))
 
 #----------------------------------------------------------------------
