@@ -424,28 +424,27 @@ def findComplete(trainDir, resultFileReader):
 #----------------------------------------------------------------------
 
 class __ReadFromTrainingDirHelperFunc:
-    def __init__(self, func, windowSize):
+    def __init__(self, func, resultFileReader):
         self.func = func
-        self.windowSize = windowSize
+        self.resultFileReader = resultFileReader
 
     def __call__(self, theDir):
-        return self.func(theDir, self.windowSize, useBDT = False)
+        return self.func(resultFileReader, theDir, useBDT = False)
 
-def readFromTrainingDir(trainDir, fomFunction, windowSize, expectedNumEpochs,
+def readFromTrainingDir(resultFileReader, trainDir, fomFunction,
                         numParallelProcesses = None):
     # reads data from the given training directory and
     # returns an object of class VarImportanceResults
     # 
     # @param fomFunction is a function returning the 'figure of merit' (FOM)
-    # and takes two arguments theDir and windowSize (how many of the
-    # last iterations should be considered)
+    # and takes two arguments theDir and resultFileReader
 
     retval = VarImportanceResults()
 
-    completeDirs, incompleteDirs = findComplete(trainDir, expectedNumEpochs)
+    completeDirs, incompleteDirs = findComplete(trainDir, resultFileReader)
 
     if numParallelProcesses == None:
-        aucs = [ fomFunction(theDir, windowSize, useBDT = False) for theDir in completeDirs.values() ]
+        aucs = [ fomFunction(resultFileReader, theDir, useBDT = False) for theDir in completeDirs.values() ]
     else:
         import multiprocessing
         if numParallelProcesses >= 1:
@@ -454,7 +453,7 @@ def readFromTrainingDir(trainDir, fomFunction, windowSize, expectedNumEpochs,
             pool = multiprocessing.Pool()
 
         # need a pickleable object
-        helperFunc = __ReadFromTrainingDirHelperFunc(fomFunction, windowSize)
+        helperFunc = __ReadFromTrainingDirHelperFunc(fomFunction, resultFileReader)
 
         aucs = pool.map(helperFunc, completeDirs.values())
 
