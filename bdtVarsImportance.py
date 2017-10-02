@@ -543,7 +543,7 @@ if __name__ == '__main__':
         
         # first find steps which are incomplete and rename these
         # directories
-        completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(options.resumeDir, maxEpochs)
+        completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(options.resumeDir, resultFileReader)
 
         for theDir in incompleteDirs.values():
             import shutil

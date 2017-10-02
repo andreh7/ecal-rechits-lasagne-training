@@ -376,7 +376,7 @@ def readVars(dirname):
 
 #----------------------------------------------------------------------
 
-def findComplete(trainDir, expectedNumEpochs):
+def findComplete(trainDir, resultFileReader):
     # returns (map of subdirectories with the complete number of epochs),
     #         (map of subdirectories with good name but not complete)
     #
@@ -400,7 +400,7 @@ def findComplete(trainDir, expectedNumEpochs):
             continue
 
         # check if this is complete
-        if isComplete(fullPath, expectedNumEpochs):
+        if resultFileReader.isComplete(fullPath):
             completeDirs[(index, subindex)] = fullPath
         else:
             incompleteDirs[(index, subindex)] = fullPath
