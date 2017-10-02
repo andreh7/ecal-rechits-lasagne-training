@@ -634,10 +634,15 @@ if __name__ == '__main__':
     #----------
 
     thisOutputDir = os.path.join(outputDir, "%02d-%02d" % tuple(jobIndex))
+    
+    #----------
+    # create the job scheduler object
+    tasksRunner = TasksRunner(options.useCPU)
+
+    #----------
 
     # run the training if we don't have the result yet
     if aucData.getOverallAUC() == None:
-        tasksRunner = TasksRunner(options.useCPU)
         thisResults = tasksRunner.runTasks([ TrainingRunner(thisOutputDir, allVars, None, options.useCPU, options.fomFunction, resultFileReader, commandPartsBuilder)])
     else:
         # take from the existing directory
@@ -687,7 +692,6 @@ if __name__ == '__main__':
 
         # run the remaining trainings
         if tasks:
-            tasksRunner = TasksRunner(options.useCPU)
             newResults =  tasksRunner.runTasks(tasks)
         else:
             newResults = [] 
