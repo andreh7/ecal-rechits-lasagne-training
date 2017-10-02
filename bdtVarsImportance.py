@@ -575,7 +575,7 @@ if __name__ == '__main__':
     # find the one with the highest AUC
     testAUC = thisResults[0]['testAUC']
 
-    print "test AUC of full network:",testAUC
+    logging.info("test AUC of full network: %f",testAUC)
 
     #----------
 
@@ -623,7 +623,9 @@ if __name__ == '__main__':
                               
 
         for index, line in enumerate(thisResults):
-            print "test AUC when removing",line['excludedVar'],"(%d variables remaining)" % (len(remainingVars) - 1),":",line['testAUC']
+            logging.info("test AUC when removing %s (%d variables remaining): %f",
+                         str(line['excludedVar']), len(remainingVars) - 1,line['testAUC']
+                         )
 
         sys.stdout.flush()
 
@@ -638,22 +640,22 @@ if __name__ == '__main__':
                                           ])
 
         # remove the variable leading to the highest AUC when removed
-        print "removing variable",highestAUCvar
+        logging.info("removing variable %s",highestAUCvar)
+
         sys.stdout.flush()
 
         remainingVars.remove(highestAUCvar)
 
     # end while variables remaining
 
-    print "last remaining variable",remainingVars
+    logging.info("last remaining variable %s",remainingVars)
 
     import pickle
 
     resultFile = os.path.join(outputDir, "results.pkl")
     pickle.dump(results, open(resultFile,"w"))
 
-    print "wrote results to",resultFile
-
+    logging.info("wrote results to %s",resultFile)
 
         
 
