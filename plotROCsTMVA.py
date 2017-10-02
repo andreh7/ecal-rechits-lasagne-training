@@ -14,12 +14,15 @@ officialPhotonIdLabel = 'official photon id'
 
 #----------------------------------------------------------------------
 
-def readROC(fname, isTrain, returnFullCurve = False, origMVA = False):
+def readROC(fname, isTrain, returnFullCurve = False, origMVA = False, logger = None):
     # reads the TMVA output file under the ROC curve for it
     # 
     # @param origMVA if True, returns the values corresponding to the original 
 
-    print "reading",fname
+    if logger is not None:
+        logger.info("reading %s", fname)
+    else:
+        print "reading",fname
     
     assert fname.endswith(".root")
 

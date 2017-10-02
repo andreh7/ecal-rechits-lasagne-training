@@ -4,7 +4,7 @@
 # utilities for running/checking bdt variable importance scans
 #----------------------------------------------------------------------
 
-import os, glob, re
+import os, glob, re, logging
 
 #----------------------------------------------------------------------
 
@@ -285,7 +285,7 @@ class ResultFileReaderTMVA:
         # but we need to know which variable we should look
         # for in the test tree
 
-        pass
+        self.logger = logging.logger("ResultFileReaderNN")
 
     #----------------------------------------
 
@@ -304,7 +304,8 @@ class ResultFileReaderTMVA:
 
         # TODO: make order of returned values of this readROC() function the same
         #       as the one in plotROCs
-        auc, fpr, tpr, numEvents = plotROCsTMVA.readROC(inputFname, isTrain = False, returnFullCurve = True, origMVA = useBDT)
+        auc, fpr, tpr, numEvents = plotROCsTMVA.readROC(inputFname, isTrain = False, returnFullCurve = True, origMVA = useBDT,
+                                                        logger = self.logger)
 
         result.append(dict(
                 inputFname = inputFname,
