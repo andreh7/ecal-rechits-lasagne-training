@@ -258,6 +258,10 @@ class TasksRunner:
         # maps from GPU number (-1 for CPU) to number of tasks running there
         self.numThreadsRunning = {}
         
+        # for keeping a list of running jobs
+        self.runningTasks = []
+        self.completedTasks = []
+
         # make a copy
         self.maxJobsPerGPU = {}
 
@@ -272,6 +276,17 @@ class TasksRunner:
 
             self.maxJobsPerGPU[device] = maxJobsPerGPU[device]
             self.numThreadsRunning[device] = 0
+
+    #----------------------------------------
+
+    def __moveCompletedTaskToCompletedList(self, task):
+
+        for entryIndex in range(len(self.runningTasks)):
+            if self.runningTasks[entryIndex]['task'] == task:
+                self.completedTasks.append(self.runningTasks.pop(entryIndex))
+                return
+
+        self.logger.warn("could not find task to be moved from running to completed: %s", str(task))
 
     #----------------------------------------
 
@@ -377,8 +392,11 @@ class TasksRunner:
                     else:
                         self.logger.info("STARTING ON GPU",task.gpuindex)
 
+                    self.runningTasks.append(task)
+
                     task.start()
                     numRunningTasks += 1
+
                 else:
                     # wait until a task completes
                     break
@@ -388,6 +406,9 @@ class TasksRunner:
 
             # 'free' a slot on this gpu/cpu
             self.numThreadsRunning[thread.gpuindex] -= 1
+
+            # move tasks to list of completed tasks
+            self.__moveCompletedTaskToCompletedList(self, thread)
 
             results[thread.taskIndex] = thisResult
 
