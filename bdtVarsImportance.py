@@ -662,7 +662,7 @@ if __name__ == '__main__':
     # find the one with the highest AUC
     testAUC = thisResults[0]['testAUC']
 
-    logging.info("test AUC of full network: %f",testAUC)
+    logging.info("test FOM of full network: %f",testAUC)
 
     #----------
 
@@ -709,7 +709,7 @@ if __name__ == '__main__':
                               
 
         for index, line in enumerate(thisResults):
-            logging.info("test AUC when removing %s (%d variables remaining): %f",
+            logging.info("test FOM when removing %s (%d variables remaining): %f",
                          str(line['excludedVar']), len(remainingVars) - 1,line['testAUC']
                          )
 
