@@ -290,7 +290,7 @@ class ResultFileReaderTMVA:
         # but we need to know which variable we should look
         # for in the test tree
 
-        self.logger = logging.getLogger("ResultFileReaderNN")
+        self.logger = logging.getLogger("ResultFileReaderTMVA")
 
     #----------------------------------------
 
