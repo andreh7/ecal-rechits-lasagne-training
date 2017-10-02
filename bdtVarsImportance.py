@@ -662,7 +662,7 @@ if __name__ == '__main__':
     # find the one with the highest AUC
     testAUC = thisResults[0]['testAUC']
 
-    logging.info("test FOM of full network: %f",testAUC)
+    logging.info("test FOM with full set of variables: %f",testAUC)
 
     #----------
 
