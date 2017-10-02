@@ -527,7 +527,7 @@ if __name__ == '__main__':
                 newName = theDir + "-deleteme%d" % index
                 index += 1
 
-            print "renaming incomplete directory",theDir,"to",newName
+            logging.warn("renaming incomplete directory %s to %s",theDir,newName)
             import shutil
             shutil.move(theDir, newName)
 
