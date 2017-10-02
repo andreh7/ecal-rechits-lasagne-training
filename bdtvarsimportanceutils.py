@@ -177,22 +177,19 @@ def getAUCs(outputDir, sample = "test"):
 
 #----------------------------------------------------------------------
 
-def getMeanTestAUC(outputDir, windowSize, useBDT = False):
+def getMeanTestAUC(resultFileReader, outputDir, useBDT):
+    # relies on the fact that the ResultFileReader only
+    # looks at the test data (not the train data)
 
     assert not useBDT
 
     import numpy as np
 
-    epochToAUC = getAUCs(outputDir, "test")
+    rocDatas = resultFileReader.getROCs(outputDir, useBDT)
 
-    # average over the last few iterations
-    assert len(epochToAUC) >= windowSize, "have %d in epochToAUC but require %d (windowSize) in directory %s" % (len(epochToAUC), windowSize, outputDir)
+    meanAUC = np.mean([ rocData['auc'] for rocData in rocDatas ])
 
-    aucs = zip(*sorted(epochToAUC.items()))[1]
-
-    # print "aucs=",aucs
-
-    return float(np.mean(aucs[-windowSize:]))
+    return float(meanAUC)
 
 #----------------------------------------------------------------------
 # classes to return a list of file names to be read 
