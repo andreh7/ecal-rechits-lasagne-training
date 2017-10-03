@@ -304,6 +304,10 @@ class TasksRunner:
         #
         # this is typically called on request from the user
 
+        self.logger.info("----------------------------------------")
+        self.logger.info("task status at %s", time.strftime("%Y-%m-%d %H:%M:%S"))
+        self.logger.info("----------------------------------------")
+
         for description, taskList in (
             ("running", self.runningTasks),
             ("completed", self.completedTasks),
@@ -335,6 +339,8 @@ class TasksRunner:
                     parts.append("fom=%f" % task.fom)
 
                 self.logger.info("  index %2d: %s", index, ", ".join(parts))
+
+        self.logger.info("----------------------------------------")
 
     #----------------------------------------
 
