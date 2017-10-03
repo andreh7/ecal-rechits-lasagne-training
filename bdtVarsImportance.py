@@ -112,6 +112,7 @@ class TrainingRunner(threading.Thread):
 
         # make a copy to be safe
         self.varnames = list(varnames)
+        self.excludedVar = excludedVar
 
         self.commandPartsBuilder = commandPartsBuilder
 
