@@ -304,7 +304,7 @@ class TasksRunner:
         #
         # this is typically called on request from the user
 
-        for description, taskList in zip(
+        for description, taskList in (
             ("running", self.runningTasks),
             ("completed", self.completedTasks),
             ):
