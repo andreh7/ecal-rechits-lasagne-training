@@ -472,7 +472,7 @@ class TasksRunner:
             self.numThreadsRunning[thread.gpuindex] -= 1
 
             # move tasks to list of completed tasks
-            self.__moveCompletedTaskToCompletedList(self, thread)
+            self.__moveCompletedTaskToCompletedList(thread)
 
             results[thread.taskIndex] = thisResult
 
