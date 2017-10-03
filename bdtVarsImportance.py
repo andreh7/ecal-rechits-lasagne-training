@@ -450,7 +450,14 @@ class TasksRunner:
                     break
 
             # wait for any task to complete
-            thread, thisResult = completionQueue.get()
+            # we put a timeout here so that we can react
+            # to SIGUSR1
+            while True:
+                try:
+                    thread, thisResult = completionQueue.get(timeout = 5)
+                    break
+                except queue.Empty, ex:
+                    pass
 
             # add the figure of merit
             thread.fom = thisResult['testAUC']
