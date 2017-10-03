@@ -315,15 +315,15 @@ class TasksRunner:
                 # can be None
                 excludedVar = str(task.excludedVar)
 
-                parts = [ "numVars=%2d" % len(task.varnames),
+                parts = [ "numVars=%d" % len(task.varnames),
                           "excludedVar=" + excludedVar
                           ]
 
                 if task.startTime is not None:
-                    parts.append("started at " + time.asctime(time.localtime(task.startTime)))
+                    parts.append("started at " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(task.startTime)))
 
                 if task.endTime is not None:
-                    parts.append("finished at " + time.asctime(time.localtime(task.endTime)))
+                    parts.append("finished at " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(task.endTime)))
 
                 if task.startTime is not None and task.endTime is not None:
                     parts.append("wallclock time: %.1f hours" % ((task.endTime - task.startTime) / 3600.))
@@ -334,7 +334,7 @@ class TasksRunner:
                 if task.fom is not None:
                     parts.append("fom=%f" % task.fom)
 
-                self.logger.info("  index %2d: %s", index, ",".join(parts))
+                self.logger.info("  index %2d: %s", index, ", ".join(parts))
 
     #----------------------------------------
 
