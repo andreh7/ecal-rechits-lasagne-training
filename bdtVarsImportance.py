@@ -572,11 +572,9 @@ if __name__ == '__main__':
                                                              fomFunction = options.fomFunction
                                                              )
 
-        # fill into the traditional data structure
-        for varnames, testAUC in aucData.data.items():
-            results.append(dict(testAUC = testAUC,
-                                varnames = varnames))
-
+        # do NOT fill into results because we will fill
+        # results later on with either data from aucData
+        # or from new trainings
 
     # the first number is the round of variable removal
     # the second number is the index corresponding to the variable
