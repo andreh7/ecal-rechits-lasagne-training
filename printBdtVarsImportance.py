@@ -150,44 +150,64 @@ if __name__ == '__main__':
                         help="save plots in input directory",
                         )
 
+    parser.add_argument("--recalculate",
+                        default = False,
+                        action="store_true",
+                        help="recalculate the figure of merit from files in the results directories. Needs config.py in the results directory.",
+                        )
+
     options = parser.parse_args()
 
 
     options.inputDir = options.inputDir[0]
 
-    fomFunctionName = options.fomFunction
-    bdtvarsimportanceutils.fomGetSelectedFunction(options, windowSize, expectedNumEpochs)
+    if options.recalculate:
+        #----------
+        # recalculate the figures of merit
+        #----------
 
-    #----------
+        # execute the configuration which was used for training
+        execfile(os.path.join(options.inputDir, "config.py"))
 
-    # find complete directories
-    completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(options.inputDir, expectedNumEpochs = expectedNumEpochs)
+        fomFunctionName = options.fomFunction
+        bdtvarsimportanceutils.fomGetSelectedFunction(options, windowSize, expectedNumEpochs)
 
-    print "complete directories:"
-    for theDir in sorted(completeDirs.values()):
-        print "  %s" % theDir
+        #----------
 
-    print "incomplete directories:"
-    for theDir in sorted(incompleteDirs.values()):
-        print "  %s" % theDir
+        # find complete directories
+        completeDirs, incompleteDirs = bdtvarsimportanceutils.findComplete(options.inputDir, resultFileReader)
 
+        print "complete directories:"
+        for theDir in sorted(completeDirs.values()):
+            print "  %s" % theDir
 
+        print "incomplete directories:"
+        for theDir in sorted(incompleteDirs.values()):
+            print "  %s" % theDir
 
-    # stepData = readFromLogFiles(ARGV)
-    aucData = bdtvarsimportanceutils.readFromTrainingDir(options.inputDir, windowSize = windowSize,
-                                                         expectedNumEpochs = expectedNumEpochs, 
-                                                         fomFunction = options.fomFunction,
-                                                         numParallelProcesses = 10)
+        # stepData = readFromLogFiles(ARGV)
+        aucData = bdtvarsimportanceutils.readFromTrainingDir(resultFileReader,
+                                                             options.inputDir,
+                                                             fomFunction = options.fomFunction
+                                                             )
+
+        # read official photon ID score
+        bdtAuc = options.fomFunction(resultFileReader, os.path.join(options.inputDir,"00-00"), useBDT = True) 
+
+    else:
+        #----------
+        # read from pickled results file
+        #----------
+        aucData = bdtvarsimportanceutils.readFromResultsFile(os.path.join(options.inputDir, "results.pkl"))
+
+        # mostly for the axis label
+        fomFunctionName = open(os.path.join(options.inputDir, "fomFunction.txt")).read().strip()
+
 
     aucData.removeVarnamePrefix('phoIdInput/')
 
     fullNetworkAUC = aucData.getOverallAUC()
     
-    # read official photon ID score
-    # TODO: somebody must initialize the resultFileReader, probably
-    #       we should store the task-specific configuration file
-    #       in the master result directory
-    bdtAuc = options.fomFunction(resultFileReader, os.path.join(options.inputDir,"00-00"), useBDT = True) 
 
     # from pprint import pprint
     # print pprint(aucData.data)
