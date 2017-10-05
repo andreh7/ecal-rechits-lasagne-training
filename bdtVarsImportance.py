@@ -290,7 +290,7 @@ class TasksRunner:
     def __moveCompletedTaskToCompletedList(self, task):
 
         for entryIndex in range(len(self.runningTasks)):
-            if self.runningTasks[entryIndex]['task'] == task:
+            if self.runningTasks[entryIndex] == task:
                 self.completedTasks.append(self.runningTasks.pop(entryIndex))
                 return
 
