@@ -218,7 +218,7 @@ if __name__ == '__main__':
     
 print "order of removal:"
 print "%-30s: %.4f" % ('before', fullNetworkAUC)
-print "%-30s: %.4f" % ('BDT (phoid)', bdtAuc)
+# print "%-30s: %.4f" % ('BDT (phoid)', bdtAuc)
 
 # we only have to up to tot num vars minus two
 for numVarsRemoved in range(aucData.getTotNumVars()):
