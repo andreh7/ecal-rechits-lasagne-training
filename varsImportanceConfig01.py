@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import bdtvarsimportanceutils
+
 #----------
 # configuration for BDT variable scan (with shallow neural network)
 #  run around 2017-07-01
@@ -25,8 +27,7 @@ additionalOptions = [
     ]
 
 
-commandPartsBuilder = commandPartsBuilderNN
+commandPartsBuilder = bdtvarsimportanceutils.commandPartsBuilderNN
 
 # how to read the result files
-import bdtvarsimportanceutils
 resultFileReader = bdtvarsimportanceutils.ResultFileReaderNN(windowSize, maxEpochs)

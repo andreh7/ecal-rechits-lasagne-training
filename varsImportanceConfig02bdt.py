@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import bdtvarsimportanceutils
+
 #----------
 # configuration for BDT variable scan (with parallelized BDT implementation)
 #  run around 2017-09-27
@@ -29,8 +31,7 @@ additionalOptions = [
     ]
 
 
-commandPartsBuilder = commandPartsBuilderBDT
+commandPartsBuilder = bdtvarsimportanceutils.commandPartsBuilderBDT
 
 # how to read the result files
-import bdtvarsimportanceutils
 resultFileReader = bdtvarsimportanceutils.ResultFileReaderTMVA()

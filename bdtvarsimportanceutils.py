@@ -501,3 +501,73 @@ def fomGetSelectedFunction(options, windowSize, expectedNumEpochs):
             options.fomFunction = SigEffAtBgFractionFunc(bgfrac)
         else:
             raise Exception("internal error")
+
+#----------------------------------------------------------------------
+
+def commandPartsBuilderNN(useCPU,
+                          gpuindex,
+                          memFraction,
+                          dataSetFileName,
+                          modelFname,
+                          maxEpochs,
+                          outputDir,
+                          ):
+    # returns a list of command parts for running neural network trainings
+    cmdParts = []
+
+    cmdParts.append("./run-gpu.py")
+
+    if useCPU:
+        cmdParts.append("--gpu cpu")
+    else:
+        cmdParts.append("--gpu " + str(gpuindex))
+
+        if memFraction != None:
+            cmdParts.append("--memfrac %f" % memFraction)
+
+    cmdParts.append("--")
+
+    cmdParts.extend([
+        "train01.py",
+
+        # put the dataset specification file first 
+        # so that we know the selected variables
+        # at the time we build the model
+        dataSetFileName,
+        modelFname,
+        "--max-epochs " + str(maxEpochs),
+        "--output-dir " + outputDir,
+        ])
+
+    return cmdParts, None
+
+#----------------------------------------------------------------------
+
+def commandPartsBuilderBDT(useCPU,
+                           gpuindex,
+                           memFraction,
+                           dataSetFileName,
+                           modelFname,
+                           maxEpochs,
+                           outputDir,
+                           ):
+    # returns a list of command parts for running neural network trainings
+    cmdParts = []
+
+    cmdParts.extend([
+        "./train-tmva.py",
+
+        # put the dataset specification file first 
+        # so that we know the selected variables
+        # at the time we build the model
+        dataSetFileName,
+        modelFname,
+        "--output-dir " + outputDir,
+        ])
+
+    logFile = os.path.join(outputDir, "tmva-training.log")
+    
+    return cmdParts, logFile
+
+#----------------------------------------------------------------------
+
