@@ -307,6 +307,8 @@ class TasksRunner:
         self.logger.info("----------------------------------------")
         self.logger.info("task status at %s", time.strftime("%Y-%m-%d %H:%M:%S"))
         self.logger.info("----------------------------------------")
+        
+        now = time.time()
 
         for description, taskList in (
             ("running", self.runningTasks),
@@ -320,7 +322,8 @@ class TasksRunner:
                 excludedVar = str(task.excludedVar)
 
                 parts = [ "numVars=%d" % len(task.varnames),
-                          "excludedVar=" + excludedVar
+                          "excludedVar=" + excludedVar,
+                          "outputDir=" + task.outputDir,
                           ]
 
                 if task.startTime is not None:
@@ -329,8 +332,13 @@ class TasksRunner:
                 if task.endTime is not None:
                     parts.append("finished at " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(task.endTime)))
 
-                if task.startTime is not None and task.endTime is not None:
-                    parts.append("wallclock time: %.1f hours" % ((task.endTime - task.startTime) / 3600.))
+                if task.startTime is not None:
+                    if task.endTime is not None:
+                        # completed job
+                        parts.append("total wallclock time: %.1f hours" % ((task.endTime - task.startTime) / 3600.))
+                    else:
+                        # job still running
+                        parts.append("elapsed time since start: %.1f hours" % ((now - task.startTime) / 3600.))
 
                 if task.exitStatus is not None:
                     parts.append("exit status %d" % task.exitStatus)
