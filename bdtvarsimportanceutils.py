@@ -465,6 +465,23 @@ def readFromTrainingDir(resultFileReader, trainDir, fomFunction,
 
 #----------------------------------------------------------------------
 
+def readFromResultsFile(resultsFname):
+    # fills an VarImportanceResults() object with data from
+    # a results.pkl file
+
+    retval = VarImportanceResults()
+    
+    import cPickle as pickle
+    
+    results = pickle.load(open(resultsFname))
+
+    for line in results:
+        retval.add(line['varnames'], line['testAUC'])
+
+    return retval
+
+#----------------------------------------------------------------------
+
 def fomAddOptions(parser):
     # adds command line option for known figures of merit
 
