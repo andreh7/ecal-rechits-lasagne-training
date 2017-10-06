@@ -220,6 +220,12 @@ print "order of removal:"
 print "%-30s: %.4f" % ('before', fullNetworkAUC)
 # print "%-30s: %.4f" % ('BDT (phoid)', bdtAuc)
 
+# keeps data for only the variable removed at each step
+# (sumamry information)
+removedData = [ ]
+
+remainingVars = aucData.getAllVars()
+
 # we only have to up to tot num vars minus two
 for numVarsRemoved in range(aucData.getTotNumVars()):
     print "%2d vars removed:" % numVarsRemoved,
@@ -229,14 +235,19 @@ for numVarsRemoved in range(aucData.getTotNumVars()):
     varData = aucData.getStepAUCs(numVarsRemoved)
 
     if varData:
-        worstVar = max([(step['aucWithVarRemoved'], step['removedVariable']) for step in varData ])[1]
+        worstFom, worstVar = max([(step['aucWithVarRemoved'], step['removedVariable']) for step in varData ])
     else:
-        worstVar = None
+        worstFom, worstVar = fullNetworkAUC, None
 
     isStepComplete = aucData.isStepComplete(numVarsRemoved)
 
     if isStepComplete:
         print "complete"
+        removedData.append(dict(removedVariable = worstVar, fom = worstFom))
+
+        if worstVar in remainingVars:
+            remainingVars.remove(worstVar)
+
     else:
         print "incomplete (%d results)" % aucData.getNumResultsAtStep(numVarsRemoved)
 
@@ -249,6 +260,27 @@ for numVarsRemoved in range(aucData.getTotNumVars()):
                 print "(<<<)",
 
         print
+
+if len(remainingVars) == 1:
+    # append a last line with the only remaining variable
+    # and no FOM
+    removedData.append(dict(removedVariable = remainingVars[0], fom = "-"))
+
+#----------
+# print removed vars as a table
+#----------
+print 
+print "removed variable information"
+for line in removedData:
+
+    if isinstance(line['fom'], float):
+        fom = "%f" % line['fom']
+    else:
+        fom = str(line['fom'])
+
+    print "%-20s: %s" % (str(line['removedVariable']), fom)
+
+
 
 #----------
 # make plots
