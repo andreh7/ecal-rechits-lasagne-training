@@ -27,6 +27,13 @@ class VarImportanceResults:
         return self.getAUC(self.allVars)
 
     #----------
+
+    def getAllVars(self):
+        # returns the list of all variables seen so far
+        # make a copy
+        return list(self.allVars)
+
+    #----------
     
     def getAUC(self, varnames):
         return self.data.get(tuple(sorted(varnames)), None)
