@@ -123,6 +123,9 @@ for dirname in ARGV:
         if not mo:
             mo = re.match("model-(\d+)\.npz$", fname)
 
+        if not mo:
+            mo = re.match("checkpoint-(\d+)\.torch$", fname)
+
         if mo:
             modelNumber = int(mo.group(1), 10)
 
