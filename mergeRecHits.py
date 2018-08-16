@@ -291,7 +291,14 @@ if __name__ == '__main__':
                 print "opening",fname, fileIndex,"/",len(fileNames),
                 thisData = np.load(fname)
 
-                print len(thisData['y']),"photons"
+                numPhotons = len(thisData['y'])
+
+                print numPhotons,"photons"
+
+                # skip empty files, at the moment they make some of the checks
+                # above fail
+                if numPhotons == 0:
+                    continue
 
                 recHitsAdded = False
                 tracksAdded  = False
